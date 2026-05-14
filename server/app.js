@@ -54,4 +54,10 @@ app.use("/api/purchases", require("./routes/purchaseRoutes"));
 app.use("/api/protein-powders", require("./routes/proteinPowderRoutes"));
 app.use("/api/bmi", require("./routes/bmiRoutes"));
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
