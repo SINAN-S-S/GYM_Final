@@ -20,7 +20,7 @@ function BMIHistory() {
 
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        const res = await axios.get("http://localhost:5000/api/bmi", config);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bmi`, config);
         setHistory(res.data);
       } catch (err) {
         console.error("Failed to fetch BMI history", err);

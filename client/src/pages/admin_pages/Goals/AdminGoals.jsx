@@ -13,7 +13,7 @@ function AdminGoals() {
 
   const fetchGoals = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/goals");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/goals`);
       setGoals(res.data);
     } catch (err) {
       console.error(err);
@@ -26,7 +26,7 @@ function AdminGoals() {
 
   const deleteGoal = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/goals/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/goals/${id}`);
       setGoals(goals.filter((g) => g._id !== id));
     } catch (err) {
       console.error(err);

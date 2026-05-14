@@ -16,7 +16,7 @@ function AdminBMIHistory() {
     const token = localStorage.getItem('token');
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get("http://localhost:5000/api/bmi/admin/all", config);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bmi/admin/all`, config);
       setHistory(res.data);
     } catch (err) {
       console.error("Failed to fetch admin BMI history", err);
@@ -32,7 +32,7 @@ function AdminBMIHistory() {
     const token = localStorage.getItem('token');
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.delete(`http://localhost:5000/api/bmi/admin/${id}`, config);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/bmi/admin/${id}`, config);
       
       // Remove from UI
       setHistory(history.filter(record => record._id !== id));

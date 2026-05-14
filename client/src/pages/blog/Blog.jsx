@@ -53,7 +53,7 @@ function Blog() {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/blogs");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/blogs`);
       const data = Array.isArray(res.data) ? res.data : [];
       if (data.length === 0) { setBlogs(DEMO_BLOGS); setIsDemo(true); }
       else { setBlogs(data); setIsDemo(false); }

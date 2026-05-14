@@ -23,7 +23,7 @@ function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/admin/dashboard-stats", {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/dashboard-stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(res.data);
@@ -39,7 +39,7 @@ function AdminDashboard() {
   const handleCreateBroadcast = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/admin/broadcast", 
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/broadcast`, 
         { message: broadcastMessage, type: broadcastType },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -62,7 +62,7 @@ function AdminDashboard() {
   const handleDeleteBroadcast = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/admin/broadcast/${id}`, 
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/broadcast/${id}`, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
       

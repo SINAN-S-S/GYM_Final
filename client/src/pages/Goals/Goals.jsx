@@ -13,7 +13,7 @@ function Goals() {
 
   const fetchGoals = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/goals");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/goals`);
       setGoals(res.data);
     } catch (err) {
       console.log(err);
@@ -25,7 +25,7 @@ function Goals() {
     if (!newGoal.title) return;
 
     try {
-      const res = await axios.post("http://localhost:5000/api/goals", {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/goals`, {
         title: newGoal.title.toUpperCase(),
         target: newGoal.target,
         description: `Target: ${newGoal.target} · Started ${new Date().toLocaleDateString()} · 0% complete`

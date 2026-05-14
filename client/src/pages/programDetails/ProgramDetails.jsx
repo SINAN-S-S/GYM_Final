@@ -21,7 +21,7 @@ function ProgramDetails() {
   useEffect(() => {
     const fetchProgram = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/programs/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/programs/${id}`);
         setProgram(res.data);
       } catch (err) {
         console.error("Error fetching program details:", err);

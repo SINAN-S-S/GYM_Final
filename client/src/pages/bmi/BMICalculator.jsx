@@ -62,7 +62,7 @@ function BMICalculator() {
     try {
       console.log("[BMI Save] Sending Data:", { weight, height, bmi: bmiResult, status: bmiStatus });
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post("http://localhost:5000/api/bmi", {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/bmi`, {
         weight,
         height,
         bmi: bmiResult,

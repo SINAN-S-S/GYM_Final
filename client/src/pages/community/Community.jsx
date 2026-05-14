@@ -12,7 +12,7 @@ function Community() {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/community");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/community`);
       setPosts(res.data);
     } catch (err) {
       console.log(err);
@@ -27,7 +27,7 @@ function Community() {
     e.preventDefault();
     if (!form.name || !form.content) return;
     try {
-      await axios.post("http://localhost:5000/api/community", form);
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/community`, form);
       setForm({ name: '', plan: '', content: '' });
       fetchPosts();
     } catch (err) {
@@ -37,7 +37,7 @@ function Community() {
 
   const handleLike = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/community/${id}/like`);
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/community/${id}/like`);
       fetchPosts(); // Refresh likes
     } catch (err) {
       console.log(err);

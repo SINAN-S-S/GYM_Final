@@ -18,7 +18,7 @@ function Workouts() {
         // Fetch access status
         if (token) {
           try {
-            const accessRes = await axios.get("http://localhost:5000/api/users/access-status", {
+            const accessRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/access-status`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             setAccessData(accessRes.data);
@@ -28,7 +28,7 @@ function Workouts() {
         }
 
         // Fetch workouts
-        const res = await axios.get("http://localhost:5000/api/workouts");
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/workouts`);
         setWorkouts(res.data);
       } catch (err) {
         console.error("Error fetching workouts:", err);

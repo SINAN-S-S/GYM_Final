@@ -12,7 +12,7 @@ function AdminCommunity() {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/community");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/community`);
       setPosts(res.data);
     } catch (err) {
       console.log(err);
@@ -22,7 +22,7 @@ function AdminCommunity() {
   const deletePost = async (id) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/community/${id}`, {
+        await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/community/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         fetchPosts();

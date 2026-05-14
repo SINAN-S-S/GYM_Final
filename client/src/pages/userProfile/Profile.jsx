@@ -19,19 +19,19 @@ function Profile() {
 
         if (token) {
           // Fetch Access Status
-          const accessRes = await axios.get("http://localhost:5000/api/users/access-status", {
+          const accessRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/access-status`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setAccess(accessRes.data);
 
           // Fetch Purchases
-          const purchaseRes = await axios.get("http://localhost:5000/api/purchases/my-purchases", {
+          const purchaseRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/purchases/my-purchases`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setPurchases(purchaseRes.data);
 
           // Fetch Bookings
-          const bookingRes = await axios.get("http://localhost:5000/api/bookings/mybookings", {
+          const bookingRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/mybookings`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setBookings(bookingRes.data);
@@ -54,7 +54,7 @@ function Profile() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        "http://localhost:5000/api/users/profile",
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile`,
         user,
         { headers: { Authorization: `Bearer ${token}` } }
       );

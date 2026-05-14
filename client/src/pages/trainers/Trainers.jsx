@@ -11,7 +11,7 @@ function Trainers() {
   useEffect(() => {
     const fetchTrainers = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/trainers");
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/trainers`);
         setTrainers(res.data);
       } catch (err) {
         console.error(err);

@@ -3,7 +3,7 @@ const ProteinPowder = require("../models/ProteinPowder");
 const getImageUrl = (req) => {
   if (req.file) {
     if (req.file.path.startsWith("http")) return req.file.path;
-    return `http://localhost:5000/uploads/${req.file.filename}`;
+    return `${import.meta.env.VITE_BACKEND_URL}/uploads/${req.file.filename}`;
   }
   return req.body.imageUrl || undefined;
 };

@@ -71,7 +71,7 @@ export default function Progress() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/progress');
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/progress`);
       const data = Array.isArray(res.data) ? res.data : [];
       if (data.length === 0) { setLogs(DEMO_LOGS); setIsDemo(true); }
       else { setLogs(data); setIsDemo(false); }
@@ -88,7 +88,7 @@ export default function Progress() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.post('http://localhost:5000/api/progress', {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/progress`, {
         weight, workoutsCompleted: workouts, calories, chest, waist,
       });
       setWeight(''); setWorkouts(''); setCalories(''); setChest(''); setWaist('');

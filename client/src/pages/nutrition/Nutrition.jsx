@@ -22,8 +22,8 @@ function Nutrition() {
     const fetchData = async () => {
       try {
         const [resFood, resPowders] = await Promise.all([
-          axios.get("http://localhost:5000/api/nutrition"),
-          axios.get("http://localhost:5000/api/protein-powders")
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`)
         ]);
         setFoods(resFood.data);
         setPowders(resPowders.data);

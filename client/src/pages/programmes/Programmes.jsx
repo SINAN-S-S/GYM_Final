@@ -10,7 +10,7 @@ export const Programmes = () => {
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/programs");
+                const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/programs`);
                 setPrograms(res.data);
             } catch (err) {
                 console.error("Error fetching programs:", err);

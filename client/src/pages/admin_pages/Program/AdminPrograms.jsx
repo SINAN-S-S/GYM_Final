@@ -21,7 +21,7 @@ function AdminPrograms() {
   }, []);
 
   const fetchPrograms = async () => {
-    const res = await axios.get("http://localhost:5000/api/programs");
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/programs`);
     setPrograms(res.data);
   };
 
@@ -49,11 +49,11 @@ function AdminPrograms() {
       }
 
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/programs/${editingId}`, formData, {
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/programs/${editingId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       } else {
-        await axios.post("http://localhost:5000/api/programs", formData, {
+        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/programs`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       }
@@ -79,7 +79,7 @@ function AdminPrograms() {
   //  Delete
   const handleDelete = async (id) => {
     if (window.confirm("Delete this program?")) {
-      await axios.delete(`http://localhost:5000/api/programs/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/programs/${id}`);
       fetchPrograms();
     }
   };

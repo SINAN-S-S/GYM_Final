@@ -30,12 +30,12 @@ function AdminNutrition() {
   }, []);
 
   const fetchNutrition = async () => {
-    const res = await axios.get("http://localhost:5000/api/nutrition");
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`);
     setItems(res.data);
   };
 
   const fetchPowders = async () => {
-    const res = await axios.get("http://localhost:5000/api/protein-powders");
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`);
     setPowders(res.data);
   };
 
@@ -79,11 +79,11 @@ function AdminNutrition() {
       }
 
       if (editItem) {
-        await axios.put(`http://localhost:5000/api/nutrition/${editItem._id}`, formData, {
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition/${editItem._id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       } else {
-        await axios.post("http://localhost:5000/api/nutrition", formData, {
+        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       }
@@ -113,11 +113,11 @@ function AdminNutrition() {
       }
 
       if (editPowder) {
-        await axios.put(`http://localhost:5000/api/protein-powders/${editPowder._id}`, formData, {
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders/${editPowder._id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       } else {
-        await axios.post("http://localhost:5000/api/protein-powders", formData, {
+        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       }
@@ -134,13 +134,13 @@ function AdminNutrition() {
   // ✅ DELETE
   const deleteItem = async (id) => {
     if (!window.confirm("Are you sure to delete?")) return;
-    await axios.delete(`http://localhost:5000/api/nutrition/${id}`);
+    await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition/${id}`);
     fetchNutrition();
   };
 
   const deletePowder = async (id) => {
     if (!window.confirm("Are you sure to delete this product?")) return;
-    await axios.delete(`http://localhost:5000/api/protein-powders/${id}`);
+    await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders/${id}`);
     fetchPowders();
   };
 

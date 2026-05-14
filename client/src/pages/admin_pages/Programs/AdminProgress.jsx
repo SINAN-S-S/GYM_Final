@@ -12,7 +12,7 @@ function AdminProgress() {
 
   const fetchProgressLogs = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/progress");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/progress`);
       setLogs(res.data);
     } catch (err) {
       console.log(err);
@@ -21,7 +21,7 @@ function AdminProgress() {
 
   const deleteLog = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/progress/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/progress/${id}`);
       setLogs(logs.filter((l) => l._id !== id));
     } catch (err) {
       console.log(err);

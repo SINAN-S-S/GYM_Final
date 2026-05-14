@@ -13,7 +13,7 @@ function TrainerProfile() {
   useEffect(() => {
     const fetchTrainer = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/trainers/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/trainers/${id}`);
         setTrainer(res.data);
       } catch (err) {
         console.error("Error fetching trainer:", err);
@@ -34,7 +34,7 @@ function TrainerProfile() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/bookings",
+        `${import.meta.env.VITE_BACKEND_URL}/api/bookings`,
         { trainer: trainer._id, notes: "Requested from Trainer Profile" },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -19,7 +19,7 @@ function CreateBlog() {
     formData.append("image", file);
 
     try {
-      await axios.post("http://localhost:5000/api/blogs", formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/blogs`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

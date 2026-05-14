@@ -27,7 +27,7 @@ function AdminWorkouts() {
 
   const fetchWorkouts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/workouts");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/workouts`);
       setWorkouts(res.data);
     } catch (err) {
       console.log(err);
@@ -61,14 +61,14 @@ function AdminWorkouts() {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/workouts/${editingId}`, formData, {
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/workouts/${editingId}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         });
       } else {
-        await axios.post("http://localhost:5000/api/workouts", formData, {
+        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/workouts`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -104,7 +104,7 @@ function AdminWorkouts() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this workout?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/workouts/${id}`, {
+        await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/workouts/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         fetchWorkouts();

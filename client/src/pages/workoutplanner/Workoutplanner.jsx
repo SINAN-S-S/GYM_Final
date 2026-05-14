@@ -18,8 +18,8 @@ function Workoutplanner() {
   const fetchData = async () => {
     try {
       const [protocolRes, bankRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/protocol"),
-        axios.get("http://localhost:5000/api/exercise-bank")
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protocol`),
+        axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/exercise-bank`)
       ]);
       
       if (protocolRes.data && protocolRes.data.schedule) {
@@ -37,7 +37,7 @@ function Workoutplanner() {
 
   const saveProtocol = async () => {
     try {
-      await axios.post("http://localhost:5000/api/protocol", { schedule });
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/protocol`, { schedule });
       alert("PROTOCOL SAVED TO DATABASE!");
     } catch (err) {
       console.error(err);

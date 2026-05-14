@@ -18,7 +18,7 @@ function Users() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(res.data);
@@ -30,7 +30,7 @@ function Users() {
   const fetchBookings = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/bookings", {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bookings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBookings(res.data);
@@ -42,7 +42,7 @@ function Users() {
   const handleAcceptBooking = async (bookingId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5000/api/bookings/${bookingId}`, 
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/${bookingId}`, 
         { status: "Confirmed" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -58,7 +58,7 @@ function Users() {
     if (!window.confirm("Are you sure you want to remove this trainer request?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/bookings/${bookingId}`, 
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/${bookingId}`, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBookings(prev => prev.filter(b => b._id !== bookingId));
@@ -80,7 +80,7 @@ function Users() {
 
     try {
       await axios.put(
-        `http://localhost:5000/api/users/${user._id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/${user._id}`,
         { role },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -98,7 +98,7 @@ function Users() {
     const token = localStorage.getItem("token");
     try {
       await axios.put(
-        `http://localhost:5000/api/admin/users/${user._id}/block`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/block`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -118,7 +118,7 @@ function Users() {
     if (user.role === "admin") return alert("Cannot remove an admin.");
     const token = localStorage.getItem("token");
     try {
-      await axios.put(`http://localhost:5000/api/admin/users/${user._id}/remove`, {}, {
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/remove`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers((prev) => prev.map((u) => u._id === user._id ? { ...u, isDeleted: true } : u));
@@ -131,7 +131,7 @@ function Users() {
   const restoreUser = async (user) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.put(`http://localhost:5000/api/admin/users/${user._id}/restore`, {}, {
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/restore`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers((prev) => prev.map((u) => u._id === user._id ? { ...u, isDeleted: false } : u));
@@ -145,7 +145,7 @@ function Users() {
     if (!window.confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`http://localhost:5000/api/admin/users/${user._id}/hard-delete`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/hard-delete`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers((prev) => prev.filter((u) => u._id !== user._id));

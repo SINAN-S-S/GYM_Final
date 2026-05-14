@@ -5,7 +5,7 @@ const getFileUrl = (req, fieldName, urlField) => {
   if (!req.files || !req.files[fieldName] || req.files[fieldName].length === 0) return undefined;
   const file = req.files[fieldName][0];
   if (file.path.startsWith("http")) return file.path;
-  return `http://localhost:5000/uploads/${file.filename}`;
+  return `${import.meta.env.VITE_BACKEND_URL}/uploads/${file.filename}`;
 };
 
 // CREATE

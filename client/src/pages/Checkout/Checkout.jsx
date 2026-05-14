@@ -19,7 +19,7 @@ function Checkout() {
     const fetchItem = async () => {
       try {
         const endpoint = type === "powder" ? `/api/protein-powders/${id}` : `/api/programs/${id}`;
-        const res = await axios.get(`http://localhost:5000${endpoint}`);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}${endpoint}`);
         setItem(res.data);
       } catch (err) {
         console.error("Error fetching item:", err);
@@ -44,7 +44,7 @@ function Checkout() {
     setTimeout(async () => {
       try {
         await axios.post(
-          "http://localhost:5000/api/purchases",
+          `${import.meta.env.VITE_BACKEND_URL}/api/purchases`,
           {
             itemId: id,
             itemType: type,

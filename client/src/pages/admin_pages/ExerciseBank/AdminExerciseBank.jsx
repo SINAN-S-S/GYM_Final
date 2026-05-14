@@ -20,7 +20,7 @@ function AdminExerciseBank() {
 
   const fetchExercises = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/exercise-bank");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/exercise-bank`);
       setExercises(res.data);
     } catch (err) {
       console.log(err);
@@ -42,7 +42,7 @@ function AdminExerciseBank() {
     }
 
     try {
-      await axios.post("http://localhost:5000/api/exercise-bank", formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/exercise-bank`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -64,7 +64,7 @@ function AdminExerciseBank() {
 
   const deleteExercise = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/exercise-bank/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/exercise-bank/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setExercises(exercises.filter((e) => e._id !== id));

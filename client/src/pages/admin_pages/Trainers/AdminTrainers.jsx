@@ -18,7 +18,7 @@ function AdminTrainers() {
 
   const fetchTrainers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/trainers");
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/trainers`);
       setTrainers(res.data);
     } catch (err) {
       console.log(err);
@@ -36,12 +36,12 @@ function AdminTrainers() {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/trainers/${editingId}`, formData, {
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/trainers/${editingId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         alert("Trainer updated successfully!");
       } else {
-        await axios.post("http://localhost:5000/api/trainers", formData, {
+        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/trainers`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         alert("Trainer added successfully!");
@@ -70,7 +70,7 @@ function AdminTrainers() {
 
   const deleteTrainer = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/trainers/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/trainers/${id}`);
       setTrainers(trainers.filter((t) => t._id !== id));
     } catch (err) {
       console.log(err);
@@ -85,7 +85,7 @@ function AdminTrainers() {
       formData.append("availableTime", trainer.availableTime);
       formData.append("isActive", !trainer.isActive);
 
-      await axios.put(`http://localhost:5000/api/trainers/${trainer._id}`, formData, {
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/trainers/${trainer._id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       fetchTrainers();
