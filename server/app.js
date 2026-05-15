@@ -34,7 +34,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Connect Database
-connectDB();
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({ message: "DB Connection Failed" });
+  }
+});
 
 // Middlewares
 app.use(cors());
