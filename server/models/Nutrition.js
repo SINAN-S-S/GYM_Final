@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const nutritionSchema = new mongoose.Schema(
   {
@@ -7,29 +7,36 @@ const nutritionSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     calories: {
       type: Number,
       required: true,
     },
+
     protein: {
       type: Number,
       required: true,
     },
+
     carbs: {
       type: Number,
       required: true,
     },
+
     fat: {
       type: Number,
       default: 0,
     },
+
     image: {
       type: String,
     },
   },
   {
-    timestamps: true, // adds createdAt, updatedAt
+    timestamps: true,
   }
 );
 
-module.exports = mongoose.model("Nutrition", nutritionSchema);
+const Nutrition = mongoose.model("Nutrition", nutritionSchema);
+
+export default Nutrition;

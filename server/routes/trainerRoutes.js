@@ -1,12 +1,34 @@
-const express = require("express");
+import express from "express";
+import upload from "../config/multer.js";
+import * as trainerController from "../controllers/trainerController.js";
+
 const router = express.Router();
-const upload = require("../config/multer");
-const trainerController = require("../controllers/trainerController");
 
-router.get("/", trainerController.getTrainers);
-router.get("/:id", trainerController.getTrainerById);
-router.post("/", upload.single("image"), trainerController.createTrainer);
-router.put("/:id", upload.single("image"), trainerController.updateTrainer);
-router.delete("/:id", trainerController.deleteTrainer);
+router.get(
+  "/",
+  trainerController.getTrainers
+);
 
-module.exports = router;
+router.get(
+  "/:id",
+  trainerController.getTrainerById
+);
+
+router.post(
+  "/",
+  upload.single("image"),
+  trainerController.createTrainer
+);
+
+router.put(
+  "/:id",
+  upload.single("image"),
+  trainerController.updateTrainer
+);
+
+router.delete(
+  "/:id",
+  trainerController.deleteTrainer
+);
+
+export default router;

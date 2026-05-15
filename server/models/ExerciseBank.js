@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const exerciseBankSchema = new mongoose.Schema(
   {
@@ -22,4 +22,6 @@ const exerciseBankSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ExerciseBank", exerciseBankSchema);
+const ExerciseBank = mongoose.model("ExerciseBank", exerciseBankSchema);
+
+export default ExerciseBank;

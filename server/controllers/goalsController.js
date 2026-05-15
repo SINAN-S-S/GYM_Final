@@ -1,7 +1,7 @@
-const Goal = require("../models/goals");
+import Goal from "../models/goals.js";
 
 // GET ALL GOALS
-exports.getGoals = async (req, res) => {
+export const getGoals = async (req, res) => {
   try {
     const goals = await Goal.find();
     res.json(goals);
@@ -10,20 +10,25 @@ exports.getGoals = async (req, res) => {
   }
 };
 
-// CREATE A GOAL
-exports.createGoal = async (req, res) => {
+// CREATE GOAL
+export const createGoal = async (req, res) => {
   try {
     const { title, description, target } = req.body;
-    const newGoal = new Goal({ title, description, target });
-    await newGoal.save();
+
+    const newGoal = await Goal.create({
+      title,
+      description,
+      target,
+    });
+
     res.status(201).json(newGoal);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// DELETE A GOAL
-exports.deleteGoal = async (req, res) => {
+// DELETE GOAL
+export const deleteGoal = async (req, res) => {
   try {
     await Goal.findByIdAndDelete(req.params.id);
     res.json({ message: "Goal deleted" });

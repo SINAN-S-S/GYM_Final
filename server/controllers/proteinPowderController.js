@@ -1,38 +1,61 @@
-const ProteinPowder = require("../models/ProteinPowder");
+import ProteinPowder from "../models/ProteinPowder.js";
 
 const getImageUrl = (req) => {
   if (req.file) {
-    if (req.file.path.startsWith("http")) return req.file.path;
+    if (req.file.path.startsWith("http")) {
+      return req.file.path;
+    }
+
     return `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
   }
+
   return req.body.imageUrl || undefined;
 };
 
 // GET all
-exports.getAllProteinPowders = async (req, res) => {
+export const getAllProteinPowders = async (req, res) => {
   try {
-    const data = await ProteinPowder.find().sort({ createdAt: -1 });
+    const data = await ProteinPowder.find().sort({
+      createdAt: -1,
+    });
+
     res.json(data);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
 // GET single
-exports.getProteinPowderById = async (req, res) => {
+export const getProteinPowderById = async (req, res) => {
   try {
     const item = await ProteinPowder.findById(req.params.id);
-    if (!item) return res.status(404).json({ message: "Not found" });
+
+    if (!item) {
+      return res.status(404).json({
+        message: "Not found",
+      });
+    }
+
     res.json(item);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
 // CREATE
-exports.createProteinPowder = async (req, res) => {
+export const createProteinPowder = async (req, res) => {
   try {
-    const { name, brand, price, description, inStock } = req.body;
+    const {
+      name,
+      brand,
+      price,
+      description,
+      inStock,
+    } = req.body;
 
     const newItem = new ProteinPowder({
       name,
@@ -44,17 +67,26 @@ exports.createProteinPowder = async (req, res) => {
     });
 
     const saved = await newItem.save();
+
     res.status(201).json(saved);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
 // UPDATE
-exports.updateProteinPowder = async (req, res) => {
+export const updateProteinPowder = async (req, res) => {
   try {
-    const { name, brand, price, description, inStock } = req.body;
-    
+    const {
+      name,
+      brand,
+      price,
+      description,
+      inStock,
+    } = req.body;
+
     const data = {
       name,
       brand,
@@ -64,6 +96,7 @@ exports.updateProteinPowder = async (req, res) => {
     };
 
     const imageUrl = getImageUrl(req);
+
     if (imageUrl) {
       data.image = imageUrl;
     }
@@ -76,17 +109,31 @@ exports.updateProteinPowder = async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
 // DELETE
-exports.deleteProteinPowder = async (req, res) => {
+export const deleteProteinPowder = async (req, res) => {
   try {
-    const deleted = await ProteinPowder.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Not found" });
-    res.json({ message: "Deleted successfully" });
+    const deleted = await ProteinPowder.findByIdAndDelete(
+      req.params.id
+    );
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Not found",
+      });
+    }
+
+    res.json({
+      message: "Deleted successfully",
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };

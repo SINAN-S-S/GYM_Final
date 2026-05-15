@@ -1,6 +1,7 @@
-const Progress = require("../models/Progress");
+import Progress from "../models/Progress.js";
 
-exports.getProgressLogs = async (req, res) => {
+// GET ALL PROGRESS LOGS
+export const getProgressLogs = async (req, res) => {
   try {
     const logs = await Progress.find().sort({ date: -1 });
     res.json(logs);
@@ -9,24 +10,27 @@ exports.getProgressLogs = async (req, res) => {
   }
 };
 
-exports.logProgress = async (req, res) => {
+// CREATE PROGRESS LOG
+export const logProgress = async (req, res) => {
   try {
     const { weight, workoutsCompleted, calories, chest, waist } = req.body;
-    const log = new Progress({
+
+    const log = await Progress.create({
       weight,
       workoutsCompleted,
       calories,
       chest,
       waist,
     });
-    await log.save();
+
     res.status(201).json(log);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.deleteProgressLog = async (req, res) => {
+// DELETE PROGRESS LOG
+export const deleteProgressLog = async (req, res) => {
   try {
     await Progress.findByIdAndDelete(req.params.id);
     res.json({ message: "Log deleted" });

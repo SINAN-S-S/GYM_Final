@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const trainerSchema = new mongoose.Schema(
   {
@@ -25,4 +25,6 @@ const trainerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Trainer", trainerSchema);
+const Trainer = mongoose.model("Trainer", trainerSchema);
+
+export default Trainer;

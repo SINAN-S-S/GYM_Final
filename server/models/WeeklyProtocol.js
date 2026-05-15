@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const exerciseItemSchema = new mongoose.Schema({
   id: Number,
@@ -6,7 +6,7 @@ const exerciseItemSchema = new mongoose.Schema({
   category: String,
   icon: String,
   image: String,
-  uniqueId: Number
+  uniqueId: Number,
 });
 
 const weeklyProtocolSchema = new mongoose.Schema(
@@ -19,9 +19,11 @@ const weeklyProtocolSchema = new mongoose.Schema(
       FRIDAY: [exerciseItemSchema],
       SATURDAY: [exerciseItemSchema],
       SUNDAY: [exerciseItemSchema],
-    }
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("WeeklyProtocol", weeklyProtocolSchema);
+const WeeklyProtocol = mongoose.model("WeeklyProtocol", weeklyProtocolSchema);
+
+export default WeeklyProtocol;

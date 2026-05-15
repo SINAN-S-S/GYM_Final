@@ -1,30 +1,14 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const progressSchema = new mongoose.Schema(
-  {
-    weight: {
-      type: Number,
-      required: true,
-    },
-    workoutsCompleted: {
-      type: String,
-    },
-    calories: {
-      type: Number,
-    },
-    chest: {
-      type: Number,
-    },
-    waist: {
-      type: Number,
-    },
-    // We can manually specify date or rely on timestamps
-    date: {
-      type: Date,
-      default: Date.now,
-    }
-  },
-  { timestamps: true }
-);
+const progressSchema = new mongoose.Schema({
+  weight: Number,
+  workoutsCompleted: Number,
+  calories: Number,
+  chest: Number,
+  waist: Number,
+  date: { type: Date, default: Date.now },
+});
 
-module.exports = mongoose.model("Progress", progressSchema);
+const Progress = mongoose.model("Progress", progressSchema);
+
+export default Progress;

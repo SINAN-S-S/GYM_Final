@@ -1,14 +1,37 @@
-const express = require("express");
-const router = express.Router();
-const { saveBMI, getBMIHistory, getAllBMIHistory, deleteBMIRecord } = require("../controllers/bmiController");
-const { protect, admin } = require("../middleware/authMiddleware");
+import express from "express";
 
-// Protected routes (require user login)
+import {
+  saveBMI,
+  getBMIHistory,
+  getAllBMIHistory,
+  deleteBMIRecord,
+} from "../controllers/bmiController.js";
+
+import {
+  protect,
+  admin,
+} from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+// Protected Routes
 router.post("/", protect, saveBMI);
+
 router.get("/", protect, getBMIHistory);
 
-// Admin routes
-router.get("/admin/all", protect, admin, getAllBMIHistory);
-router.delete("/admin/:id", protect, admin, deleteBMIRecord);
+// Admin Routes
+router.get(
+  "/admin/all",
+  protect,
+  admin,
+  getAllBMIHistory
+);
 
-module.exports = router;
+router.delete(
+  "/admin/:id",
+  protect,
+  admin,
+  deleteBMIRecord
+);
+
+export default router;

@@ -1,53 +1,46 @@
-const Blog = require("../models/Blog");
+import Blog from "../models/Blog.js";
 
-const getImageUrl = (req) => {
-  if (req.file) {
-    if (req.file.path.startsWith("http")) return req.file.path;
-    return `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
-  }
-  return req.body.imageUrl || undefined;
-};
-
-// CREATE
-exports.createBlog = async (req, res) => {
+// GET ALL BLOGS
+export const getBlogs = async (req, res) => {
   try {
-    const { title, content, author, videoUrl } = req.body;
-
-    const blog = await Blog.create({
-      title,
-      content,
-      author,
-      videoUrl,
-      image: getImageUrl(req), 
-    });
-
-    res.json(blog);
+    const blogs = await Blog.find().sort({ createdAt: -1 });
+    res.json(blogs);
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
-// GET ALL
-exports.getBlogs = async (req, res) => {
-  const blogs = await Blog.find();
-  res.json(blogs);
-};
 
-// UPDATE
-exports.updateBlog = async (req, res) => {
-  let updateData = { ...req.body };
-  const imageUrl = getImageUrl(req);
-  if (imageUrl) {
-    updateData.image = imageUrl;
+// CREATE BLOG
+export const createBlog = async (req, res) => {
+  try {
+    const blog = await Blog.create(req.body);
+    res.status(201).json(blog);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-
-  const blog = await Blog.findByIdAndUpdate(req.params.id, updateData, {
-    new: true,
-  });
-  res.json(blog);
 };
 
-// DELETE
-exports.deleteBlog = async (req, res) => {
-  await Blog.findByIdAndDelete(req.params.id);
-  res.json({ msg: "Blog deleted" });
+// UPDATE BLOG
+export const updateBlog = async (req, res) => {
+  try {
+    const updated = await Blog.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// DELETE BLOG
+export const deleteBlog = async (req, res) => {
+  try {
+    await Blog.findByIdAndDelete(req.params.id);
+    res.json({ message: "Blog deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

@@ -1,14 +1,17 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const workoutSchema = new mongoose.Schema(
   {
     title: String,
+
     description: String,
+
     level: String,
+
     duration: Number,
 
-
     image: String,
+
     video: String,
 
     exercises: [String],
@@ -16,4 +19,6 @@ const workoutSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Workout", workoutSchema);
+const Workout = mongoose.model("Workout", workoutSchema);
+
+export default Workout;

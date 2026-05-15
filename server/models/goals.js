@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const goalSchema = new mongoose.Schema({
   title: String,
@@ -7,4 +7,6 @@ const goalSchema = new mongoose.Schema({
   current: { type: Number, default: 0 },
 });
 
-module.exports = mongoose.model("Goal", goalSchema);
+const Goal = mongoose.model("Goal", goalSchema);
+
+export default Goal;

@@ -1,29 +1,38 @@
-const express = require("express");
-const router = express.Router();
+import express from "express";
 
-const {
+import {
   getAllNutrition,
   getNutritionById,
   createNutrition,
   updateNutrition,
   deleteNutrition,
-} = require("../controllers/nutritionController");
+} from "../controllers/nutritionController.js";
 
-const upload = require("../config/multer");
+import upload from "../config/multer.js";
 
-// GET all
+const router = express.Router();
+
+// GET ALL
 router.get("/", getAllNutrition);
 
-// GET single
+// GET SINGLE
 router.get("/:id", getNutritionById);
 
-// POST
-router.post("/", upload.single("image"), createNutrition);
+// CREATE
+router.post(
+  "/",
+  upload.single("image"),
+  createNutrition
+);
 
-// PUT
-router.put("/:id", upload.single("image"), updateNutrition);
+// UPDATE
+router.put(
+  "/:id",
+  upload.single("image"),
+  updateNutrition
+);
 
 // DELETE
 router.delete("/:id", deleteNutrition);
 
-module.exports = router;
+export default router;

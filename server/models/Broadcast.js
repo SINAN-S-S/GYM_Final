@@ -1,19 +1,23 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const broadcastSchema = new mongoose.Schema({
   message: {
     type: String,
     required: true,
   },
+
   type: {
     type: String,
     enum: ["info", "urgent"],
     default: "info",
   },
+
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model("Broadcast", broadcastSchema);
+const Broadcast = mongoose.model("Broadcast", broadcastSchema);
+
+export default Broadcast;

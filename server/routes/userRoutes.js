@@ -1,39 +1,46 @@
-const express = require("express");
+import express from "express";
+
+import User from "../models/User.js";
+import Purchase from "../models/Purchase.js";
+import Booking from "../models/Booking.js";
+
+import { updateProfile } from "../controllers/authController.js";
+import { protect, admin } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-const User = require("../models/User");
-const { updateProfile } = require("../controllers/authController");
-const authMiddleware = require("../middleware/authMiddleware");
 
-const Purchase = require("../models/Purchase");
-const Booking = require("../models/Booking");
-
-//  GET USER ACCESS STATUS
-router.get("/access-status", authMiddleware.protect, async (req, res) => {
+// ======================
+// ACCESS STATUS
+// ======================
+router.get("/access-status", protect, async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const purchase = await Purchase.findOne({ user: userId });
-    const booking = await Booking.findOne({ user: userId });
+    const purchase = await Purchase.exists({ user: userId });
+    const booking = await Booking.findOne({
+      user: userId,
+      status: "Confirmed",
+    });
 
     const hasPurchased = !!purchase;
     const hasTrainer = !!booking;
     const isApproved = booking?.status === "Confirmed";
 
-    const isLocked = !(hasPurchased && hasTrainer && isApproved);
-
     res.json({
       hasPurchased,
       hasTrainer,
       isApproved,
-      isLocked
+      isLocked: !(hasPurchased && hasTrainer && isApproved),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-//  GET ALL USERS
-router.get("/", async (req, res) => {
+// ======================
+// GET ALL USERS (ADMIN ONLY)
+// ======================
+router.get("/", protect, admin, async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -42,8 +49,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-//  UPDATE USER (role + block toggle)
-router.put("/:id", async (req, res) => {
+// ======================
+// UPDATE USER
+// ======================
+router.put("/:id", protect, async (req, res) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
@@ -57,7 +66,9 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.put("/profile", authMiddleware.protect, updateProfile);
+// ======================
+// PROFILE UPDATE
+// ======================
+router.put("/profile", protect, updateProfile);
 
-
-module.exports = router;
+export default router;

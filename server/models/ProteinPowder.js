@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const proteinPowderSchema = new mongoose.Schema(
   {
@@ -6,25 +6,37 @@ const proteinPowderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     brand: {
       type: String,
     },
+
     price: {
       type: Number,
       required: true,
     },
+
     image: {
-      type: String, // Can be a URL or local path
+      type: String,
     },
+
     description: {
       type: String,
     },
+
     inStock: {
       type: Boolean,
       default: true,
-    }
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("ProteinPowder", proteinPowderSchema);
+const ProteinPowder = mongoose.model(
+  "ProteinPowder",
+  proteinPowderSchema
+);
+
+export default ProteinPowder;

@@ -1,8 +1,16 @@
-const express = require("express");
+import express from "express";
+import * as protocolController from "../controllers/protocolController.js";
+
 const router = express.Router();
-const protocolController = require("../controllers/protocolController");
 
-router.get("/", protocolController.getProtocol);
-router.post("/", protocolController.saveProtocol);
+router.get(
+  "/",
+  protocolController.getProtocol
+);
 
-module.exports = router;
+router.post(
+  "/",
+  protocolController.saveProtocol
+);
+
+export default router;

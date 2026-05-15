@@ -1,7 +1,7 @@
-const Nutrition = require("../models/Nutrition");
+import Nutrition from "../models/Nutrition.js";
 
 // ✅ GET all nutrition
-exports.getAllNutrition = async (req, res) => {
+export const getAllNutrition = async (req, res) => {
   try {
     const data = await Nutrition.find().sort({ createdAt: -1 });
     res.json(data);
@@ -11,7 +11,7 @@ exports.getAllNutrition = async (req, res) => {
 };
 
 // ✅ GET single nutrition
-exports.getNutritionById = async (req, res) => {
+export const getNutritionById = async (req, res) => {
   try {
     const item = await Nutrition.findById(req.params.id);
 
@@ -27,13 +27,18 @@ exports.getNutritionById = async (req, res) => {
 
 const getImageUrl = (req) => {
   if (req.file) {
-    if (req.file.path.startsWith("http")) return req.file.path;
+    if (req.file.path.startsWith("http")) {
+      return req.file.path;
+    }
+
     return `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
   }
+
   return req.body.imageUrl || undefined;
 };
 
-exports.createNutrition = async (req, res) => {
+// ✅ CREATE nutrition
+export const createNutrition = async (req, res) => {
   try {
     const { name, calories, protein, carbs, fat } = req.body;
 
@@ -51,12 +56,15 @@ exports.createNutrition = async (req, res) => {
     res.status(201).json(saved);
   } catch (err) {
     console.error("CREATE ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
 // ✅ UPDATE nutrition
-exports.updateNutrition = async (req, res) => {
+export const updateNutrition = async (req, res) => {
   try {
     const data = {
       ...req.body,
@@ -66,6 +74,7 @@ exports.updateNutrition = async (req, res) => {
     };
 
     const imageUrl = getImageUrl(req);
+
     if (imageUrl) {
       data.image = imageUrl;
     }
@@ -79,20 +88,30 @@ exports.updateNutrition = async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.error("UPDATE ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
+
 // ✅ DELETE nutrition
-exports.deleteNutrition = async (req, res) => {
+export const deleteNutrition = async (req, res) => {
   try {
     const deleted = await Nutrition.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res.status(404).json({ message: "Nutrition not found" });
+      return res.status(404).json({
+        message: "Nutrition not found",
+      });
     }
 
-    res.json({ message: "Deleted successfully" });
+    res.json({
+      message: "Deleted successfully",
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };

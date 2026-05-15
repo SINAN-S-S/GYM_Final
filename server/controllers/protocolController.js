@@ -1,9 +1,10 @@
-const WeeklyProtocol = require("../models/WeeklyProtocol");
+import WeeklyProtocol from "../models/WeeklyProtocol.js";
 
-// Get the saved protocol (we just fetch the first one for now as it's a global protocol)
-exports.getProtocol = async (req, res) => {
+// GET PROTOCOL
+export const getProtocol = async (req, res) => {
   try {
     const protocol = await WeeklyProtocol.findOne();
+
     if (protocol) {
       res.json(protocol);
     } else {
@@ -14,22 +15,20 @@ exports.getProtocol = async (req, res) => {
   }
 };
 
-// Save or overwrite the protocol
-exports.saveProtocol = async (req, res) => {
+// SAVE / UPDATE PROTOCOL
+export const saveProtocol = async (req, res) => {
   try {
     const { schedule } = req.body;
-    
-    // Find the existing protocol, if any
+
     let protocol = await WeeklyProtocol.findOne();
-    
+
     if (protocol) {
       protocol.schedule = schedule;
       await protocol.save();
     } else {
-      protocol = new WeeklyProtocol({ schedule });
-      await protocol.save();
+      protocol = await WeeklyProtocol.create({ schedule });
     }
-    
+
     res.status(200).json(protocol);
   } catch (err) {
     res.status(500).json({ message: err.message });

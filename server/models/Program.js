@@ -1,11 +1,17 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const programSchema = new mongoose.Schema({
   title: String,
+
   duration: String,
+
   level: String,
+
   description: String,
+
   videoUrl: String,
 });
 
-module.exports = mongoose.model("Program", programSchema);
+const Program = mongoose.model("Program", programSchema);
+
+export default Program;

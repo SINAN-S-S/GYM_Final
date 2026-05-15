@@ -1,36 +1,38 @@
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import User from "../models/User.js";
 
-
-
-
-exports.register = async (req, res) => {
+// REGISTER USER
+export const register = async (req, res) => {
   try {
-    const { 
-      username, 
-      email, 
-      phone, 
-      weight, 
-      height, 
-      goal, 
-      password 
+    const {
+      username,
+      email,
+      phone,
+      weight,
+      height,
+      goal,
+      password,
     } = req.body;
 
-    
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    // Check Existing User
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
     if (existingUser) {
-      return res.status(400).json({ 
-        msg: "An operator with this identity already exists in the portal." 
+      return res.status(400).json({
+        msg: "An operator with this identity already exists in the portal.",
       });
     }
 
-    
+    // Hash Password
     const salt = await bcrypt.genSalt(10);
+
     const hashedPassword = await bcrypt.hash(password, salt);
 
- 
+    // Create User
     const user = await User.create({
       username,
       email,
@@ -38,16 +40,23 @@ exports.register = async (req, res) => {
       weight,
       height,
       goal,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
+    console.log(
+      `[JWT Generation] Minting new token for newly registered User ID: ${user._id}`
+    );
 
-    console.log(`[JWT Generation]  Minting new token for newly registered User ID: ${user._id}`);
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "secret", {
-      expiresIn: "1d",
-    });
+    // Generate Token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "1d",
+      }
+    );
 
-  
+    // Response
     res.status(201).json({
       token,
       user: {
@@ -56,19 +65,19 @@ exports.register = async (req, res) => {
         email: user.email,
         goal: user.goal,
         weight: user.weight,
-        height: user.height
-      }
+        height: user.height,
+      },
     });
   } catch (err) {
-    res.status(500).json({ 
-      msg: "System failure during recruitment phase", 
-      error: err.message 
+    res.status(500).json({
+      msg: "System failure during recruitment phase",
+      error: err.message,
     });
   }
 };
 
-
-exports.login = async (req, res) => {
+// LOGIN USER
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -76,27 +85,49 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email });
 
+    // User Not Found
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
 
+    // Block Check
     if (user.isBlocked) {
-      return res.status(403).json({ message: "User is blocked" });
+      return res.status(403).json({
+        message: "User is blocked",
+      });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    console.log(`[JWT Generation]  Minting new token for login User ID: ${user._id}`);
-    const token = jwt.sign(
-      { id: user._id, role: user.role || "user" },
-      process.env.JWT_SECRET || "secret",
-      { expiresIn: "7d" }
+    // Password Check
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
     );
 
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    console.log(
+      `[JWT Generation] Minting new token for login User ID: ${user._id}`
+    );
+
+    // Generate Token
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role || "user",
+      },
+      process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    // Response
     res.json({
       token,
       user: {
@@ -105,25 +136,32 @@ exports.login = async (req, res) => {
         role: user.role || "user",
       },
     });
-
   } catch (err) {
-    console.error("LOGIN ERROR:", err); 
-    res.status(500).json({ message: err.message });
+    console.error("LOGIN ERROR:", err);
+
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
-exports.updateProfile = async (req, res) => {
+// UPDATE PROFILE
+export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       req.body,
-      { new: true }
+      {
+        new: true,
+      }
     );
 
     res.json(updatedUser);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };

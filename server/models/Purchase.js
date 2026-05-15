@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const purchaseSchema = new mongoose.Schema(
   {
@@ -7,32 +7,39 @@ const purchaseSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     itemId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      refPath: 'itemType'
+      refPath: "itemType",
     },
+
     itemType: {
       type: String,
       required: true,
-      enum: ['Program', 'ProteinPowder']
+      enum: ["Program", "ProteinPowder"],
     },
+
     paymentMethod: {
       type: String,
       enum: ["UPI", "Card", "GPay"],
       required: true,
     },
+
     amount: {
       type: Number,
       required: true,
     },
+
     status: {
       type: String,
       enum: ["Pending", "Completed", "Failed"],
-      default: "Completed", // Simulated payment is instantly completed
+      default: "Completed",
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Purchase", purchaseSchema);
+const Purchase = mongoose.model("Purchase", purchaseSchema);
+
+export default Purchase;

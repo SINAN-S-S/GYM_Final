@@ -1,17 +1,37 @@
-const express = require("express");
-const router = express.Router();
-const { protect, admin } = require("../middleware/authMiddleware");
-const {
+import express from "express";
+
+import {
+  protect,
+  admin,
+} from "../middleware/authMiddleware.js";
+
+import {
   createPurchase,
   getUserPurchases,
-  getAllPurchases
-} = require("../controllers/purchaseController");
+  getAllPurchases,
+} from "../controllers/purchaseController.js";
+
+const router = express.Router();
 
 // User routes
-router.post("/", protect, createPurchase);
-router.get("/my-purchases", protect, getUserPurchases);
+router.post(
+  "/",
+  protect,
+  createPurchase
+);
+
+router.get(
+  "/my-purchases",
+  protect,
+  getUserPurchases
+);
 
 // Admin routes
-router.get("/", protect, admin, getAllPurchases);
+router.get(
+  "/",
+  protect,
+  admin,
+  getAllPurchases
+);
 
-module.exports = router;
+export default router;

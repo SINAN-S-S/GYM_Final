@@ -1,12 +1,20 @@
-const express = require("express");
+import express from "express";
+import upload from "../config/multer.js";
+
+import {
+  getPrograms,
+  getProgramById,
+  createProgram,
+  updateProgram,
+  deleteProgram,
+} from "../controllers/programController.js";
+
 const router = express.Router();
-const controller = require("../controllers/programController");
-const upload = require("../config/multer");
 
-router.get("/", controller.getPrograms);
-router.get("/:id", controller.getProgramById);
-router.post("/", upload.single("image"), controller.createProgram);
-router.put("/:id", upload.single("image"), controller.updateProgram);
-router.delete("/:id", controller.deleteProgram);
+router.get("/", getPrograms);
+router.get("/:id", getProgramById);
+router.post("/", upload.single("image"), createProgram);
+router.put("/:id", upload.single("image"), updateProgram);
+router.delete("/:id", deleteProgram);
 
-module.exports = router;
+export default router;

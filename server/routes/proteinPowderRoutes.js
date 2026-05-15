@@ -1,14 +1,15 @@
-const express = require("express");
-const router = express.Router();
-const upload = require("../config/multer");
+import express from "express";
+import upload from "../config/multer.js";
 
-const {
+import {
   getAllProteinPowders,
   getProteinPowderById,
   createProteinPowder,
   updateProteinPowder,
   deleteProteinPowder,
-} = require("../controllers/proteinPowderController");
+} from "../controllers/proteinPowderController.js";
+
+const router = express.Router();
 
 // GET all
 router.get("/", getAllProteinPowders);
@@ -17,12 +18,20 @@ router.get("/", getAllProteinPowders);
 router.get("/:id", getProteinPowderById);
 
 // POST
-router.post("/", upload.single("image"), createProteinPowder);
+router.post(
+  "/",
+  upload.single("image"),
+  createProteinPowder
+);
 
 // PUT
-router.put("/:id", upload.single("image"), updateProteinPowder);
+router.put(
+  "/:id",
+  upload.single("image"),
+  updateProteinPowder
+);
 
 // DELETE
 router.delete("/:id", deleteProteinPowder);
 
-module.exports = router;
+export default router;

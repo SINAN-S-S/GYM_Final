@@ -1,9 +1,21 @@
-const express = require("express");
+import express from "express";
+import * as progressController from "../controllers/progressController.js";
+
 const router = express.Router();
-const progressController = require("../controllers/progressController");
 
-router.get("/", progressController.getProgressLogs);
-router.post("/", progressController.logProgress);
-router.delete("/:id", progressController.deleteProgressLog);
+router.get(
+  "/",
+  progressController.getProgressLogs
+);
 
-module.exports = router;
+router.post(
+  "/",
+  progressController.logProgress
+);
+
+router.delete(
+  "/:id",
+  progressController.deleteProgressLog
+);
+
+export default router;

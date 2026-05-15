@@ -1,22 +1,40 @@
-const express = require("express");
-const router = express.Router();
-const { protect, admin } = require("../middleware/authMiddleware");
+import express from "express";
 
-const {
+import {
+  protect,
+  admin,
+} from "../middleware/authMiddleware.js";
+
+import {
   getPosts,
   createPost,
   likePost,
   updatePost,
-  deletePost
-} = require("../controllers/communityController");
+  deletePost,
+} from "../controllers/communityController.js";
 
-// Public/Protected Routes
+const router = express.Router();
+
+// PUBLIC / USER ROUTES
 router.get("/", getPosts);
-router.post("/", createPost); // Users can create posts
-router.put("/:id/like", likePost); // Users can like posts
 
-// Admin Routes
-router.put("/:id", protect, admin, updatePost);
-router.delete("/:id", protect, admin, deletePost);
+router.post("/", createPost);
 
-module.exports = router;
+router.put("/:id/like", likePost);
+
+// ADMIN ROUTES
+router.put(
+  "/:id",
+  protect,
+  admin,
+  updatePost
+);
+
+router.delete(
+  "/:id",
+  protect,
+  admin,
+  deletePost
+);
+
+export default router;
