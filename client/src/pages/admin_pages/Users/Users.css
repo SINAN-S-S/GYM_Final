@@ -18,8 +18,7 @@
   color: #fff;
   padding: 40px;
   font-family: Arial, sans-serif;
-  box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 .users-container {
@@ -100,7 +99,7 @@
   background: #1e293b;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
   width: 100%;
 }
 
@@ -235,34 +234,27 @@ button:hover {
 }
 
 /* =========================
-   TABLET (max 1024px)
+   TABLET
 ========================= */
 @media (max-width: 1024px) {
   .users-page {
-    padding: 28px 22px;
+    padding: 25px;
   }
 
   .row,
   .table-row,
   .table-header {
-    grid-template-columns: 2fr 2fr 1fr 1fr 2fr;
-    font-size: 13px;
-    padding: 12px;
-    gap: 8px;
+    grid-template-columns: 2fr 2fr 1fr 1fr;
+    font-size: 14px;
   }
 
   .title {
     font-size: 24px;
   }
-
-  .search,
-  .search-box {
-    max-width: 100%;
-  }
 }
 
 /* =========================
-   MOBILE (max 768px)
+   MOBILE
 ========================= */
 @media (max-width: 768px) {
   .admin-layout {
@@ -270,12 +262,7 @@ button:hover {
   }
 
   .users-page {
-    padding: 18px 14px;
-  }
-
-  .title {
-    font-size: 22px;
-    margin-bottom: 14px;
+    padding: 20px 15px;
   }
 
   .top-header {
@@ -285,103 +272,78 @@ button:hover {
 
   .tab-buttons {
     width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
   }
 
   .tab-buttons button {
-    flex: 1 1 calc(33% - 8px);
-    min-width: 90px;
-    padding: 9px 8px;
-    font-size: 12px;
-    text-align: center;
+    flex: 1;
   }
 
   .search,
   .search-box {
     max-width: 100%;
-    padding: 11px 12px;
-    font-size: 13px;
   }
 
-  /* Table shell becomes invisible */
+  /* Responsive Cards */
   .table,
   .users-table {
     background: transparent;
     box-shadow: none;
-    border-radius: 0;
-    overflow: visible;
   }
 
-  /* Hide grid header */
   .header,
   .table-header {
     display: none;
   }
 
-  /* Each row = card */
   .row,
   .table-row {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 15px;
     border: 1px solid #334155;
+    margin-bottom: 15px;
     border-radius: 10px;
     background: #1e293b;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
-  .row > *,
-  .table-row > * {
+  .row span,
+  .table-row span,
+  .row div {
     width: 100%;
-    font-size: 13px;
+    padding: 4px 0;
+    font-size: 14px;
     word-break: break-word;
-    box-sizing: border-box;
-  }
-
-  .user-info {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
   }
 
   .actions {
     width: 100%;
-    margin-top: 6px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    margin-top: 10px;
   }
 
   .actions button {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 80px;
-    padding: 9px 10px;
-    font-size: 12px;
+    flex: 1;
   }
 }
 
 /* =========================
-   SMALL MOBILE (max 480px)
+   SMALL MOBILE
 ========================= */
 @media (max-width: 480px) {
   .users-page {
-    padding: 14px 10px;
+    padding: 15px 10px;
   }
 
   .title {
-    font-size: 19px;
+    font-size: 20px;
+  }
+
+  .tab-buttons {
+    flex-direction: column;
   }
 
   .tab-buttons button {
-    flex: 1 1 100%;
     width: 100%;
-    padding: 10px;
-    font-size: 13px;
   }
 
   .search,
@@ -392,54 +354,21 @@ button:hover {
 
   .row,
   .table-row {
-    padding: 13px;
-    gap: 7px;
-    margin-bottom: 10px;
+    padding: 12px;
   }
 
-  .row > *,
-  .table-row > * {
-    font-size: 12px;
-  }
-
-  .actions {
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  .actions button {
-    width: 100%;
-    flex: unset;
-    padding: 10px;
+  .row span,
+  .table-row span {
     font-size: 13px;
   }
 
   button {
-    font-size: 12px;
-    padding: 9px 10px;
-  }
-}
-
-/* =========================
-   EXTRA SMALL (max 360px)
-========================= */
-@media (max-width: 360px) {
-  .users-page {
-    padding: 10px 8px;
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
   }
 
-  .title {
-    font-size: 17px;
-  }
-
-  .row,
-  .table-row {
-    padding: 11px;
-    border-radius: 8px;
-  }
-
-  button {
-    font-size: 11px;
-    padding: 8px;
+  .actions {
+    flex-direction: column;
   }
 }
