@@ -1,3 +1,6 @@
+/* =========================
+   ADMIN BLOG PAGE
+========================= */
 .admin-blog-page {
   min-height: 100vh;
   background: #111;
@@ -10,19 +13,25 @@
   margin: auto;
 }
 
+/* =========================
+   TITLE
+========================= */
 .title {
   font-size: 28px;
   margin-bottom: 20px;
   color: #B5F23D;
   border-bottom: 2px solid #333;
   padding-bottom: 10px;
+  word-break: break-word;
 }
 
-/* FORM */
+/* =========================
+   FORM
+========================= */
 .blog-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 30px;
   background: #222;
   padding: 20px;
@@ -31,17 +40,24 @@
 
 .blog-form input,
 .blog-form textarea {
-  padding: 10px;
+  width: 100%;
+  padding: 12px;
   border-radius: 4px;
   border: none;
   background: #333;
   color: white;
+  font-size: 15px;
+}
+
+.blog-form textarea {
+  min-height: 120px;
+  resize: vertical;
 }
 
 .blog-form input:focus,
 .blog-form textarea:focus {
   outline: none;
-  border-bottom: 1px solid #B5F23D;
+  border-bottom: 2px solid #B5F23D;
 }
 
 .blog-form button {
@@ -53,36 +69,153 @@
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
+  transition: 0.3s;
 }
 
-/* BLOG LIST */
+.blog-form button:hover {
+  opacity: 0.85;
+}
+
+/* =========================
+   BLOG LIST
+========================= */
 .blog-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
 }
 
+/* =========================
+   BLOG CARD
+========================= */
 .blog-card {
   background: #222;
   padding: 15px;
   border-radius: 8px;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+.blog-card:hover {
+  transform: translateY(-3px);
 }
 
 .blog-card img {
   width: 100%;
-  height: 150px;
+  height: 180px;
   object-fit: cover;
   border-radius: 6px;
   margin-bottom: 10px;
 }
 
+.blog-card h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.blog-card p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ccc;
+}
+
+/* =========================
+   DELETE BUTTON
+========================= */
 .delete-btn {
   background: #ff3333;
   color: #fff;
   border: none;
-  padding: 8px;
+  padding: 10px;
   border-radius: 4px;
   cursor: pointer;
   width: 100%;
-  margin-top: 10px;
+  margin-top: 12px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.delete-btn:hover {
+  opacity: 0.85;
+}
+
+/* =========================
+   TABLET
+========================= */
+@media (max-width: 768px) {
+  .admin-blog-page {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .blog-form {
+    padding: 18px;
+  }
+
+  .blog-list {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .blog-card img {
+    height: 160px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 480px) {
+  .admin-blog-page {
+    padding: 15px;
+  }
+
+  .title {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .blog-form {
+    padding: 15px;
+  }
+
+  .blog-form input,
+  .blog-form textarea {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .blog-form button {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .blog-list {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-card {
+    padding: 12px;
+  }
+
+  .blog-card img {
+    height: 200px;
+  }
+
+  .blog-card h3 {
+    font-size: 16px;
+  }
+
+  .blog-card p {
+    font-size: 13px;
+  }
+
+  .delete-btn {
+    padding: 9px;
+    font-size: 14px;
+  }
 }

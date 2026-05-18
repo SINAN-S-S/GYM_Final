@@ -1,9 +1,24 @@
+/* =========================
+   ADMIN LAYOUT
+========================= */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* =========================
+   USERS PAGE
+========================= */
 .users-page {
+  flex: 1;
   min-height: 100vh;
   background: #0f172a;
   color: #fff;
   padding: 40px;
   font-family: Arial, sans-serif;
+  overflow-x: auto;
 }
 
 .users-container {
@@ -11,86 +26,132 @@
   margin: auto;
 }
 
+/* =========================
+   TITLE
+========================= */
 .title {
   font-size: 28px;
   margin-bottom: 20px;
   color: #38bdf8;
+  word-break: break-word;
 }
 
-/* Table */
+/* =========================
+   TOP BAR
+========================= */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.tab-buttons button:hover {
+  opacity: 0.85;
+}
+
+/* =========================
+   SEARCH
+========================= */
+.search,
+.search-box {
+  width: 100%;
+  max-width: 350px;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #334155;
+  color: white;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.search:focus,
+.search-box:focus {
+  border: 1px solid #38bdf8;
+}
+
+/* =========================
+   TABLE
+========================= */
+.table,
 .users-table {
   background: #1e293b;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  width: 100%;
 }
 
-/* Header */
+/* =========================
+   HEADER
+========================= */
+.header,
 .table-header {
-  display: grid;
-  grid-template-columns: 2fr 3fr 1fr 1fr;
-  padding: 15px;
   background: #334155;
   font-weight: bold;
+  color: #B5F23D;
 }
 
-/* Row */
-.table-row {
+/* =========================
+   ROW
+========================= */
+.row,
+.table-row,
+.table-header {
   display: grid;
-  grid-template-columns: 2fr 3fr 1fr 1fr;
+  grid-template-columns: 2fr 3fr 1fr 1fr 2fr;
   padding: 15px;
-  border-top: 1px solid #334155;
+  border-bottom: 1px solid #334155;
   align-items: center;
+  gap: 10px;
 }
 
-/* Role styles */
+/* =========================
+   ROLE
+========================= */
 .role {
   padding: 4px 10px;
   border-radius: 20px;
   text-align: center;
   font-size: 12px;
   width: fit-content;
+  font-weight: bold;
 }
 
 .role.admin {
   background: #ef4444;
+  color: white;
 }
 
 .role.user {
   background: #22c55e;
-}
-
-/* Buttons */
-.actions {
-  display: flex;
-  gap: 10px;
-}
-
-.delete-btn {
-  background: #ef4444;
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.delete-btn:hover {
-  background: #dc2626;
-}
-
-
-.search-box {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  background: #334155;
   color: white;
 }
 
+/* =========================
+   STATUS
+========================= */
 .active {
   color: #22c55e;
   font-weight: bold;
@@ -99,116 +160,215 @@
 .blocked {
   color: #ef4444;
   font-weight: bold;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+button {
+  padding: 7px 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: 0.3s;
+  font-weight: 600;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+.delete-btn,
+.block-btn {
+  background: #ef4444;
+  color: white;
 }
 
 .role-btn {
   background: #3b82f6;
   color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.block-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
 .unblock-btn {
   background: #22c55e;
   color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
-.users-page {
-  background: #0f172a;
-  color: white;
-  min-height: 100vh;
-  padding: 30px;
+/* =========================
+   USER AVATAR
+========================= */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  word-break: break-word;
 }
 
-.search {
-  padding: 10px;
-  width: 300px;
-  margin: 20px 0;
-  border-radius: 8px;
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
-.table {
-  background: #1e293b;
-  padding: 10px;
-  border-radius: 10px;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 2fr 3fr 1fr 1fr 2fr;
-  padding: 10px;
-  border-bottom: 1px solid #334155;
-}
-
-.header {
+.user-avatar-placeholder {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #B5F23D;
   font-weight: bold;
 }
 
-.role.admin {
-  color: #ef4444;
-}
-
-.role.user {
-  color: #22c55e;
-}
-
-.active {
-  color: #22c55e;
-}
-
-.blocked {
-  color: #ef4444;
-}
-
-.actions button {
-  margin-right: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
+/* =========================
+   TABLET
+========================= */
 @media (max-width: 1024px) {
-  .row, .table-row {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
+  .users-page {
+    padding: 25px;
+  }
+
+  .row,
+  .table-row,
+  .table-header {
+    grid-template-columns: 2fr 2fr 1fr 1fr;
+    font-size: 14px;
+  }
+
+  .title {
+    font-size: 24px;
   }
 }
 
+/* =========================
+   MOBILE
+========================= */
 @media (max-width: 768px) {
-  .row, .table-row {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .users-page {
+    padding: 20px 15px;
+  }
+
+  .top-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-buttons {
+    width: 100%;
+  }
+
+  .tab-buttons button {
+    flex: 1;
+  }
+
+  .search,
+  .search-box {
+    max-width: 100%;
+  }
+
+  /* Responsive Cards */
+  .table,
+  .users-table {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .header,
+  .table-header {
+    display: none;
+  }
+
+  .row,
+  .table-row {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     padding: 15px;
     border: 1px solid #334155;
-    margin-bottom: 10px;
-    border-radius: 8px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    background: #1e293b;
   }
-  
-  .header {
-    display: none; /* Hide header on mobile, stack rows as cards */
+
+  .row span,
+  .table-row span,
+  .row div {
+    width: 100%;
+    padding: 4px 0;
+    font-size: 14px;
+    word-break: break-word;
   }
 
   .actions {
+    width: 100%;
     margin-top: 10px;
-    flex-wrap: wrap;
   }
-  
+
+  .actions button {
+    flex: 1;
+  }
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+@media (max-width: 480px) {
   .users-page {
-    padding: 15px;
+    padding: 15px 10px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .tab-buttons {
+    flex-direction: column;
+  }
+
+  .tab-buttons button {
+    width: 100%;
+  }
+
+  .search,
+  .search-box {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .row,
+  .table-row {
+    padding: 12px;
+  }
+
+  .row span,
+  .table-row span {
+    font-size: 13px;
+  }
+
+  button {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .actions {
+    flex-direction: column;
   }
 }

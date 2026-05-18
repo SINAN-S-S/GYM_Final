@@ -1,8 +1,53 @@
+/* =========================
+   INPUT PLACEHOLDER
+========================= */
 .exercise-page input::placeholder {
   color: #888;
+  font-size: 15px;
 }
 
+/* =========================
+   INPUT FOCUS
+========================= */
 .exercise-page input:focus {
   outline: none;
   border-bottom: 1px solid #B5F23D;
+}
+
+/* =========================
+   RESPONSIVE INPUT
+========================= */
+.exercise-page input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* =========================
+   TABLET
+========================= */
+@media (max-width: 768px) {
+  .exercise-page input {
+    padding: 11px;
+    font-size: 15px;
+  }
+
+  .exercise-page input::placeholder {
+    font-size: 14px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 480px) {
+  .exercise-page input {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .exercise-page input::placeholder {
+    font-size: 13px;
+  }
 }
