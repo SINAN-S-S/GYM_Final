@@ -1,16 +1,25 @@
 # Dependencies
 node_modules/
+client/node_modules/
+server/node_modules/
+jspm_packages/
+bower_components/
 
 # Build files
 dist/
 build/
+client/dist/
+.next
+out
+.nuxt
+.output
+.svelte-kit/
+.vuepress/dist
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Logs
 logs
@@ -18,26 +27,49 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output
+
+# Cache
+.cache/
+.parcel-cache/
+.vite/
+.eslintcache
+.stylelintcache
+.pnpm-store/
+
+# IDE files
+.vscode/
+.idea/
+.vscode-test
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# IDE files
-.vscode/
-.idea/
-
-# Cache
-.cache/
-.parcel-cache/
-
 # Runtime files
-coverage/
+pids
+*.pid
+*.seed
+*.pid.lock
 
-client/node_modules/
-server/node_modules/
-client/dist/
+# TypeScript
+*.tsbuildinfo
 
-node_modules/
-dist/
-.env
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.yarn-integrity
+
+# Misc
+.npm
+.node_repl_history
+*.tgz
