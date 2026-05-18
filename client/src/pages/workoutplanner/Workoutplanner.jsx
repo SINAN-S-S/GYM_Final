@@ -46,14 +46,14 @@ function Workoutplanner() {
   };
 
   const onDragStart = (e, exercise) => {
-    e.dataTransfer.setData("exercise", JSON.stringify(exercise));
+    e.dataTransfer.setData("application/json", JSON.stringify(exercise));
   };
 
   const onDragOver = (e) => e.preventDefault();
 
   const onDrop = (e, day) => {
     e.preventDefault();
-    const exerciseData = e.dataTransfer.getData("exercise");
+    const exerciseData = e.dataTransfer.getData("application/json") || e.dataTransfer.getData("exercise") || e.dataTransfer.getData("text/plain");
     if (!exerciseData) return;
     
     const exercise = JSON.parse(exerciseData);
@@ -96,7 +96,7 @@ function Workoutplanner() {
               <div className="exercise-list">
                 {exerciseBank.map((ex) => (
                   <div
-                    key={ex.id}
+                    key={ex._id || ex.id}
                     className="exercise-item-card"
                     draggable
                     onDragStart={(e) => onDragStart(e, ex)}
@@ -121,6 +121,7 @@ function Workoutplanner() {
                     key={day}
                     className="day-slot-box"
                     onDragOver={onDragOver}
+                    onDragEnter={(e) => e.preventDefault()}
                     onDrop={(e) => onDrop(e, day)}
                   >
                     <div className="day-header">
