@@ -7,7 +7,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import connectDB from "./config/mongodb.js";
-
 import userRoutes from "./routes/userRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import nutritionRoutes from "./routes/nutritionRoutes.js";
