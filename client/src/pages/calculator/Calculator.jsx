@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "./Calculator.css";
+import "./calculator.css";
 
 export default function Calculator() {
   const [formData, setFormData] = useState({
