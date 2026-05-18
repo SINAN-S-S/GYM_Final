@@ -6,6 +6,7 @@
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
+  background: #050505;
 }
 
 /* =========================
@@ -14,10 +15,11 @@
 .programs-page {
   flex: 1;
   padding: 40px;
-  background: #0d0d0d;
+  background: #050505;
   min-height: 100vh;
   color: white;
-  overflow-x: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* =========================
@@ -26,38 +28,20 @@
 .title {
   font-size: 2rem;
   font-weight: 900;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  color: #b5f23d;
   word-break: break-word;
-}
-
-/* =========================
-   SEARCH
-========================= */
-.search {
-  width: 100%;
-  padding: 12px;
-  background: #111;
-  border: 1px solid #1a1a1a;
-  color: white;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 15px;
-  box-sizing: border-box;
-}
-
-.search:focus {
-  outline: none;
-  border-color: #B5F23D;
 }
 
 /* =========================
    TABLE
 ========================= */
 .table {
-  border: 1px solid #1a1a1a;
-  border-radius: 10px;
-  overflow: hidden;
   width: 100%;
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1f1f1f;
 }
 
 /* =========================
@@ -65,17 +49,51 @@
 ========================= */
 .row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  padding: 15px;
-  border-bottom: 1px solid #1a1a1a;
+  grid-template-columns: 1.3fr 1fr 1fr 1fr 1.5fr 120px;
   align-items: center;
   gap: 15px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #222;
 }
 
 .header {
-  background: #020617;
-  color: #B5F23D;
-  font-weight: bold;
+  background: #161616;
+  color: #b5f23d;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* =========================
+   DATA ROW
+========================= */
+.data-row {
+  transition: 0.3s ease;
+}
+
+.data-row:hover {
+  background: #151515;
+}
+
+/* =========================
+   MOBILE LABELS
+========================= */
+.mobile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobile-item label {
+  display: none;
+  color: #b5f23d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mobile-item span {
+  color: #fff;
+  font-size: 14px;
+  word-break: break-word;
 }
 
 /* =========================
@@ -83,34 +101,46 @@
 ========================= */
 .actions {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
 /* =========================
    BUTTONS
 ========================= */
-button {
-  padding: 8px 14px;
+.delete-btn {
+  background: #ff4d4d;
+  color: #fff;
   border: none;
+  padding: 10px 14px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  transition: 0.3s;
+  transition: 0.3s ease;
 }
 
-button:hover {
+.delete-btn:hover {
   opacity: 0.85;
+  transform: translateY(-2px);
 }
 
-.edit-btn {
-  background: #38bdf8;
-  color: black;
+/* =========================
+   EMPTY TEXT
+========================= */
+.empty-text {
+  padding: 25px;
+  color: #888;
+  text-align: center;
 }
 
-.delete-btn {
-  background: #ef4444;
-  color: white;
+/* =========================
+   LAPTOP
+========================= */
+@media (max-width: 1200px) {
+  .row {
+    grid-template-columns: 1.2fr 1fr 1fr 1fr 1.3fr 100px;
+    gap: 10px;
+  }
 }
 
 /* =========================
@@ -122,12 +152,32 @@ button:hover {
   }
 
   .title {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
   }
 
   .row {
-    grid-template-columns: 2fr 1fr 1fr;
-    font-size: 14px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .header {
+    display: none;
+  }
+
+  .data-row {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    padding: 18px;
+  }
+
+  .mobile-item label {
+    display: block;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    margin-top: 10px;
   }
 }
 
@@ -145,41 +195,28 @@ button:hover {
 
   .title {
     font-size: 1.5rem;
+    margin-bottom: 20px;
   }
 
-  .search {
-    padding: 10px;
-    font-size: 14px;
-  }
-
-  /* Responsive Card Layout */
   .table {
+    background: transparent;
     border: none;
-  }
-
-  .header {
-    display: none;
   }
 
   .row {
     grid-template-columns: 1fr;
-    background: #111;
-    margin-bottom: 15px;
-    border: 1px solid #1a1a1a;
-    border-radius: 10px;
-    padding: 15px;
+    gap: 12px;
   }
 
-  .row div {
-    padding: 5px 0;
-    font-size: 14px;
+  .data-row {
+    padding: 16px;
   }
 
-  .actions {
-    margin-top: 10px;
+  .mobile-item span {
+    font-size: 13px;
   }
 
-  button {
+  .delete-btn {
     width: 100%;
   }
 }
@@ -196,17 +233,20 @@ button:hover {
     font-size: 1.3rem;
   }
 
-  .search {
-    font-size: 13px;
-    padding: 9px;
+  .data-row {
+    padding: 14px;
   }
 
-  .row div {
-    font-size: 13px;
+  .mobile-item label {
+    font-size: 11px;
   }
 
-  button {
+  .mobile-item span {
+    font-size: 12px;
+  }
+
+  .delete-btn {
+    font-size: 13px;
     padding: 10px;
-    font-size: 13px;
   }
 }
