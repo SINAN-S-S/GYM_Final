@@ -106,7 +106,7 @@ function Goals() {
               <div className="input-group">
                 <label>TARGET SPECIFICS</label>
                 <input 
-                  type="text" 
+                  type="number" 
                   placeholder="E.G. 200 KG" 
                   value={newGoal.target}
                   onChange={(e) => setNewGoal({...newGoal, target: e.target.value})}
