@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminTrainers.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
@@ -12,11 +12,7 @@ function AdminTrainers() {
   const [file, setFile] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
-  useEffect(() => {
-    fetchTrainers();
-  }, []);
-
-  const fetchTrainers = async () => {
+const fetchTrainers = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/trainers`);
       setTrainers(res.data);
@@ -24,6 +20,11 @@ function AdminTrainers() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchTrainers();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

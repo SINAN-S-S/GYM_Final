@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminPrograms.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
@@ -16,14 +16,15 @@ function AdminPrograms() {
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchPrograms();
-  }, []);
-
-  const fetchPrograms = async () => {
+const fetchPrograms = async () => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/programs`);
     setPrograms(res.data);
   };
+
+  
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

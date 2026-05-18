@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminBlog.css";
 
@@ -14,11 +14,7 @@ function AdminBlog() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
-
-  const fetchBlogs = async () => {
+const fetchBlogs = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/blogs`);
       setBlogs(res.data);
@@ -26,6 +22,11 @@ function AdminBlog() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
 
   //  CREATE BLOG
   const handleSubmit = async (e) => {

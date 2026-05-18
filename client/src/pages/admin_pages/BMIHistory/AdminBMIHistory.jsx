@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminSidebar from '../../../admin_components/AdminSidebar/AdminSidebar';
 import './AdminBMIHistory.css';
@@ -8,15 +8,16 @@ function AdminBMIHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+const fetchHistory = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
   useEffect(() => {
     fetchHistory();
   }, []);
 
-  const fetchHistory = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bmi/admin/all`, config);
+  const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bmi/admin/all`, config);
       setHistory(res.data);
     } catch (err) {
       console.error("Failed to fetch admin BMI history", err);

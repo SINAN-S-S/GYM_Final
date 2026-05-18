@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Community.css';
 
@@ -6,11 +6,7 @@ function Community() {
   const [posts, setPosts] = useState([]);
   const [form, setForm] = useState({ name: '', plan: '', content: '' });
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
+const fetchPosts = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/community`);
       setPosts(res.data);
@@ -18,6 +14,11 @@ function Community() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

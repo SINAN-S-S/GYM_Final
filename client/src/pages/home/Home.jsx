@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../../components/common/Navbar";
 import Calculator from "../calculator/Calculator";
 import Goals from "../Goals/Goals";
 import "./Home.css";
@@ -7,8 +6,6 @@ import { Programmes } from "../programmes/Programmes";
 import Workoutplanner from "../workoutplanner/Workoutplanner";
 import { useNavigate } from 'react-router-dom'; 
 import Trainers from "../trainers/Trainers";
-import Workouts from "../workouts/Workouts";
-import Profile from "../userProfile/Profile";
 
 export default function Home() {
   const navigate = useNavigate(); 

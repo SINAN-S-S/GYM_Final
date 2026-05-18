@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -66,8 +66,6 @@ export default function Progress() {
   // Focus glow on inputs
   const [focused, setFocused] = useState('');
 
-  useEffect(() => { fetchLogs(); }, []);
-
   const fetchLogs = async () => {
     setLoading(true);
     try {
@@ -83,6 +81,8 @@ export default function Progress() {
       setLoading(false);
     }
   };
+
+  useEffect(() => { fetchLogs(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -223,8 +223,8 @@ export default function Progress() {
                   {logs.length === 0 ? (
                     <p style={{ color: '#555', fontSize: '0.8rem' }}>No logs yet.</p>
                   ) : (
-                    logs.slice(0, 5).map(log => (
-                      <div key={log._id || Math.random()} style={S.logRow}>
+                    logs.slice(0, 5).map((log, index) => (
+                      <div key={log._id || index} style={S.logRow}>
                         <div style={S.logHeader}>
                           <span style={S.logDate}>{fmt(log.date, true)}</span>
                           <span style={S.logWeight}>{log.weight} kg</span>

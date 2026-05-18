@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminWorkouts.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
@@ -22,11 +22,7 @@ function AdminWorkouts() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchWorkouts();
-  }, []);
-
-  const fetchWorkouts = async () => {
+const fetchWorkouts = async () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/workouts`
@@ -36,6 +32,11 @@ function AdminWorkouts() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

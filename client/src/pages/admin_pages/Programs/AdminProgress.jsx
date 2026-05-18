@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminProgress.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
@@ -6,11 +6,7 @@ import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
 function AdminProgress() {
   const [logs, setLogs] = useState([]);
 
-  useEffect(() => {
-    fetchProgressLogs();
-  }, []);
-
-  const fetchProgressLogs = async () => {
+const fetchProgressLogs = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/progress`);
       setLogs(res.data);
@@ -18,6 +14,11 @@ function AdminProgress() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchProgressLogs();
+  }, []);
 
   const deleteLog = async (id) => {
     try {

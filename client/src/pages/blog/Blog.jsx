@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Blog.css";
 
@@ -46,11 +46,7 @@ function Blog() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [isDemo, setIsDemo] = useState(false);
 
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
-
-  const fetchBlogs = async () => {
+const fetchBlogs = async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/blogs`);
@@ -66,6 +62,11 @@ function Blog() {
       setLoading(false);
     }
   };
+
+  
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
 
   const getImg = (url) => url || FALLBACK_IMG;
 

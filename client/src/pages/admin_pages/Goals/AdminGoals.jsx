@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminGoals.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
@@ -7,11 +7,7 @@ function AdminGoals() {
   const [goals, setGoals] = useState([]);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = async () => {
+const fetchGoals = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/goals`);
       setGoals(res.data);
@@ -19,6 +15,11 @@ function AdminGoals() {
       console.error(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchGoals();
+  }, []);
 
   const filtered = goals.filter((g) =>
     g.title?.toLowerCase().includes(search.toLowerCase())

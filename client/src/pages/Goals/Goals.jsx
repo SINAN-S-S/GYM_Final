@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Goals.css';
 
@@ -7,11 +7,7 @@ function Goals() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({ title: '', target: '', icon: '🎯' });
 
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = async () => {
+const fetchGoals = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/goals`);
       setGoals(res.data);
@@ -19,6 +15,11 @@ function Goals() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchGoals();
+  }, []);
 
   const handleAddGoal = async (e) => {
     e.preventDefault();

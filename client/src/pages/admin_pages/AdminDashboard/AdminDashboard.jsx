@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import "./Admin.css";
 import AdminSidebar from '../../../admin_components/AdminSidebar/AdminSidebar';

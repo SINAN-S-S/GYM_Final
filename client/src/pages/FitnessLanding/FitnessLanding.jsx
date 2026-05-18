@@ -1,5 +1,4 @@
-// import React from 'react';
-// import { Leaf, BarChart2, Users, Trophy, Crown, Dumbbell, Heart, Zap, Flame } from 'lucide-react';
+// // import { Leaf, BarChart2, Users, Trophy, Crown, Dumbbell, Heart, Zap, Flame } from 'lucide-react';
 // import './FitnessLanding.css';
 
 // const FitnessLanding = () => {
@@ -97,7 +96,6 @@
 // export default FitnessLanding;
 
 
-import React from 'react';
 import { Leaf, BarChart2, Users, Trophy, Crown, Dumbbell, Heart, Zap, Flame } from 'lucide-react';
 import './FitnessLanding.css';
 

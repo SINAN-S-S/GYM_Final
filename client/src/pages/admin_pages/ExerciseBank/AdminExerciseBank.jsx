@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminExerciseBank.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
@@ -14,11 +14,7 @@ function AdminExerciseBank() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchExercises();
-  }, []);
-
-  const fetchExercises = async () => {
+const fetchExercises = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/exercise-bank`);
       setExercises(res.data);
@@ -26,6 +22,11 @@ function AdminExerciseBank() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchExercises();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

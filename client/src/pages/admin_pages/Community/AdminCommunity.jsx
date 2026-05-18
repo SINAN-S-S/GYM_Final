@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
 
@@ -6,11 +6,7 @@ function AdminCommunity() {
   const [posts, setPosts] = useState([]);
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
+const fetchPosts = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/community`);
       setPosts(res.data);
@@ -18,6 +14,11 @@ function AdminCommunity() {
       console.log(err);
     }
   };
+
+  
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const deletePost = async (id) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
