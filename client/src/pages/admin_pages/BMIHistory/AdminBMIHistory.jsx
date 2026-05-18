@@ -8,16 +8,12 @@ function AdminBMIHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-const fetchHistory = async () => {
+  const fetchHistory = async () => {
     const token = localStorage.getItem('token');
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bmi/admin/all`, config);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bmi/admin/all`, config);
       setHistory(res.data);
     } catch (err) {
       console.error("Failed to fetch admin BMI history", err);
@@ -26,6 +22,10 @@ const fetchHistory = async () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this BMI record?")) return;

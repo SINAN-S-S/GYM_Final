@@ -30,7 +30,7 @@ function BMICalculator() {
     const bmi = (weightNum / (heightNum * heightNum)).toFixed(1);
     setBmiResult(bmi);
 
-    let status = '';
+    let status;
     if (bmi < 18.5) status = 'Underweight';
     else if (bmi >= 18.5 && bmi < 24.9) status = 'Normal Weight';
     else if (bmi >= 25 && bmi < 29.9) status = 'Overweight';

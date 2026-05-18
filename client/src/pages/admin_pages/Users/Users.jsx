@@ -10,10 +10,6 @@ function Users() {
   const [activeTab, setActiveTab] = useState("users");
   const [bookings, setBookings] = useState([]);
 
-  useEffect(() => {
-    fetchUsers();
-    fetchBookings();
-  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -38,6 +34,11 @@ function Users() {
       console.error("Fetch bookings error:", err);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchBookings();
+  }, []);
 
   const handleAcceptBooking = async (bookingId) => {
     try {

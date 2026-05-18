@@ -24,10 +24,6 @@ function AdminNutrition() {
     name: "", brand: "", price: "", description: "", inStock: true
   });
 
-  useEffect(() => {
-    fetchNutrition();
-    fetchPowders();
-  }, []);
 
   const fetchNutrition = async () => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`);
@@ -38,6 +34,11 @@ function AdminNutrition() {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`);
     setPowders(res.data);
   };
+
+  useEffect(() => {
+    fetchNutrition();
+    fetchPowders();
+  }, []);
 
   const filteredItems = items.filter((i) =>
     i.name?.toLowerCase().includes(search.toLowerCase())

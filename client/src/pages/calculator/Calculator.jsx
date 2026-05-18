@@ -13,7 +13,7 @@ export default function Calculator() {
 
   const [results, setResults] = useState({ bmr: 0, tdee: 0 });
 
-  const calculateResults = () => {
+  useEffect(() => {
     const { age, gender, weight, height, activity, goal } = formData;
     
     // Mifflin-St Jeor Equation
@@ -27,10 +27,6 @@ export default function Calculator() {
     if (goal === "gain") tdee += 500;
 
     setResults({ bmr: Math.round(bmr), tdee: Math.round(tdee) });
-  };
-
-  useEffect(() => {
-    calculateResults();
   }, [formData]);
 
   const handleChange = (e) => {
