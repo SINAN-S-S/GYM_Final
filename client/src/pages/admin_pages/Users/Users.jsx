@@ -164,29 +164,32 @@ function Users() {
       {/* Main Content */}
       <div style={{ flex: 1 }}>
         <div className="users-page">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h1> Users Management</h1>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => setActiveTab("users")}
-                style={{ padding: '10px 20px', background: activeTab === 'users' ? '#38bdf8' : '#333', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '4px' }}
-              >
-                Active Users
-              </button>
-              <button 
-                onClick={() => setActiveTab("restore")}
-                style={{ padding: '10px 20px', background: activeTab === 'restore' ? '#FF9F43' : '#333', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '4px' }}
-              >
-                Restore List
-              </button>
-              <button 
-                onClick={() => setActiveTab("bookings")}
-                style={{ padding: '10px 20px', background: activeTab === 'bookings' ? '#B5F23D' : '#333', border: 'none', color: activeTab === 'bookings' ? '#000' : '#fff', cursor: 'pointer', borderRadius: '4px' }}
-              >
-                Trainer Requests
-              </button>
-            </div>
-          </div>
+         <div className="users-topbar">
+  <h1 className="users-title">Users Management</h1>
+
+  <div className="users-tabs">
+    <button
+      onClick={() => setActiveTab("users")}
+      className={`tab-btn ${activeTab === "users" ? "active-users" : ""}`}
+    >
+      Active Users
+    </button>
+
+    <button
+      onClick={() => setActiveTab("restore")}
+      className={`tab-btn ${activeTab === "restore" ? "active-restore" : ""}`}
+    >
+      Restore List
+    </button>
+
+    <button
+      onClick={() => setActiveTab("bookings")}
+      className={`tab-btn ${activeTab === "bookings" ? "active-bookings" : ""}`}
+    >
+      Trainer Requests
+    </button>
+  </div>
+</div>
 
           {activeTab === "users" ? (
             <>
