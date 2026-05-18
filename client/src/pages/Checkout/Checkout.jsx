@@ -30,6 +30,16 @@ function Checkout() {
     fetchItem();
   }, [id, type]);
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePayment = async () => {
     setIsProcessing(true);
     const token = localStorage.getItem("token");
@@ -40,34 +50,77 @@ function Checkout() {
       return;
     }
 
-    // Simulate payment gateway delay
-    setTimeout(async () => {
-      try {
-        await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/purchases`,
-          {
-            itemId: id,
-            itemType: type,
-            paymentMethod,
-            amount: item.price || 99, // Fallback price
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (type === "program") {
-          alert("👉 Welcome back! Program started successfully.");
-          navigate("/trainers");
-        } else {
-          alert("👉 Purchase successful! Your order has been placed.");
-          navigate("/profile");
-        }
-      } catch (err) {
-        console.error("Purchase error:", err);
-        alert("Payment failed. Please try again.");
-      } finally {
+    try {
+      const res = await loadRazorpayScript();
+      if (!res) {
+        alert("Razorpay SDK failed to load. Are you online?");
         setIsProcessing(false);
+        return;
       }
-    }, 1500);
+
+      // Create Order
+      const amount = item.price || 99;
+      const orderRes = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/payment/order`,
+        { amount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const order = orderRes.data;
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_replace_me",
+        amount: order.amount,
+        currency: order.currency,
+        name: "AlphaFit",
+        description: `Payment for ${item.title || item.name}`,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            await axios.post(
+              `${import.meta.env.VITE_BACKEND_URL}/api/payment/verify`,
+              response,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // Record purchase
+            await axios.post(
+              `${import.meta.env.VITE_BACKEND_URL}/api/purchases`,
+              {
+                itemId: id,
+                itemType: type,
+                paymentMethod: "Razorpay",
+                amount,
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (type === "program") {
+              alert("👉 Payment successful! Program started.");
+              navigate("/trainers");
+            } else {
+              alert("👉 Purchase successful! Your order has been placed.");
+              navigate("/profile");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Payment verification failed.");
+          }
+        },
+        theme: {
+          color: "#B5F23D",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      console.error("Purchase error:", err);
+      alert("Failed to initialize payment. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading) return <div className="checkout-page"><div className="loading-state">Loading Checkout...</div></div>;
@@ -100,37 +153,15 @@ function Checkout() {
             <h3>SELECT PAYMENT METHOD</h3>
             
             <div className="payment-options">
-              <label className={`payment-option ${paymentMethod === "UPI" ? "selected" : ""}`}>
+              <label className={`payment-option ${paymentMethod === "Razorpay" ? "selected" : ""}`}>
                 <input 
                   type="radio" 
                   name="payment" 
-                  value="UPI" 
-                  checked={paymentMethod === "UPI"} 
+                  value="Razorpay" 
+                  checked={paymentMethod === "Razorpay"} 
                   onChange={(e) => setPaymentMethod(e.target.value)} 
                 />
-                <span className="option-text">UPI / BHIM</span>
-              </label>
-
-              <label className={`payment-option ${paymentMethod === "Card" ? "selected" : ""}`}>
-                <input 
-                  type="radio" 
-                  name="payment" 
-                  value="Card" 
-                  checked={paymentMethod === "Card"} 
-                  onChange={(e) => setPaymentMethod(e.target.value)} 
-                />
-                <span className="option-text">Credit / Debit Card</span>
-              </label>
-
-              <label className={`payment-option ${paymentMethod === "GPay" ? "selected" : ""}`}>
-                <input 
-                  type="radio" 
-                  name="payment" 
-                  value="GPay" 
-                  checked={paymentMethod === "GPay"} 
-                  onChange={(e) => setPaymentMethod(e.target.value)} 
-                />
-                <span className="option-text">Google Pay (GPay)</span>
+                <span className="option-text">Razorpay (Cards, UPI, NetBanking)</span>
               </label>
             </div>
 
