@@ -131,6 +131,63 @@
   margin-left: 5px;
 }
 
+/* =========================
+   SELECT FIELD
+========================= */
+.brutalist-select {
+  width: 100%;
+  background: #000;
+  border: 1px solid #333;
+  padding: 15px;
+  color: #fff;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+
+  /* Custom Arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%23B5F23D' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6 6 6-6' stroke='%23B5F23D' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px;
+}
+
+/* Focus */
+.brutalist-select:focus {
+  border-color: #B5F23D;
+}
+
+/* Option */
+.brutalist-select option {
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .brutalist-select {
+    padding: 13px;
+    font-size: 14px;
+    background-position: right 12px center;
+  }
+}
+
+@media (max-width: 480px) {
+  .brutalist-select {
+    padding: 12px;
+    font-size: 13px;
+    background-size: 14px;
+  }
+}
+
+
+
 /* Responsive */
 @media (max-width: 600px) {
   .form-grid {
