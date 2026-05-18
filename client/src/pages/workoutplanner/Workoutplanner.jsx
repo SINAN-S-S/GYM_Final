@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { polyfill } from "mobile-drag-drop";
+import "mobile-drag-drop/default.css";
 import './Workoutplanner.css';
+
+// Initialize the mobile drag and drop polyfill
+polyfill({
+  dragImageTranslateOverride: "scrollBehavior"
+});
+
 
 const days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 
