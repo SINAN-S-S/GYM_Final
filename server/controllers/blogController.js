@@ -10,10 +10,22 @@ export const getBlogs = async (req, res) => {
   }
 };
 
+const getImageUrl = (req) => {
+  if (req.file) {
+    if (req.file.path.startsWith("http")) return req.file.path;
+    return `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+  }
+  return req.body.imageUrl || undefined;
+};
+
 // CREATE BLOG
 export const createBlog = async (req, res) => {
   try {
-    const blog = await Blog.create(req.body);
+    const data = { ...req.body };
+    const imageUrl = getImageUrl(req);
+    if (imageUrl) data.image = imageUrl;
+
+    const blog = await Blog.create(data);
     res.status(201).json(blog);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -23,9 +35,13 @@ export const createBlog = async (req, res) => {
 // UPDATE BLOG
 export const updateBlog = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    const imageUrl = getImageUrl(req);
+    if (imageUrl) updateData.image = imageUrl;
+
     const updated = await Blog.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
 

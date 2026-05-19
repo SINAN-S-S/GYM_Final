@@ -23,10 +23,22 @@ export const getProgramById = async (req, res) => {
   }
 };
 
+const getImageUrl = (req) => {
+  if (req.file) {
+    if (req.file.path.startsWith("http")) return req.file.path;
+    return `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+  }
+  return req.body.imageUrl || undefined;
+};
+
 // CREATE (🔥 THIS WAS MISSING / WRONG)
 export const createProgram = async (req, res) => {
   try {
-    const program = await Program.create(req.body);
+    const data = { ...req.body };
+    const imageUrl = getImageUrl(req);
+    if (imageUrl) data.image = imageUrl;
+
+    const program = await Program.create(data);
     res.status(201).json(program);
   } catch (err) {
     res.status(500).json({ msg: err.message });
@@ -36,9 +48,13 @@ export const createProgram = async (req, res) => {
 // UPDATE
 export const updateProgram = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    const imageUrl = getImageUrl(req);
+    if (imageUrl) updateData.image = imageUrl;
+
     const updated = await Program.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
     res.json(updated);
