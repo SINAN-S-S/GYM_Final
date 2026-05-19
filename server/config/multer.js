@@ -17,10 +17,13 @@ const __dirname = path.dirname(__filename);
 let storage;
 
 // Cloudinary Storage
+console.log("[MULTER] Configuring storage. CLOUDINARY_API_KEY =", process.env.CLOUDINARY_API_KEY ? "SET" : "UNDEFINED");
+
 if (
   process.env.CLOUDINARY_API_KEY &&
   process.env.CLOUDINARY_API_KEY !== "your_key"
 ) {
+  console.log("[MULTER] Using Cloudinary Storage");
   storage = new CloudinaryStorage({
     cloudinary: cloudinary,
 
