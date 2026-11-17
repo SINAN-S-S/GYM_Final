@@ -73,3 +73,4 @@ pids
 .npm
 .node_repl_history
 *.tgz
+scratch/

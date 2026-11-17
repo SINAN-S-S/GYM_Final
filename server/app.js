@@ -41,10 +41,24 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// URL Normalization for Vercel Serverless Functions & Single-Domain Rewrites
+app.use((req, res, next) => {
+  // If Vercel edge rewrite set req.url to /api/index, restore from x-matched-path or x-forwarded-uri
+  const matchedPath = req.headers["x-matched-path"] || req.headers["x-forwarded-uri"];
+  if (matchedPath && (req.url.startsWith("/api/index") || req.url === "/api")) {
+    req.url = matchedPath;
+  }
+  // If the request was stripped of /api prefix (e.g. /workouts), restore it
+  if (!req.url.startsWith("/api") && !req.url.startsWith("/uploads") && req.url !== "/" && req.url !== "") {
+    req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
+  }
+  next();
+});
+
 // Global Request Logging
 app.use((req, res, next) => {
   console.log(
-    `[Backend] Incoming Request: ${req.method} ${req.originalUrl}`
+    `[Backend] Incoming Request: ${req.method} ${req.originalUrl || req.url}`
   );
 
   if (req.body && Object.keys(req.body).length > 0) {
@@ -61,10 +75,12 @@ app.use((req, res, next) => {
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Home Route / Health Check (Responds immediately for ping/uptime monitors)
-app.get("/", (req, res) => {
+app.get(["/", "/api", "/api/health"], (req, res) => {
   res.status(200).json({
     success: true,
     message: "Backend API Running Successfully",
+    env: process.env.NODE_ENV || "production",
+    timestamp: new Date().toISOString()
   });
 });
 
