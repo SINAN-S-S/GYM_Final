@@ -10,54 +10,6 @@ import {
 } from '../../utils/imageUrl';
 import './Nutrition.css';
 
-// Complementary catalog items for categories not yet in DB so all store categories are complete
-const SUPPLEMENT_CATALOG = [
-  {
-    _id: "supp-creatine-01",
-    name: "Creapure® Creatine Monohydrate",
-    brand: "AlphaFit Lab Series",
-    category: "Creatine",
-    price: 999,
-    image: PRODUCT_FALLBACK_IMAGES.creatine,
-    description: "100% pure micronized Creapure® Creatine Monohydrate for explosive power, increased ATP regeneration, and cellular hydration. Unflavored and instantly soluble.",
-    inStock: true,
-    specs: ["5g Pure Creatine Monohydrate", "Zero Sugars or Fillers", "Maximum Muscle Power & Fullness"],
-  },
-  {
-    _id: "supp-preworkout-01",
-    name: "Ignite Pre-Workout Rush",
-    brand: "AlphaFit Performance",
-    category: "Pre-Workout",
-    price: 1499,
-    image: PRODUCT_FALLBACK_IMAGES.pre_workout,
-    description: "High-intensity pre-workout formula engineered with L-Citrulline Malate, Beta-Alanine, and natural caffeine for skin-splitting pumps and laser mental focus.",
-    inStock: true,
-    specs: ["6000mg L-Citrulline Pump Matrix", "3200mg Beta-Alanine Endurance", "250mg Natural Caffeine for Clean Energy"],
-  },
-  {
-    _id: "supp-gainer-01",
-    name: "Pro-Anabolic Mass Gainer",
-    brand: "AlphaFit Nutrition",
-    category: "Mass Gainers",
-    price: 2499,
-    image: PRODUCT_FALLBACK_IMAGES.mass_gainer,
-    description: "Calorie-dense mass gainer with complex carbohydrates, multi-phase protein blend, digestive enzymes, and essential fatty acids for hardgainers.",
-    inStock: true,
-    specs: ["1250 Calories per Full Serving", "50g Multi-Source Clean Protein", "Enhanced with Digestive Enzymes & MCTs"],
-  },
-  {
-    _id: "supp-vitamins-01",
-    name: "Daily Sport Multivitamin & Minerals",
-    brand: "AlphaFit Essentials",
-    category: "Vitamins and Minerals",
-    price: 799,
-    image: PRODUCT_FALLBACK_IMAGES.vitamins,
-    description: "Comprehensive daily micronutrient pack containing 24 essential vitamins, chelated minerals, antioxidants, and immune-supporting zinc and vitamin D3.",
-    inStock: true,
-    specs: ["100% RDA of 24 Essential Micronutrients", "Optimized Zinc, Magnesium & D3", "Antioxidant & Joint Defense Complex"],
-  },
-];
-
 const CATEGORIES = [
   "ALL",
   "Whey Protein",
@@ -104,10 +56,9 @@ function Nutrition() {
     fetchData();
   }, []);
 
-  // Merge database powders with complementary catalog items without duplicate IDs
+  // All real database products from MongoDB Fitness
   const allStoreProducts = useMemo(() => {
-    const dbItems = powders.map((p) => {
-      // Determine standard category if missing
+    return powders.map((p) => {
       const cat =
         p.category ||
         (p.brand?.toLowerCase().includes("isolate") || p.name?.toLowerCase().includes("isolate")
@@ -120,14 +71,6 @@ function Nutrition() {
         brand: p.brand || "AlphaFit Nutrition",
       };
     });
-
-    // Check which categories are present
-    const existingCats = new Set(dbItems.map((i) => i.category.toLowerCase()));
-    const extraItems = SUPPLEMENT_CATALOG.filter(
-      (item) => !existingCats.has(item.category.toLowerCase())
-    );
-
-    return [...dbItems, ...extraItems];
   }, [powders]);
 
   // Filtered store products
@@ -159,9 +102,9 @@ function Nutrition() {
     addToCart(product, qty);
   };
 
-  const handleBuyNow = (product, e) => {
+  const handleBuyNow = (product, e, qty = 1) => {
     if (e) e.stopPropagation();
-    navigate(`/checkout/${product._id}?type=powder`);
+    navigate(`/checkout/${product._id}?type=powder&qty=${qty}`);
   };
 
   return (
@@ -657,8 +600,9 @@ function Nutrition() {
                       className="details-buy-btn"
                       disabled={!selectedProduct.inStock}
                       onClick={() => {
+                        const qty = productQty;
                         setSelectedProduct(null);
-                        navigate(`/checkout/${selectedProduct._id}?type=powder`);
+                        navigate(`/checkout/${selectedProduct._id}?type=powder&qty=${qty}`);
                       }}
                     >
                       BUY NOW

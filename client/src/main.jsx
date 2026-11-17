@@ -32,6 +32,23 @@ axios.interceptors.request.use(request => {
 });
 
 axios.interceptors.response.use(response => {
+  // Catch SPA fallback HTML responses on /api/ endpoints
+  const contentType = response.headers?.['content-type'] || '';
+  if (
+    response.config?.url?.includes('/api/') &&
+    contentType.includes('text/html') &&
+    typeof response.data === 'string' &&
+    response.data.includes('<!doctype html')
+  ) {
+    console.error(
+      `[Frontend] API Configuration Error: Endpoint ${response.config.url} returned HTML index page instead of JSON. ` +
+      `Ensure VITE_BACKEND_URL is set in Vercel to your deployed backend URL.`
+    );
+    return Promise.reject(
+      new Error(`API endpoint ${response.config.url} returned HTML instead of JSON. Check VITE_BACKEND_URL setting in Vercel.`)
+    );
+  }
+
   console.log(`[Frontend]  API Response: ${response.status} from ${response.config.url}`);
   return response;
 }, error => {

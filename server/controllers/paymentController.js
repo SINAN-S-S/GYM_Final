@@ -98,10 +98,12 @@ export const verifyPayment = async (req, res) => {
     if (!purchase && (itemId || req.body.items?.length) && req.user?._id) {
       const { items, shippingAddress } = req.body;
       const formattedType =
-        items && items.length > 0
-          ? "StoreCart"
-          : itemType === "powder" || itemType === "ProteinPowder"
+        itemType === "powder" || itemType === "ProteinPowder"
           ? "ProteinPowder"
+          : itemType === "program" || itemType === "Program"
+          ? "Program"
+          : items && items.length > 0
+          ? "StoreCart"
           : "Program";
 
       // Save verified purchase to database
@@ -147,10 +149,12 @@ export const handleDemoPayment = async (req, res) => {
     }
 
     const formattedType =
-      items && items.length > 0
-        ? "StoreCart"
-        : itemType === "powder" || itemType === "ProteinPowder"
+      itemType === "powder" || itemType === "ProteinPowder"
         ? "ProteinPowder"
+        : itemType === "program" || itemType === "Program"
+        ? "Program"
+        : items && items.length > 0
+        ? "StoreCart"
         : "Program";
 
     // 1. Simulate Failure Test Mode

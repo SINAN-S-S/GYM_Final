@@ -32,22 +32,13 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Connect Database
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error("[Backend] Database Connection Error:", err.message);
-    res.status(500).json({
-      message: "DB Connection Failed",
-      error: err.message,
-    });
-  }
-});
-
-// Middlewares
-app.use(cors());
+// Middlewares - Placed FIRST so all responses (including 500 DB errors) include CORS headers
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 
 // Global Request Logging
@@ -69,12 +60,27 @@ app.use((req, res, next) => {
 // Static Folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Home Route
+// Home Route / Health Check (Responds immediately for ping/uptime monitors)
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     message: "Backend API Running Successfully",
   });
+});
+
+// Connect Database for all API routes
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("[Backend] Database Connection Error:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "DB Connection Failed",
+      error: err.message,
+    });
+  }
 });
 
 // API Routes

@@ -11,12 +11,20 @@ const connectDB = async () => {
     return cached.conn;
   }
 
+  const isProduction = Boolean(
+    process.env.VERCEL ||
+    process.env.RENDER ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.NODE_ENV === "production"
+  );
   const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
-  const localUri = process.env.LOCAL_MONGO_URI || "mongodb://127.0.0.1:27017/Fitness";
+  const localUri = isProduction
+    ? null
+    : (process.env.LOCAL_MONGO_URI || "mongodb://127.0.0.1:27017/Fitness");
 
   if (!uri && !localUri) {
     throw new Error(
-      "MongoDB connection URI is missing. Set MONGO_URI or MONGODB_URI in your environment variables."
+      "MongoDB Atlas connection string is missing! Please configure MONGO_URI in your Vercel Dashboard -> Project Settings -> Environment Variables."
     );
   }
 
@@ -24,6 +32,8 @@ const connectDB = async () => {
     const opts = {
       bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
+      maxPoolSize: isProduction ? 10 : 50,
+      connectTimeoutMS: 10000,
     };
 
     const tryConnect = async (targetUri, label) => {

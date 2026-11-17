@@ -4,19 +4,41 @@ const baseURL = (isProductionRemote && rawBaseURL.includes("localhost:5000")) ? 
 const API = `${baseURL}/api`;
 
 export const registerUser = async (data) => {
-  const res = await fetch(`${API}/auth/register`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error(
+        `Backend API returned non-JSON response (${res.status}). Verify your backend is running and VITE_BACKEND_URL is set.`
+      );
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("[Auth API] Register error:", err.message);
+    throw err;
+  }
 };
 
 export const loginUser = async (data) => {
-  const res = await fetch(`${API}/auth/login`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error(
+        `Backend API returned non-JSON response (${res.status}). Verify your backend is running and VITE_BACKEND_URL is set.`
+      );
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("[Auth API] Login error:", err.message);
+    throw err;
+  }
 };

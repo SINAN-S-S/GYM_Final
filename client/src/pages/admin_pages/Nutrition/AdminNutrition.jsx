@@ -26,6 +26,7 @@ function AdminNutrition() {
   const [powders, setPowders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("nutrition");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [search, setSearch] = useState("");
   const [statusMessage, setStatusMessage] = useState(null);
 
@@ -87,13 +88,18 @@ function AdminNutrition() {
   });
 
   const filteredPowders = powders.filter((p) => {
+    const matchesCategory =
+      selectedCategory === "ALL" ||
+      (p.category || "Whey Protein").toLowerCase() === selectedCategory.toLowerCase();
+
     const q = search.trim().toLowerCase();
-    return (
+    const matchesSearch =
       !q ||
       p.name?.toLowerCase().includes(q) ||
       p.brand?.toLowerCase().includes(q) ||
-      p.category?.toLowerCase().includes(q)
-    );
+      p.category?.toLowerCase().includes(q);
+
+    return matchesCategory && matchesSearch;
   });
 
   // Open modals
@@ -325,6 +331,33 @@ function AdminNutrition() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+
+          {activeTab === "powders" && (
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{
+                background: "#141414",
+                border: "1px solid #282828",
+                color: "#fff",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                fontWeight: "700",
+                fontSize: "14px",
+                cursor: "pointer"
+              }}
+            >
+              <option value="ALL">All Categories ({powders.length})</option>
+              {SUPPLEMENT_CATEGORIES.map((cat) => {
+                const count = powders.filter((p) => (p.category || "Whey Protein") === cat).length;
+                return (
+                  <option key={cat} value={cat}>
+                    {cat} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          )}
 
           <button
             className="add-btn"

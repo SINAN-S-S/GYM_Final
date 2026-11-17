@@ -16,9 +16,11 @@ function Checkout() {
   const queryParams = new URLSearchParams(location.search);
   const type = queryParams.get("type") || "program";
   const isCartMode = queryParams.get("mode") === "cart" || !id;
+  const initialQty = Math.max(1, parseInt(queryParams.get("qty") || "1", 10));
 
   const { cartItems, cartSubtotal, clearCart } = useContext(CartContext);
 
+  const [singleQty, setSingleQty] = useState(initialQty);
   const [singleItem, setSingleItem] = useState(null);
   const [loading, setLoading] = useState(!isCartMode);
   const [paymentMethod, setPaymentMethod] = useState("Razorpay");
@@ -94,6 +96,15 @@ function Checkout() {
     setCustomerInfo({ ...customerInfo, [e.target.name]: e.target.value });
   };
 
+  // Handle Back button safely without modifying cart state
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate("/nutrition");
+    }
+  };
+
   // Compile items to buy
   const itemsToCheckout = isCartMode
     ? cartItems
@@ -103,10 +114,10 @@ function Checkout() {
           _id: singleItem._id,
           name: singleItem.title || singleItem.name,
           brand: singleItem.brand || "AlphaFit",
-          price: Number(singleItem.price) || 99,
-          quantity: 1,
+          price: Number(singleItem.price) || 49.99,
+          quantity: singleQty,
           image: singleItem.image,
-          category: type === "powder" ? "Supplement" : "Program",
+          category: type === "powder" ? (singleItem.category || "Supplement") : "Program",
         },
       ]
     : [];
@@ -114,7 +125,7 @@ function Checkout() {
   const totalAmount = isCartMode
     ? cartSubtotal
     : singleItem
-    ? Number(singleItem.price) || 99
+    ? (Number(singleItem.price) || 49.99) * singleQty
     : 0;
 
   const validateCustomerForm = () => {
@@ -365,6 +376,11 @@ function Checkout() {
     return (
       <div className="checkout-page">
         <div className="checkout-container">
+          <div className="checkout-top-nav">
+            <button type="button" className="checkout-back-btn" onClick={() => navigate("/nutrition")} aria-label="Back to Store">
+              <span className="back-arrow">←</span> Back to Store
+            </button>
+          </div>
           <div className="order-confirmation-card">
             <div className="confirmation-header">
               <span className="success-icon">✓</span>
@@ -441,6 +457,11 @@ function Checkout() {
     return (
       <div className="checkout-page">
         <div className="checkout-container">
+          <div className="checkout-top-nav">
+            <button type="button" className="checkout-back-btn" onClick={handleBack} aria-label="Back">
+              <span className="back-arrow">←</span> Back
+            </button>
+          </div>
           <div className="empty-cart-checkout">
             <h2>YOUR CART IS EMPTY</h2>
             <p>Add some supplements or fitness programs before heading to checkout.</p>
@@ -458,6 +479,11 @@ function Checkout() {
     return (
       <div className="checkout-page">
         <div className="checkout-container">
+          <div className="checkout-top-nav">
+            <button type="button" className="checkout-back-btn" onClick={handleBack} aria-label="Back">
+              <span className="back-arrow">←</span> Back
+            </button>
+          </div>
           <div className="empty-state">Item details not found.</div>
           <button className="continue-shop-btn" onClick={() => navigate("/nutrition")}>
             BACK TO STORE
@@ -470,6 +496,16 @@ function Checkout() {
   return (
     <div className="checkout-page">
       <div className="checkout-container">
+        {/* TOP NAVIGATION WITH CLEAR BACK BUTTON */}
+        <div className="checkout-top-nav">
+          <button type="button" className="checkout-back-btn" onClick={handleBack} aria-label="Back">
+            <span className="back-arrow">←</span> Back
+          </button>
+          <span className="checkout-step-badge">
+            {isCartMode ? "Multi-Item Cart Checkout" : "Direct Buy Checkout"}
+          </span>
+        </div>
+
         <header className="checkout-header">
           <span className="section-kicker">05 — SECURE CHECKOUT</span>
           <h1 className="heavy-title">
@@ -522,9 +558,33 @@ function Checkout() {
                         </div>
                         <h4 className="item-title">{item.name}</h4>
                         <div className="item-qty-row">
-                          <span>Qty: <strong>{item.quantity || 1}</strong></span>
+                          {!isCartMode ? (
+                            <div className="single-qty-controls">
+                              <span style={{ fontSize: "0.75rem", color: "#888", marginRight: "4px" }}>Qty:</span>
+                              <button
+                                type="button"
+                                className="qty-stepper-btn"
+                                onClick={() => setSingleQty((q) => Math.max(1, q - 1))}
+                                disabled={singleQty <= 1}
+                                aria-label="Decrease quantity"
+                              >
+                                −
+                              </button>
+                              <span className="qty-num-val">{singleQty}</span>
+                              <button
+                                type="button"
+                                className="qty-stepper-btn"
+                                onClick={() => setSingleQty((q) => Math.min(20, q + 1))}
+                                aria-label="Increase quantity"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <span>Qty: <strong>{item.quantity || 1}</strong></span>
+                          )}
                           <span className="line-cost">
-                            Subtotal: ${(item.price * (item.quantity || 1)).toFixed(2)}
+                            Subtotal: ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}
                           </span>
                         </div>
                       </div>
