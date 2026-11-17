@@ -77,3 +77,5 @@ export const Programmes = () => {
         </section>
     )
 }
+
+export default Programmes;
