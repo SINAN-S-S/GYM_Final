@@ -1,4 +1,5 @@
-const API = `${import.meta.env.VITE_BACKEND_URL}/api`;
+const baseURL = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "");
+const API = `${baseURL}/api`;
 
 export const registerUser = async (data) => {
   const res = await fetch(`${API}/auth/register`, {

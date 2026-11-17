@@ -45,6 +45,23 @@ function Workouts() {
 
   const closeVideo = () => setActiveVideo(null);
 
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+    if (shortMatch && shortMatch[1]) {
+      return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
+    }
+    const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+    if (longMatch && longMatch[1]) {
+      return `https://www.youtube.com/embed/${longMatch[1]}?autoplay=1`;
+    }
+    const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    if (embedMatch && embedMatch[1]) {
+      return `https://www.youtube.com/embed/${embedMatch[1]}?autoplay=1`;
+    }
+    return null;
+  };
+
   return (
     <div className="workouts-page">
       <div className="workouts-container">
@@ -139,7 +156,18 @@ function Workouts() {
             <button className="close-video-btn" onClick={closeVideo}>
               <FaTimes />
             </button>
-            <video src={activeVideo} controls autoPlay className="workout-video-player" />
+            {getEmbedUrl(activeVideo) ? (
+              <iframe
+                src={getEmbedUrl(activeVideo)}
+                title="Workout Demonstration Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="workout-video-player"
+                style={{ width: '100%', minHeight: '380px', border: 'none', borderRadius: '8px' }}
+              />
+            ) : (
+              <video src={activeVideo} controls autoPlay className="workout-video-player" />
+            )}
           </div>
         </div>
       )}

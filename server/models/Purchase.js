@@ -10,19 +10,24 @@ const purchaseSchema = new mongoose.Schema(
 
     itemId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      required: false,
       refPath: "itemType",
+    },
+
+    program: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Program",
     },
 
     itemType: {
       type: String,
-      required: true,
+      required: false,
       enum: ["Program", "ProteinPowder"],
     },
 
     paymentMethod: {
       type: String,
-      enum: ["UPI", "Card", "GPay"],
+      enum: ["UPI", "Card", "GPay", "Razorpay", "DEMO"],
       required: true,
     },
 
@@ -33,8 +38,18 @@ const purchaseSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending", "Completed", "Failed"],
+      enum: ["Pending", "Completed", "SUCCESS", "Failed"],
       default: "Completed",
+    },
+
+    transactionId: {
+      type: String,
+      default: null,
+    },
+
+    orderId: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

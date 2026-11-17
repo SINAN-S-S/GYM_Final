@@ -65,7 +65,7 @@ const fetchPosts = async () => {
         <div className="create-post-section" style={{ background: '#1a1a1a', padding: '20px', borderRadius: '8px', marginBottom: '40px', border: '1px solid #333' }}>
           <h3 style={{ color: '#B5F23D', marginBottom: '15px' }}>Share Your Progress</h3>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <div style={{ display: 'flex', gap: '15px' }}>
+            <div className="create-post-inputs" style={{ display: 'flex', gap: '15px' }}>
               <input 
                 type="text" 
                 name="name" 

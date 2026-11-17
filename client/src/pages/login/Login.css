@@ -119,6 +119,34 @@
   padding: 20px;
 }
 
+.auth-back-btn {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #B5F23D;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  transition: transform 0.2s;
+}
+
+.auth-back-btn:hover {
+  transform: translateX(-3px);
+}
+
+@media (max-width: 600px) {
+  .auth-back-btn {
+    top: 15px;
+    left: 15px;
+    font-size: 0.82rem;
+  }
+}
+
 /* Grayscale Gym Background */
 .login-bg-image {
   position: absolute;

@@ -11,6 +11,7 @@ function AdminPrograms() {
     level: "",
     description: "",
     videoUrl: "",
+    price: "",
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -40,6 +41,7 @@ const fetchPrograms = async () => {
       formData.append("duration", form.duration);
       formData.append("level", form.level);
       formData.append("description", form.description);
+      if (form.price) formData.append("price", form.price);
       if (form.videoUrl) formData.append("videoUrl", form.videoUrl);
       if (form._id) formData.append("_id", form._id);
       
@@ -114,6 +116,13 @@ const fetchPrograms = async () => {
             name="level"
             placeholder="Level (Beginner/Advanced)"
             value={form.level}
+            onChange={handleChange}
+          />
+          <input
+            name="price"
+            type="number"
+            placeholder="Price in USD (e.g. 99)"
+            value={form.price || ""}
             onChange={handleChange}
           />
           <textarea

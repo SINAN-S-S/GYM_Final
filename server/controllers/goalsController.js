@@ -27,6 +27,23 @@ export const createGoal = async (req, res) => {
   }
 };
 
+// UPDATE GOAL
+export const updateGoal = async (req, res) => {
+  try {
+    const updated = await Goal.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // DELETE GOAL
 export const deleteGoal = async (req, res) => {
   try {

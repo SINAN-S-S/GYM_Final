@@ -8,6 +8,7 @@ import {
 const router = express.Router();
 
 router.post("/signup", register);
+router.post("/register", register);
 
 router.post("/login", login);
 

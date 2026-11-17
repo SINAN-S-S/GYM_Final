@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const progressSchema = new mongoose.Schema({
   weight: Number,
-  workoutsCompleted: Number,
+  workoutsCompleted: {
+    type: mongoose.Schema.Types.Mixed,
+    default: 0,
+  },
   calories: Number,
   chest: Number,
   waist: Number,

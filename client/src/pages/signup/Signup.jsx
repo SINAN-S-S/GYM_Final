@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
 import "./signup.css";
 
 function Signup() {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -37,15 +39,12 @@ function Signup() {
         formData
       );
 
-      console.log(res.data);
-
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
+      login(res.data.user, res.data.token);
 
       navigate("/");
     } catch (err) {
-      alert(err.response?.data?.msg || "Signup failed");
-      console.log(err)
+      alert(err.response?.data?.message || err.response?.data?.msg || "Signup failed");
+      console.log(err);
     }
   };
 
@@ -53,6 +52,13 @@ function Signup() {
     <>
     
       <div className="signup-page">
+        {/* Back Arrow */}
+        <div 
+          onClick={() => navigate("/")} 
+          className="auth-back-btn"
+        >
+          <span style={{ fontSize: '1.3rem' }}>←</span> BACK TO HOME
+        </div>
         <div className="signup-bg-overlay"></div>
         <div className="signup-container">
           <header className="signup-header">

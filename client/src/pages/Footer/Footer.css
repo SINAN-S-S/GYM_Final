@@ -118,3 +118,14 @@
     text-align: center;
   }
 }
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 50px 20px 30px;
+  }
+  .footer-links-grid {
+    gap: 25px;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

@@ -64,6 +64,7 @@
   border-bottom: 1px solid #222;
   padding: 40px 0;
   margin-bottom: 40px;
+  flex-wrap: wrap;
 }
 
 .stat-box {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import './Progress.css';
 
 // ── Demo data shown when backend is offline ──────────────────────────────────
 const DEMO_LOGS = [
@@ -138,10 +139,7 @@ export default function Progress() {
         {loading ? (
           <p style={{ color: '#555', letterSpacing: 2, fontSize: '0.8rem' }}>LOADING...</p>
         ) : (
-          <div style={{
-            ...S.grid,
-            gridTemplateColumns: window.innerWidth < 900 ? '1fr' : 'minmax(0,1.1fr) minmax(0,0.9fr)',
-          }}>
+          <div className="progress-grid">
 
             {/* ── LEFT: Form ── */}
             <section style={S.panel}>
@@ -168,7 +166,7 @@ export default function Progress() {
                     onFocus={() => setFocused('calories')} onBlur={() => setFocused('')} />
                 </div>
 
-                <div style={{ ...S.inputBlock, ...S.inputRow }}>
+                <div className="input-row" style={{ ...S.inputBlock, ...S.inputRow }}>
                   <div>
                     <label style={S.label}>Chest (cm)</label>
                     <input style={inputStyle('chest')} type="number" placeholder="94"

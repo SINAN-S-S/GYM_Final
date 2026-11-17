@@ -8,17 +8,34 @@ export const createPurchase = async (req, res) => {
       itemType,
       paymentMethod,
       amount,
+      status,
+      transactionId,
+      orderId,
     } = req.body;
+
+    // Duplicate transaction check
+    if (transactionId) {
+      const existingTxn = await Purchase.findOne({ transactionId });
+      if (existingTxn) {
+        return res.status(200).json({
+          msg: "Purchase already recorded for this transaction",
+          purchase: existingTxn,
+        });
+      }
+    }
 
     const purchase = await Purchase.create({
       user: req.user._id,
       itemId,
       itemType:
-        itemType === "powder"
+        itemType === "powder" || itemType === "ProteinPowder"
           ? "ProteinPowder"
           : "Program",
-      paymentMethod,
-      amount,
+      paymentMethod: paymentMethod || "Razorpay",
+      amount: Number(amount),
+      status: status || "Completed",
+      transactionId: transactionId || null,
+      orderId: orderId || null,
     });
 
     res.status(201).json(purchase);
@@ -37,7 +54,9 @@ export const getUserPurchases = async (
   try {
     const purchases = await Purchase.find({
       user: req.user._id,
-    }).populate("itemId");
+    })
+      .populate("itemId")
+      .populate("program");
 
     res.json(purchases);
   } catch (err) {
@@ -54,8 +73,9 @@ export const getAllPurchases = async (
 ) => {
   try {
     const purchases = await Purchase.find()
-      .populate("user", "name email")
-      .populate("itemId");
+      .populate("user", "username email name")
+      .populate("itemId")
+      .populate("program");
 
     res.json(purchases);
   } catch (err) {

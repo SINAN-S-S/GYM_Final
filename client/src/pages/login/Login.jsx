@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 import "./Login.css";
 import axios from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
-    const [formData, setFormData] = useState({
+  const { login } = useContext(AuthContext);
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
@@ -26,8 +28,7 @@ export default function Login() {
 
       const { token, user } = res.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      login(user, token);
 
       if (user.role === "admin") {
         navigate("/admin");
@@ -36,7 +37,7 @@ export default function Login() {
       }
 
     } catch (err) {
-      alert(err.response?.data?.msg || "Login failed");
+      alert(err.response?.data?.message || err.response?.data?.msg || "Login failed");
     }
   };
 
@@ -46,9 +47,9 @@ export default function Login() {
         {/* Back Arrow */}
         <div 
           onClick={() => navigate("/")} 
-          style={{ position: 'absolute', top: '30px', left: '30px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', color: '#B5F23D', fontWeight: 'bold', fontSize: '1.2rem' }}
+          className="auth-back-btn"
         >
-          <span style={{ fontSize: '1.5rem' }}>←</span> BACK TO HOME
+          <span style={{ fontSize: '1.3rem' }}>←</span> BACK TO HOME
         </div>
         {/* Background Decorative Overlay */}
         <div className="login-bg-image"></div>

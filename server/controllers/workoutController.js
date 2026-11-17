@@ -8,10 +8,12 @@ const getFileUrl = (req, fieldName, urlField) => {
   }
 
   const file = req.files[fieldName][0];
+  const url = file.path || file.secure_url || file.url;
 
-  if (file.path?.startsWith("http")) return file.path;
+  if (url && url.startsWith("http")) return url;
 
-  return `${process.env.BACKEND_URL}/uploads/${file.filename}`;
+  const backendUrl = process.env.BACKEND_URL || "";
+  return `${backendUrl}/uploads/${file.filename}`;
 };
 
 // CREATE
@@ -40,8 +42,12 @@ export const createWorkout = async (req, res) => {
 
 // GET ALL
 export const getWorkouts = async (req, res) => {
-  const workouts = await Workout.find();
-  res.json(workouts);
+  try {
+    const workouts = await Workout.find();
+    res.json(workouts);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
 };
 
 // UPDATE
@@ -75,6 +81,10 @@ export const updateWorkout = async (req, res) => {
 
 // DELETE
 export const deleteWorkout = async (req, res) => {
-  await Workout.findByIdAndDelete(req.params.id);
-  res.json({ msg: "Workout deleted" });
+  try {
+    await Workout.findByIdAndDelete(req.params.id);
+    res.json({ msg: "Workout deleted" });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
 };

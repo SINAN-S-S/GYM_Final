@@ -215,6 +215,12 @@
   }
 }
 
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 20px 15px !important;
+  }
+}
+
 /* =========================
    MOBILE
 ========================= */

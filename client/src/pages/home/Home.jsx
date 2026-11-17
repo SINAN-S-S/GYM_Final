@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext } from "react";
 import Calculator from "../calculator/Calculator";
 import Goals from "../Goals/Goals";
 import "./Home.css";
@@ -6,21 +6,15 @@ import { Programmes } from "../programmes/Programmes";
 import Workoutplanner from "../workoutplanner/Workoutplanner";
 import { useNavigate } from 'react-router-dom'; 
 import Trainers from "../trainers/Trainers";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Home() {
   const navigate = useNavigate(); 
-
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
   const handleAuth = () => {
-    if (isLoggedIn) {
-      localStorage.removeItem("token");
-      setIsLoggedIn(false);
+    if (isAuthenticated) {
+      logout();
       navigate("/login");
     } else {
       navigate("/login");
@@ -48,7 +42,7 @@ export default function Home() {
          
           <div className="cta-group">
             <button className="btn-solid" onClick={handleAuth}>
-              {isLoggedIn ? "LOGOUT" : "GET STARTED"}
+              {isAuthenticated ? "LOGOUT" : "GET STARTED"}
             </button>
 
             <button 

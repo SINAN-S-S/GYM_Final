@@ -45,7 +45,7 @@ export const getUserBookings = async (req, res) => {
 export const getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate("user", "name email")
+      .populate("user", "username email name")
       .populate("trainer", "name");
 
     res.json(bookings);

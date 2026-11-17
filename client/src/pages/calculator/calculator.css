@@ -128,6 +128,13 @@
     grid-template-columns: 1fr;
   }
   .calc-page {
-    padding: 60px 5%;
+    padding: 100px 5% 60px;
+  }
+}
+
+@media (max-width: 520px) {
+  .input-row {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 }

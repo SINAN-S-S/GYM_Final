@@ -71,9 +71,9 @@ function TrainerProfile() {
             />
           </div>
           
-          <div className="trainer-profile-body" style={{ padding: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h1 className="heavy-title" style={{ fontSize: '3rem', margin: 0 }}>{trainer.name}</h1>
+          <div className="trainer-profile-body" style={{ padding: 'clamp(20px, 4vw, 40px)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <h1 className="heavy-title" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', margin: 0 }}>{trainer.name}</h1>
               <span style={{ background: trainer.isActive ? '#B5F23D' : '#ff4d4d', color: '#000', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.8rem' }}>
                 {trainer.isActive ? "AVAILABLE FOR BOOKING" : "UNAVAILABLE"}
               </span>

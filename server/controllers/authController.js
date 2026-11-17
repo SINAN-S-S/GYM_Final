@@ -61,11 +61,14 @@ export const register = async (req, res) => {
       token,
       user: {
         id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
+        phone: user.phone || "",
         goal: user.goal,
         weight: user.weight,
         height: user.height,
+        role: user.role || "user",
       },
     });
   } catch (err) {
@@ -132,7 +135,13 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user._id,
+        _id: user._id,
         username: user.username,
+        email: user.email,
+        phone: user.phone || "",
+        weight: user.weight,
+        height: user.height,
+        goal: user.goal,
         role: user.role || "user",
       },
     });
@@ -145,18 +154,44 @@ export const login = async (req, res) => {
   }
 };
 
+// GET PROFILE
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
 // UPDATE PROFILE
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id || req.user.id;
+
+    // Filter out restricted fields from regular user profile update
+    const { username, email, phone, weight, height, goal } = req.body;
+    const updateData = {};
+    if (username !== undefined) updateData.username = username;
+    if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
+    if (weight !== undefined) updateData.weight = weight;
+    if (height !== undefined) updateData.height = height;
+    if (goal !== undefined) updateData.goal = goal;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      req.body,
+      updateData,
       {
         new: true,
+        runValidators: true,
       }
-    );
+    ).select("-password");
 
     res.json(updatedUser);
   } catch (err) {

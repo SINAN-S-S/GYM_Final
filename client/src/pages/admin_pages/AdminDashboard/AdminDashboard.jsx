@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import "./Admin.css";
 import AdminSidebar from '../../../admin_components/AdminSidebar/AdminSidebar';
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalWorkouts: 0,
@@ -137,7 +139,7 @@ function AdminDashboard() {
               <div className="admin-card full-width">
                 <div className="card-header-flex">
                   <label>RECENT ENLISTMENTS</label>
-                  <span className="text-highlight">VIEW ALL USERS</span>
+                  <span className="text-highlight" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/users')}>VIEW ALL USERS</span>
                 </div>
                 <table className="brutalist-table">
                   <thead>

@@ -134,3 +134,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 600px) {
+  .community-page {
+    padding: 100px 4% 50px;
+  }
+  
+  .post-card {
+    padding: 24px 18px;
+  }
+  
+  .create-post-inputs {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}

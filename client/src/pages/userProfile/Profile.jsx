@@ -1,41 +1,63 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../../context/AuthContext";
 import "./Profile.css";
 
 function Profile() {
-  const [user, setUser] = useState({ username: "", email: "", phone: "" });
+  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
+
+  const [user, setUser] = useState({ username: "", email: "", phone: "", weight: "", height: "", goal: "" });
   const [access, setAccess] = useState({ isLocked: true, hasPurchased: false, hasTrainer: false, isApproved: false });
   const [purchases, setPurchases] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        
-        if (storedUser) setUser(storedUser);
-
-        if (token) {
-          // Fetch Access Status
-          const accessRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/access-status`, {
+        // Fetch Fresh User Profile
+        try {
+          const profileRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/profile`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setAccess(accessRes.data);
-
-          // Fetch Purchases
-          const purchaseRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/purchases/my-purchases`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setPurchases(purchaseRes.data);
-
-          // Fetch Bookings
-          const bookingRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/mybookings`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setBookings(bookingRes.data);
+          if (profileRes.data) {
+            setUser(profileRes.data);
+            localStorage.setItem("user", JSON.stringify(profileRes.data));
+          }
+        } catch (profileErr) {
+          console.error("Error fetching fresh profile:", profileErr);
+          if (profileErr.response?.status === 401) {
+            logout();
+            navigate("/login", { replace: true });
+            return;
+          }
         }
+
+        // Fetch Access Status
+        const accessRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/access-status`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAccess(accessRes.data);
+
+        // Fetch Purchases
+        const purchaseRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/purchases/my-purchases`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setPurchases(purchaseRes.data);
+
+        // Fetch Bookings
+        const bookingRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/mybookings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBookings(bookingRes.data);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
@@ -44,7 +66,7 @@ function Profile() {
     };
     
     fetchData();
-  }, []);
+  }, [navigate, logout]);
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -76,10 +98,20 @@ function Profile() {
           <div className="header-left">
             <h1 className="heavy-title">OPERATOR <br/> DASHBOARD</h1>
           </div>
-          <div className="header-right">
+          <div className="header-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <div className={`status-badge ${access.isLocked ? 'locked' : 'unlocked'}`}>
               {access.isLocked ? "🔒 ACCESS RESTRICTED" : "🔓 FULL ACCESS"}
             </div>
+            <button
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
+              className="profile-logout-btn"
+              title="Sign Out"
+            >
+              LOGOUT
+            </button>
           </div>
         </header>
 
@@ -147,11 +179,17 @@ function Profile() {
                 {purchases.map(p => (
                   <div className="history-item" key={p._id}>
                     <div className="history-info">
-                      <h4>{p.program?.title || "Unknown Program"}</h4>
-                      <span>{new Date(p.createdAt).toLocaleDateString()}</span>
+                      <h4>{p.itemId?.title || p.itemId?.name || p.program?.title || "Purchased Item"}</h4>
+                      <span>
+                        {new Date(p.createdAt).toLocaleDateString()}
+                        {p.itemId?.duration ? ` • ${p.itemId.duration}` : p.itemId?.brand ? ` • ${p.itemId.brand}` : ""}
+                      </span>
                     </div>
                     <div className="history-meta">
-                      <span className="payment-method">{p.paymentMethod}</span>
+                      <span className={`payment-method ${p.paymentMethod === 'DEMO' ? 'demo-badge' : ''}`}>{p.paymentMethod}</span>
+                      {p.status && (
+                        <span className={`status-pill ${p.status.toLowerCase()}`}>{p.status}</span>
+                      )}
                       <span className="price">${p.amount}.00</span>
                     </div>
                   </div>

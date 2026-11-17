@@ -33,13 +33,16 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Connect Database
-
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (err) {
-    res.status(500).json({ message: "DB Connection Failed" });
+    console.error("[Backend] Database Connection Error:", err.message);
+    res.status(500).json({
+      message: "DB Connection Failed",
+      error: err.message,
+    });
   }
 });
 
@@ -105,9 +108,11 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (!process.env.VERCEL && process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 // Export App for Vercel
 export default app;

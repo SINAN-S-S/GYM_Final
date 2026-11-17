@@ -165,6 +165,9 @@
 }
 
 @media (max-width: 600px) {
+  .workouts-page {
+    padding: 100px 4% 60px 4%;
+  }
   .exercise-grid {
     grid-template-columns: 1fr;
   }

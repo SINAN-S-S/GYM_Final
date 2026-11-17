@@ -186,11 +186,16 @@
 /* RESPONSIVENESS */
 @media (max-width: 1024px) {
   .progress-grid { grid-template-columns: 1fr; }
-  .progress-page { padding: 100px 5%; }
+  .progress-page { padding: 110px 5% 80px; }
 }
 
 @media (max-width: 768px) {
   .heavy-title { font-size: 3rem; }
   .input-row { grid-template-columns: 1fr; }
   .log-details-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .progress-page { padding: 110px 16px 60px; }
+  .log-section, .chart-section, .recent-logs { padding: 20px; }
 }

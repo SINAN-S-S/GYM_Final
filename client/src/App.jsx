@@ -18,6 +18,7 @@ import Signup from "./pages/signup/Signup";
 import AdminDashboard from "./pages/admin_pages/AdminDashboard/AdminDashboard";
 
 import AdminRoute from "./routes/AdminRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import Users from "./pages/admin_pages/Users/Users";
 import AdminBlog from "./pages/admin_pages/Blog/AdminBlog";
 import AdminNutrition from "./pages/admin_pages/Nutrition/AdminNutrition";
@@ -34,6 +35,7 @@ import Trainers from "./pages/trainers/Trainers";
 import TrainerProfile from "./pages/trainers/TrainerProfile";
 import FitnessLanding from "./pages/FitnessLanding/FitnessLanding";
 import Checkout from "./pages/Checkout/Checkout";
+import Workoutplanner from "./pages/workoutplanner/Workoutplanner";
 
 
 
@@ -60,10 +62,18 @@ export default function App() {
           <Route path="/trainer/:id" element={<TrainerProfile />} />
           <Route path="/community" element={<Community />} />
           <Route path="/trainer-info" element={<FitnessLanding />} />
+          <Route path="/workout-planner" element={<Workoutplanner />} />
 
 
 
-          <Route path="/profile" element={<Profile />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
 
         </Route>
 

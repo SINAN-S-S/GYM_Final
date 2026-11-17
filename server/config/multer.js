@@ -26,11 +26,15 @@ if (
   console.log("[MULTER] Using Cloudinary Storage");
   storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-
-    params: {
-      folder: "fitness-app",
-
-      allowed_formats: ["jpg", "png", "jpeg"],
+    params: async (req, file) => {
+      const isVideo = file.mimetype?.startsWith("video") || file.fieldname === "video";
+      return {
+        folder: "fitness-app",
+        resource_type: isVideo ? "video" : "auto",
+        allowed_formats: isVideo
+          ? ["mp4", "mov", "avi", "mkv", "webm"]
+          : ["jpg", "png", "jpeg", "webp", "gif"],
+      };
     },
   });
 } else {

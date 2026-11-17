@@ -21,7 +21,7 @@ function AdminSidebar() {
       
       <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
         <NavLink to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#B5F23D', border: '1px solid #B5F23D', justifyContent: 'center' }}>
-          <span>-</span> Back to Home
+          <span>←</span> Back to Home
         </NavLink>
       </div>
     </div>

@@ -26,6 +26,18 @@ export const protect = async (req, res, next) => {
 
       req.user = await User.findById(decoded.id).select("-password");
 
+      if (!req.user) {
+        return res.status(401).json({
+          msg: "User not found, authorization denied",
+        });
+      }
+
+      if (req.user.isBlocked) {
+        return res.status(403).json({
+          msg: "User account is suspended",
+        });
+      }
+
       next();
     } catch (err) {
       console.log(

@@ -24,6 +24,26 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
+    phone: {
+      type: String,
+      default: "",
+    },
+
+    weight: {
+      type: Number,
+      default: null,
+    },
+
+    height: {
+      type: Number,
+      default: null,
+    },
+
+    goal: {
+      type: String,
+      default: "Muscle Gain",
+    },
+
     isBlocked: {
       type: Boolean,
       default: false,

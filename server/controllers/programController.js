@@ -25,8 +25,10 @@ export const getProgramById = async (req, res) => {
 
 const getImageUrl = (req) => {
   if (req.file) {
-    if (req.file.path.startsWith("http")) return req.file.path;
-    return `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+    const url = req.file.path || req.file.secure_url || req.file.url;
+    if (url && url.startsWith("http")) return url;
+    const backendUrl = process.env.BACKEND_URL || "";
+    return `${backendUrl}/uploads/${req.file.filename}`;
   }
   return req.body.imageUrl || undefined;
 };
