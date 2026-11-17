@@ -176,24 +176,32 @@ function Profile() {
               <p className="empty-msg">No programs purchased yet.</p>
             ) : (
               <div className="history-list">
-                {purchases.map(p => (
-                  <div className="history-item" key={p._id}>
-                    <div className="history-info">
-                      <h4>{p.itemId?.title || p.itemId?.name || p.program?.title || "Purchased Item"}</h4>
-                      <span>
-                        {new Date(p.createdAt).toLocaleDateString()}
-                        {p.itemId?.duration ? ` • ${p.itemId.duration}` : p.itemId?.brand ? ` • ${p.itemId.brand}` : ""}
-                      </span>
+                {purchases.map(p => {
+                  const title =
+                    p.items && p.items.length > 0
+                      ? `Cart Order (${p.items.length} ${p.items.length === 1 ? 'item' : 'items'}): ${p.items.map(i => i.name).slice(0, 2).join(", ")}${p.items.length > 2 ? '...' : ''}`
+                      : p.itemId?.title || p.itemId?.name || p.program?.title || "Purchased Item";
+
+                  return (
+                    <div className="history-item" key={p._id}>
+                      <div className="history-info">
+                        <h4>{title}</h4>
+                        <span>
+                          {new Date(p.createdAt).toLocaleDateString()}
+                          {p.itemId?.duration ? ` • ${p.itemId.duration}` : p.itemId?.brand ? ` • ${p.itemId.brand}` : ""}
+                          {p.shippingAddress?.city ? ` • Shipped to: ${p.shippingAddress.city}` : ""}
+                        </span>
+                      </div>
+                      <div className="history-meta">
+                        <span className={`payment-method ${p.paymentMethod === 'DEMO' ? 'demo-badge' : ''}`}>{p.paymentMethod}</span>
+                        {p.status && (
+                          <span className={`status-pill ${p.status.toLowerCase()}`}>{p.status}</span>
+                        )}
+                        <span className="price">${Number(p.amount).toFixed(2)}</span>
+                      </div>
                     </div>
-                    <div className="history-meta">
-                      <span className={`payment-method ${p.paymentMethod === 'DEMO' ? 'demo-badge' : ''}`}>{p.paymentMethod}</span>
-                      {p.status && (
-                        <span className={`status-pill ${p.status.toLowerCase()}`}>{p.status}</span>
-                      )}
-                      <span className="price">${p.amount}.00</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

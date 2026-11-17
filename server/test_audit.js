@@ -337,6 +337,40 @@ const runTests = async () => {
       "Duplicate Payment Prevention (Detects already owned program)"
     );
 
+    // 26b. Store Cart Multi-Item Checkout with Shipping Address
+    const resCartCheckout = await fetch(`${BASE_URL}/api/payment/demo`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        itemType: "StoreCart",
+        amount: 3200,
+        simulateFailure: false,
+        items: [
+          { name: "Whey Protein Isolate", price: 1999, quantity: 1 },
+          { name: "Creatine Monohydrate", price: 1201, quantity: 1 }
+        ],
+        shippingAddress: {
+          fullName: "Alpha Athlete",
+          phone: "9876543210",
+          street: "123 Gym Street",
+          city: "Metropolis",
+          state: "Karnataka",
+          postalCode: "560001"
+        }
+      })
+    });
+    const cartCheckoutJson = await resCartCheckout.json();
+    assert(
+      resCartCheckout.status === 201 &&
+      cartCheckoutJson.purchase?.itemType === "StoreCart" &&
+      cartCheckoutJson.purchase?.items?.length === 2 &&
+      cartCheckoutJson.purchase?.shippingAddress?.city === "Metropolis",
+      "Store Cart Multi-Item Checkout (Saved with items & shipping address)"
+    );
+
     // 27. Membership Activation Status Check
     const resAccessAfterPay = await fetch(`${BASE_URL}/api/users/access-status`, {
       headers: { Authorization: `Bearer ${userToken}` }

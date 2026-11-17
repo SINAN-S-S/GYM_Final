@@ -50,6 +50,7 @@ export const createProteinPowder = async (req, res) => {
     const {
       name,
       brand,
+      category,
       price,
       description,
       inStock,
@@ -58,6 +59,7 @@ export const createProteinPowder = async (req, res) => {
     const newItem = new ProteinPowder({
       name,
       brand,
+      category: category || brand || "Whey Protein",
       price: Number(price),
       description,
       inStock: inStock === "true" || inStock === true,
@@ -80,6 +82,7 @@ export const updateProteinPowder = async (req, res) => {
     const {
       name,
       brand,
+      category,
       price,
       description,
       inStock,
@@ -88,6 +91,7 @@ export const updateProteinPowder = async (req, res) => {
     const data = {
       name,
       brand,
+      category: category || brand || "Whey Protein",
       price: Number(price),
       description,
       inStock: inStock === "true" || inStock === true,

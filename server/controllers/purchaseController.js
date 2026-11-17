@@ -1,4 +1,7 @@
 import Purchase from "../models/Purchase.js";
+import "../models/ProteinPowder.js";
+import "../models/Program.js";
+import "../models/User.js";
 
 // CREATE PURCHASE
 export const createPurchase = async (req, res) => {
@@ -56,7 +59,9 @@ export const getUserPurchases = async (
       user: req.user._id,
     })
       .populate("itemId")
-      .populate("program");
+      .populate("program")
+      .populate("items.product")
+      .sort({ createdAt: -1 });
 
     res.json(purchases);
   } catch (err) {
@@ -75,7 +80,9 @@ export const getAllPurchases = async (
     const purchases = await Purchase.find()
       .populate("user", "username email name")
       .populate("itemId")
-      .populate("program");
+      .populate("program")
+      .populate("items.product")
+      .sort({ createdAt: -1 });
 
     res.json(purchases);
   } catch (err) {

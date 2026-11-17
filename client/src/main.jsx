@@ -9,10 +9,17 @@ import axios from "axios";
 // --- GLOBAL FRONTEND API LOGGING & URL NORMALIZATION ---
 axios.interceptors.request.use(request => {
   if (request.url) {
+    // If VITE_BACKEND_URL was undefined or omitted at build time
     if (request.url.startsWith("undefined")) {
-      const fallback = import.meta.env.VITE_BACKEND_URL || "";
-      request.url = request.url.replace(/^undefined/, fallback);
+      request.url = request.url.replace(/^undefined/, "");
     }
+
+    // In production (Vercel / live domain), if the bundle has hardcoded localhost:5000,
+    // reroute to same-origin relative path so Vercel serverless function /api routes work seamlessly
+    if (typeof window !== "undefined" && window.location && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      request.url = request.url.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, "");
+    }
+
     // Clean up duplicate slashes after protocol (e.g. http://localhost:5000//api -> http://localhost:5000/api)
     request.url = request.url.replace(/([^:])\/\/+/g, '$1/');
   }

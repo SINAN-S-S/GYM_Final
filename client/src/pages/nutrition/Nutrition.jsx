@@ -1,34 +1,102 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { CartContext } from '../../context/CartContext';
+import {
+  resolveImageUrl,
+  getProductFallbackImage,
+  onImageError,
+  PRODUCT_FALLBACK_IMAGES,
+} from '../../utils/imageUrl';
 import './Nutrition.css';
+
+// Complementary catalog items for categories not yet in DB so all store categories are complete
+const SUPPLEMENT_CATALOG = [
+  {
+    _id: "supp-creatine-01",
+    name: "Creapure® Creatine Monohydrate",
+    brand: "AlphaFit Lab Series",
+    category: "Creatine",
+    price: 999,
+    image: PRODUCT_FALLBACK_IMAGES.creatine,
+    description: "100% pure micronized Creapure® Creatine Monohydrate for explosive power, increased ATP regeneration, and cellular hydration. Unflavored and instantly soluble.",
+    inStock: true,
+    specs: ["5g Pure Creatine Monohydrate", "Zero Sugars or Fillers", "Maximum Muscle Power & Fullness"],
+  },
+  {
+    _id: "supp-preworkout-01",
+    name: "Ignite Pre-Workout Rush",
+    brand: "AlphaFit Performance",
+    category: "Pre-Workout",
+    price: 1499,
+    image: PRODUCT_FALLBACK_IMAGES.pre_workout,
+    description: "High-intensity pre-workout formula engineered with L-Citrulline Malate, Beta-Alanine, and natural caffeine for skin-splitting pumps and laser mental focus.",
+    inStock: true,
+    specs: ["6000mg L-Citrulline Pump Matrix", "3200mg Beta-Alanine Endurance", "250mg Natural Caffeine for Clean Energy"],
+  },
+  {
+    _id: "supp-gainer-01",
+    name: "Pro-Anabolic Mass Gainer",
+    brand: "AlphaFit Nutrition",
+    category: "Mass Gainers",
+    price: 2499,
+    image: PRODUCT_FALLBACK_IMAGES.mass_gainer,
+    description: "Calorie-dense mass gainer with complex carbohydrates, multi-phase protein blend, digestive enzymes, and essential fatty acids for hardgainers.",
+    inStock: true,
+    specs: ["1250 Calories per Full Serving", "50g Multi-Source Clean Protein", "Enhanced with Digestive Enzymes & MCTs"],
+  },
+  {
+    _id: "supp-vitamins-01",
+    name: "Daily Sport Multivitamin & Minerals",
+    brand: "AlphaFit Essentials",
+    category: "Vitamins and Minerals",
+    price: 799,
+    image: PRODUCT_FALLBACK_IMAGES.vitamins,
+    description: "Comprehensive daily micronutrient pack containing 24 essential vitamins, chelated minerals, antioxidants, and immune-supporting zinc and vitamin D3.",
+    inStock: true,
+    specs: ["100% RDA of 24 Essential Micronutrients", "Optimized Zinc, Magnesium & D3", "Antioxidant & Joint Defense Complex"],
+  },
+];
+
+const CATEGORIES = [
+  "ALL",
+  "Whey Protein",
+  "Whey Isolate",
+  "Mass Gainers",
+  "Creatine",
+  "Pre-Workout",
+  "Vitamins and Minerals",
+];
 
 function Nutrition() {
   const [foods, setFoods] = useState([]);
   const [powders, setPowders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Modals state
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedFood, setSelectedFood] = useState(null);
+
+  // Store filtering & search state
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [productQty, setProductQty] = useState(1);
+
   const navigate = useNavigate();
-
-  const openModal = (food) => {
-    setSelectedFood(food);
-  };
-
-  const closeModal = () => {
-    setSelectedFood(null);
-  };
+  const { addToCart, openCart } = useContext(CartContext);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [resFood, resPowders] = await Promise.all([
           axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`),
-          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`)
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`),
         ]);
-        setFoods(resFood.data);
-        setPowders(resPowders.data);
+        setFoods(Array.isArray(resFood.data) ? resFood.data : []);
+        setPowders(Array.isArray(resPowders.data) ? resPowders.data : []);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching nutrition data:", err);
       } finally {
         setLoading(false);
       }
@@ -36,143 +104,601 @@ function Nutrition() {
     fetchData();
   }, []);
 
+  // Merge database powders with complementary catalog items without duplicate IDs
+  const allStoreProducts = useMemo(() => {
+    const dbItems = powders.map((p) => {
+      // Determine standard category if missing
+      const cat =
+        p.category ||
+        (p.brand?.toLowerCase().includes("isolate") || p.name?.toLowerCase().includes("isolate")
+          ? "Whey Isolate"
+          : "Whey Protein");
+
+      return {
+        ...p,
+        category: cat,
+        brand: p.brand || "AlphaFit Nutrition",
+      };
+    });
+
+    // Check which categories are present
+    const existingCats = new Set(dbItems.map((i) => i.category.toLowerCase()));
+    const extraItems = SUPPLEMENT_CATALOG.filter(
+      (item) => !existingCats.has(item.category.toLowerCase())
+    );
+
+    return [...dbItems, ...extraItems];
+  }, [powders]);
+
+  // Filtered store products
+  const filteredProducts = useMemo(() => {
+    return allStoreProducts.filter((product) => {
+      const matchesCategory =
+        selectedCategory === "ALL" ||
+        product.category?.toLowerCase() === selectedCategory.toLowerCase();
+
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !query ||
+        product.name?.toLowerCase().includes(query) ||
+        product.brand?.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.category?.toLowerCase().includes(query);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [allStoreProducts, selectedCategory, searchQuery]);
+
+  const handleOpenProductDetails = (product) => {
+    setSelectedProduct(product);
+    setProductQty(1);
+  };
+
+  const handleAddToCart = (product, qty = 1, e) => {
+    if (e) e.stopPropagation();
+    addToCart(product, qty);
+  };
+
+  const handleBuyNow = (product, e) => {
+    if (e) e.stopPropagation();
+    navigate(`/checkout/${product._id}?type=powder`);
+  };
+
   return (
     <div className="nutrition-page">
       <div className="nutrition-container">
         {/* Header Section */}
         <header className="nutrition-header">
           <div className="header-left">
-            <p className="section-num">04 — NUTRITION DATABASE</p>
+            <p className="section-num">04 — NUTRITION &amp; SUPPLEMENTS</p>
             <h1 className="heavy-title">FUEL <br /> RIGHT</h1>
           </div>
-          {/* <div className="header-right">
-            <p className="header-desc">
-              Science-based meal plans for every goal. Clean macros, real food, no supplements required.
-            </p>
-          </div> */}
         </header>
 
         {loading ? (
-          <div className="loading-state">Loading data...</div>
+          <div className="loading-state">Loading Nutrition &amp; Store Database...</div>
         ) : (
           <>
-            {/* --- PROTEIN POWDER STORE --- */}
-            <div style={{ marginTop: '40px', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '2rem', color: '#fff', borderBottom: '2px solid #333', paddingBottom: '10px' }}>
-                PROTEIN & SUPPLEMENTS STORE
-              </h2>
-            </div>
-            
-            {powders.length === 0 ? (
-              <div className="empty-state">No products available.</div>
-            ) : (
-              <div className="nutrition-grid" style={{ marginBottom: '60px' }}>
-                {powders.map((powder) => (
-                  <div key={powder._id} className="nutrition-card">
-                    {powder.image && (
-                      <div className="nutrition-image-wrapper" style={{ height: '220px', borderBottom: '1px solid #222' }}>
-                        <img src={powder.image} alt={powder.name} className="nutrition-img" />
-                      </div>
-                    )}
-                    
-                    <div className="nutrition-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <p className="nutrition-category">{powder.brand.toUpperCase()}</p>
-                      <h2 className="nutrition-title" style={{ marginBottom: '15px' }}>{powder.name}</h2>
-                      <p style={{ color: '#888', flex: 1, marginBottom: '30px', fontSize: '0.9rem', lineHeight: '1.5' }}>{powder.description}</p>
+            {/* --- STORE HERO PROMO BANNER --- */}
+            <div className="store-banner-card" onClick={() => setIsStoreOpen(true)}>
+              <div className="store-banner-content">
+                <span className="banner-tag">OFFICIAL STORE PORTAL</span>
+                <h2 className="banner-title">PROTEIN &amp; SUPPLEMENTS STORE</h2>
+                <p className="banner-desc">
+                  Explore certified Whey Proteins, Isolates, Creatine, Pre-Workouts, and Mass Gainers.
+                  Tested for banned substances, guaranteed purity, and delivered to your doorstep.
+                </p>
+                <div className="banner-action-row">
+                  <button className="banner-btn" onClick={() => setIsStoreOpen(true)}>
+                    LAUNCH STORE →
+                  </button>
+                  <button
+                    className="banner-cart-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openCart();
+                    }}
+                  >
+                    VIEW CART
+                  </button>
+                </div>
+              </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid #222', paddingTop: '20px' }}>
-                        <span style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff' }}>${powder.price}</span>
-                        <button 
-                          disabled={!powder.inStock}
-                          onClick={() => navigate(`/checkout/${powder._id}?type=powder`)}
-                          style={{
-                            background: powder.inStock ? '#B5F23D' : '#333',
-                            color: powder.inStock ? '#000' : '#888',
-                            border: 'none',
-                            padding: '12px 25px',
-                            fontWeight: 'bold',
-                            cursor: powder.inStock ? 'pointer' : 'not-allowed',
-                            borderRadius: '4px'
-                          }}
-                        >
-                          {powder.inStock ? "BUY NOW" : "OUT OF STOCK"}
-                        </button>
+              <div className="banner-stats">
+                <div className="b-stat">
+                  <strong>100%</strong>
+                  <span>PURE ISOLATE</span>
+                </div>
+                <div className="b-stat">
+                  <strong>24G</strong>
+                  <span>PROTEIN/SCOOP</span>
+                </div>
+                <div className="b-stat">
+                  <strong>FREE</strong>
+                  <span>DELIVERY</span>
+                </div>
+              </div>
+            </div>
+
+            {/* --- QUICK SHELF: FEATURED STORE PRODUCTS --- */}
+            <div className="section-title-bar">
+              <h2 className="shelf-heading">FEATURED SUPPLEMENTS</h2>
+              <button className="view-all-link" onClick={() => setIsStoreOpen(true)}>
+                VIEW FULL STORE ({allStoreProducts.length} PRODUCTS) →
+              </button>
+            </div>
+
+            {allStoreProducts.length === 0 ? (
+              <div className="empty-state">No products available in the store.</div>
+            ) : (
+              <div className="nutrition-grid" style={{ marginBottom: "70px" }}>
+                {allStoreProducts.slice(0, 4).map((product) => {
+                  const fallback = getProductFallbackImage(
+                    product.name,
+                    product.brand,
+                    product.category
+                  );
+                  const imageSrc = resolveImageUrl(product.image, fallback);
+
+                  return (
+                    <div
+                      key={product._id}
+                      className="product-card"
+                      onClick={() => handleOpenProductDetails(product)}
+                    >
+                      <div className="product-image-box">
+                        <img
+                          src={imageSrc}
+                          alt={product.name}
+                          onError={(e) => onImageError(e, fallback)}
+                          className="product-img"
+                        />
+                        <span className={`stock-badge ${product.inStock ? "in" : "out"}`}>
+                          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+                        </span>
+                      </div>
+
+                      <div className="product-body">
+                        <div className="product-category-row">
+                          <span className="p-brand">{product.brand}</span>
+                          <span className="p-cat">{product.category}</span>
+                        </div>
+
+                        <h3 className="product-title">{product.name}</h3>
+                        <p className="product-desc">{product.description?.slice(0, 110)}...</p>
+
+                        <div className="product-footer">
+                          <div className="price-box">
+                            <span className="price-val">${Number(product.price).toFixed(2)}</span>
+                          </div>
+
+                          <div className="card-actions">
+                            <button
+                              className="add-cart-btn"
+                              disabled={!product.inStock}
+                              onClick={(e) => handleAddToCart(product, 1, e)}
+                              title="Add to Cart"
+                            >
+                              + CART
+                            </button>
+                            <button
+                              className="buy-now-btn"
+                              disabled={!product.inStock}
+                              onClick={(e) => handleBuyNow(product, e)}
+                            >
+                              BUY NOW
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
-            {/* --- FOOD DB --- */}
-            <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '2rem', color: '#fff', borderBottom: '2px solid #333', paddingBottom: '10px' }}>
-                MACRO DATABASE
-              </h2>
+            {/* --- MACRO DATABASE SECTION --- */}
+            <div className="section-title-bar" style={{ marginTop: "40px" }}>
+              <h2 className="shelf-heading">WHOLE FOODS MACRO DATABASE</h2>
+              <span className="shelf-subtitle">Verified macronutrient content per 100g serving</span>
             </div>
 
             {foods.length === 0 ? (
-              <div className="empty-state">No food items found. Check back later!</div>
+              <div className="empty-state">No whole food items registered. Check back later!</div>
             ) : (
               <div className="nutrition-grid">
-                {foods.map((food) => (
-                  <div key={food._id} className="nutrition-card" onClick={() => openModal(food)} style={{ cursor: 'pointer' }}>
-                    {food.image && (
-                      <div className="nutrition-image-wrapper" style={{ height: '220px', borderBottom: '1px solid #222' }}>
-                        <img src={food.image} alt={food.name} className="nutrition-img" />
-                      </div>
-                    )}
-                    
-                    <div className="nutrition-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <p className="nutrition-category">NUTRITION ITEM</p>
-                      <h2 className="nutrition-title" style={{ marginBottom: '15px' }}>{food.name}</h2>
-                      
-                      <div className="calories-display" style={{ marginBottom: '30px' }}>
-                        <span className="cal-num">{food.calories}</span>
-                        <span className="cal-unit">kcal/day</span>
+                {foods.map((food) => {
+                  const fallback = PRODUCT_FALLBACK_IMAGES.default_product;
+                  const imageSrc = resolveImageUrl(food.image, fallback);
+
+                  return (
+                    <div
+                      key={food._id}
+                      className="food-card"
+                      onClick={() => setSelectedFood(food)}
+                    >
+                      <div className="food-image-wrapper">
+                        <img
+                          src={imageSrc}
+                          alt={food.name}
+                          onError={(e) => onImageError(e, fallback)}
+                          className="food-img"
+                        />
                       </div>
 
-                      <div className="macro-row" style={{ marginTop: 'auto' }}>
-                        <div className="macro-item">
-                          <span className="macro-val">{food.protein}g</span>
-                          <span className="macro-label">PROTEIN</span>
+                      <div className="food-content">
+                        <span className="food-tag">WHOLE FOOD</span>
+                        <h3 className="food-name">{food.name}</h3>
+
+                        <div className="calories-display">
+                          <span className="cal-num">{food.calories}</span>
+                          <span className="cal-unit">kcal / serving</span>
                         </div>
-                        <div className="macro-item">
-                          <span className="macro-val">{food.carbs}g</span>
-                          <span className="macro-label">CARBS</span>
-                        </div>
-                        <div className="macro-item">
-                          <span className="macro-val">{food.fat || 0}g</span>
-                          <span className="macro-label">FAT</span>
+
+                        <div className="macro-row">
+                          <div className="macro-item">
+                            <span className="macro-val">{food.protein}g</span>
+                            <span className="macro-label">PROTEIN</span>
+                          </div>
+                          <div className="macro-item">
+                            <span className="macro-val">{food.carbs}g</span>
+                            <span className="macro-label">CARBS</span>
+                          </div>
+                          <div className="macro-item">
+                            <span className="macro-val">{food.fat || 0}g</span>
+                            <span className="macro-label">FAT</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* --- MODAL --- */}
+      {/* ===================================================
+          1. PROTEIN & SUPPLEMENTS STORE MODAL
+      =================================================== */}
+      {isStoreOpen && (
+        <div className="store-modal-overlay" onClick={() => setIsStoreOpen(false)}>
+          <div
+            className="store-modal-container"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header */}
+            <div className="store-modal-header">
+              <div className="header-titles">
+                <span className="modal-kicker">ALPHAFIT SUPPLEMENTS VAULT</span>
+                <h2 className="modal-heading">PROTEIN &amp; SUPPLEMENTS STORE</h2>
+                <p className="modal-sub">
+                  Scientifically backed formulation. Zero fillers. Verified bioavailability.
+                </p>
+              </div>
+
+              <div className="header-actions">
+                <button
+                  className="modal-cart-shortcut-btn"
+                  onClick={() => {
+                    setIsStoreOpen(false);
+                    openCart();
+                  }}
+                  title="Open Cart"
+                >
+                  🛒 VIEW CART
+                </button>
+                <button
+                  className="store-close-btn"
+                  onClick={() => setIsStoreOpen(false)}
+                  aria-label="Close Store Modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="store-controls-bar">
+              {/* Search Bar */}
+              <div className="store-search-box">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search proteins, gainers, creatine, brands..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="store-search-input"
+                />
+                {searchQuery && (
+                  <button className="clear-search-btn" onClick={() => setSearchQuery("")}>
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="category-pills-row">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    className={`cat-pill ${selectedCategory.toLowerCase() === cat.toLowerCase() ? "active" : ""}`}
+                    onClick={() => setSelectedCategory(cat)}
+                  >
+                    {cat.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Product Count Indicator */}
+            <div className="store-results-info">
+              <span>Showing {filteredProducts.length} certified supplements</span>
+              {selectedCategory !== "ALL" && (
+                <span className="active-cat-label">Filtered by: <strong>{selectedCategory}</strong></span>
+              )}
+            </div>
+
+            {/* Products Grid */}
+            <div className="store-modal-grid">
+              {filteredProducts.length === 0 ? (
+                <div className="no-results-box">
+                  <div className="no-res-icon">🧪</div>
+                  <h3>NO PRODUCTS MATCH YOUR SEARCH</h3>
+                  <p>Try clearing filters or searching with different keywords.</p>
+                  <button
+                    className="reset-filters-btn"
+                    onClick={() => {
+                      setSelectedCategory("ALL");
+                      setSearchQuery("");
+                    }}
+                  >
+                    SHOW ALL PRODUCTS
+                  </button>
+                </div>
+              ) : (
+                filteredProducts.map((product) => {
+                  const fallback = getProductFallbackImage(
+                    product.name,
+                    product.brand,
+                    product.category
+                  );
+                  const imageSrc = resolveImageUrl(product.image, fallback);
+
+                  return (
+                    <div
+                      key={product._id}
+                      className="store-product-card"
+                      onClick={() => handleOpenProductDetails(product)}
+                    >
+                      <div className="store-img-container">
+                        <img
+                          src={imageSrc}
+                          alt={product.name}
+                          onError={(e) => onImageError(e, fallback)}
+                          className="store-card-img"
+                        />
+                        <span className={`store-stock-tag ${product.inStock ? "in" : "out"}`}>
+                          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+                        </span>
+                      </div>
+
+                      <div className="store-card-content">
+                        <div className="store-card-meta">
+                          <span className="card-brand">{product.brand}</span>
+                          <span className="card-cat">{product.category}</span>
+                        </div>
+
+                        <h3 className="card-product-name">{product.name}</h3>
+                        <p className="card-desc-snippet">{product.description?.slice(0, 95)}...</p>
+
+                        <div className="store-card-bottom">
+                          <div className="store-price-tag">
+                            ${Number(product.price).toFixed(2)}
+                          </div>
+
+                          <div className="store-card-actions">
+                            <button
+                              className="btn-details-ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenProductDetails(product);
+                              }}
+                            >
+                              DETAILS
+                            </button>
+                            <button
+                              className="btn-cart-lime"
+                              disabled={!product.inStock}
+                              onClick={(e) => handleAddToCart(product, 1, e)}
+                            >
+                              + CART
+                            </button>
+                            <button
+                              className="btn-buy-white"
+                              disabled={!product.inStock}
+                              onClick={(e) => handleBuyNow(product, e)}
+                            >
+                              BUY NOW
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================
+          2. PRODUCT DETAILS MODAL
+      =================================================== */}
+      {selectedProduct && (
+        <div className="product-details-overlay" onClick={() => setSelectedProduct(null)}>
+          <div
+            className="product-details-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <button
+              className="details-close-btn"
+              onClick={() => setSelectedProduct(null)}
+              aria-label="Close Product Details"
+            >
+              ✕
+            </button>
+
+            <div className="details-columns">
+              {/* Product Visual Box */}
+              <div className="details-image-section">
+                <div className="details-img-wrap">
+                  <img
+                    src={resolveImageUrl(
+                      selectedProduct.image,
+                      getProductFallbackImage(
+                        selectedProduct.name,
+                        selectedProduct.brand,
+                        selectedProduct.category
+                      )
+                    )}
+                    alt={selectedProduct.name}
+                    onError={(e) =>
+                      onImageError(
+                        e,
+                        getProductFallbackImage(
+                          selectedProduct.name,
+                          selectedProduct.brand,
+                          selectedProduct.category
+                        )
+                      )
+                    }
+                    className="details-main-img"
+                  />
+                </div>
+                <div className="details-badge-row">
+                  <span className="spec-pill">✓ 100% AUTHENTIC</span>
+                  <span className="spec-pill">✓ LAB TESTED</span>
+                  <span className="spec-pill">✓ FAST DISPATCH</span>
+                </div>
+              </div>
+
+              {/* Product Info Section */}
+              <div className="details-info-section">
+                <div className="details-meta-header">
+                  <span className="brand-tag">{selectedProduct.brand}</span>
+                  <span className="category-tag">{selectedProduct.category}</span>
+                </div>
+
+                <h2 className="details-product-title">{selectedProduct.name}</h2>
+
+                <div className="details-price-row">
+                  <span className="details-price">${Number(selectedProduct.price).toFixed(2)}</span>
+                  <span className={`details-stock-pill ${selectedProduct.inStock ? "in" : "out"}`}>
+                    {selectedProduct.inStock ? "● READY FOR IMMEDIATE DISPATCH" : "✕ CURRENTLY OUT OF STOCK"}
+                  </span>
+                </div>
+
+                <div className="details-divider"></div>
+
+                <div className="details-description">
+                  <h4>PRODUCT OVERVIEW</h4>
+                  <p>{selectedProduct.description || "A pharmaceutical-grade supplement designed to enhance recovery, muscle protein synthesis, and physical resilience."}</p>
+                </div>
+
+                {selectedProduct.specs && (
+                  <div className="details-specs-box">
+                    <h4>PERFORMANCE HIGHLIGHTS</h4>
+                    <ul>
+                      {selectedProduct.specs.map((spec, i) => (
+                        <li key={i}>⚡ {spec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Quantity and Actions */}
+                <div className="details-purchase-controls">
+                  <div className="qty-picker">
+                    <label>QUANTITY:</label>
+                    <div className="qty-stepper">
+                      <button
+                        onClick={() => setProductQty((q) => Math.max(1, q - 1))}
+                        disabled={productQty <= 1}
+                      >
+                        −
+                      </button>
+                      <span>{productQty}</span>
+                      <button onClick={() => setProductQty((q) => Math.min(10, q + 1))}>
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="details-buttons-row">
+                    <button
+                      className="details-add-cart-btn"
+                      disabled={!selectedProduct.inStock}
+                      onClick={() => {
+                        addToCart(selectedProduct, productQty);
+                        setSelectedProduct(null);
+                      }}
+                    >
+                      ADD {productQty} TO CART (${(selectedProduct.price * productQty).toFixed(2)})
+                    </button>
+
+                    <button
+                      className="details-buy-btn"
+                      disabled={!selectedProduct.inStock}
+                      onClick={() => {
+                        setSelectedProduct(null);
+                        navigate(`/checkout/${selectedProduct._id}?type=powder`);
+                      }}
+                    >
+                      BUY NOW
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================
+          3. MACRO FOOD DETAILS MODAL
+      =================================================== */}
       {selectedFood && (
-        <div className="nutrition-modal-overlay" onClick={closeModal}>
+        <div className="nutrition-modal-overlay" onClick={() => setSelectedFood(null)}>
           <div className="nutrition-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="nutrition-modal-close" onClick={closeModal}>&times;</button>
-            {selectedFood.image && (
-              <img src={selectedFood.image} alt={selectedFood.name} className="nutrition-modal-img" />
-            )}
+            <button className="nutrition-modal-close" onClick={() => setSelectedFood(null)}>
+              &times;
+            </button>
+            <div className="modal-img-container">
+              <img
+                src={resolveImageUrl(selectedFood.image, PRODUCT_FALLBACK_IMAGES.default_product)}
+                alt={selectedFood.name}
+                onError={(e) => onImageError(e, PRODUCT_FALLBACK_IMAGES.default_product)}
+                className="nutrition-modal-img"
+              />
+            </div>
             <div className="nutrition-modal-details">
               <p className="nutrition-category">NUTRITION ITEM</p>
               <h2 className="nutrition-title">{selectedFood.name}</h2>
               <p style={{ color: '#ccc', margin: '15px 0', lineHeight: '1.6' }}>
-                {selectedFood.description || "A nutritious choice to hit your macro goals and fuel your performance."}
+                {selectedFood.description ||
+                  "A nutritious choice to hit your macro goals and fuel your performance."}
               </p>
-              
+
               <div className="calories-display" style={{ marginBottom: '20px' }}>
                 <span className="cal-num">{selectedFood.calories}</span>
-                <span className="cal-unit">kcal</span>
+                <span className="cal-unit">kcal / serving</span>
               </div>
 
               <div className="macro-row" style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: 0 }}>

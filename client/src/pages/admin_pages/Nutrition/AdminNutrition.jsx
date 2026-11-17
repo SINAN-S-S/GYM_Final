@@ -5,73 +5,149 @@ import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
+import {
+  resolveImageUrl,
+  getProductFallbackImage,
+  onImageError,
+  PRODUCT_FALLBACK_IMAGES
+} from "../../../utils/imageUrl";
+
+const SUPPLEMENT_CATEGORIES = [
+  "Whey Protein",
+  "Whey Isolate",
+  "Mass Gainers",
+  "Creatine",
+  "Pre-Workout",
+  "Vitamins and Minerals"
+];
 
 function AdminNutrition() {
   const [items, setItems] = useState([]);
   const [powders, setPowders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("nutrition");
   const [search, setSearch] = useState("");
+  const [statusMessage, setStatusMessage] = useState(null);
+
+  // Modals
   const [showModal, setShowModal] = useState(false);
   const [showPowderModal, setShowPowderModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [editPowder, setEditPowder] = useState(null);
 
+  // Form states
   const [form, setForm] = useState({
     name: "", calories: "", protein: "", carbs: ""
   });
 
   const [powderForm, setPowderForm] = useState({
-    name: "", brand: "", price: "", description: "", inStock: true
+    name: "", brand: "", category: "Whey Protein", price: "", description: "", inStock: true
   });
 
+  const [file, setFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+
+  const showNotification = (msg, isError = false) => {
+    setStatusMessage({ text: msg, isError });
+    setTimeout(() => setStatusMessage(null), 3500);
+  };
 
   const fetchNutrition = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`);
-    setItems(res.data);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`);
+      setItems(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching nutrition items:", err);
+      showNotification("Failed to fetch whole food items", true);
+    }
   };
 
   const fetchPowders = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`);
-    setPowders(res.data);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`);
+      setPowders(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching supplement products:", err);
+      showNotification("Failed to fetch supplement products", true);
+    }
   };
 
   useEffect(() => {
-    fetchNutrition();
-    fetchPowders();
+    const loadAll = async () => {
+      setLoading(true);
+      await Promise.all([fetchNutrition(), fetchPowders()]);
+      setLoading(false);
+    };
+    loadAll();
   }, []);
 
-  const filteredItems = items.filter((i) =>
-    i.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredItems = items.filter((i) => {
+    const q = search.trim().toLowerCase();
+    return !q || i.name?.toLowerCase().includes(q);
+  });
 
-  const filteredPowders = powders.filter((p) =>
-    p.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredPowders = powders.filter((p) => {
+    const q = search.trim().toLowerCase();
+    return (
+      !q ||
+      p.name?.toLowerCase().includes(q) ||
+      p.brand?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    );
+  });
 
-  // ✅ OPEN MODALS
+  // Open modals
   const openModal = (item = null) => {
     setEditItem(item);
-    setForm(item || { name: "", calories: "", protein: "", carbs: "" });
+    setForm(item ? {
+      name: item.name || "",
+      calories: item.calories || "",
+      protein: item.protein || "",
+      carbs: item.carbs || ""
+    } : {
+      name: "", calories: "", protein: "", carbs: ""
+    });
+    setFile(null);
+    setImageUrl(item?.image || "");
     setShowModal(true);
   };
 
   const openPowderModal = (powder = null) => {
     setEditPowder(powder);
-    setPowderForm(powder || { name: "", brand: "", price: "", description: "", inStock: true });
+    setPowderForm(powder ? {
+      name: powder.name || "",
+      brand: powder.brand || "",
+      category: powder.category || "Whey Protein",
+      price: powder.price || "",
+      description: powder.description || "",
+      inStock: powder.inStock !== false
+    } : {
+      name: "",
+      brand: "",
+      category: "Whey Protein",
+      price: "",
+      description: "",
+      inStock: true
+    });
+    setFile(null);
+    setImageUrl(powder?.image || "");
     setShowPowderModal(true);
   };
 
-  const [file, setFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
+  // Submit Food
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!form.name.trim()) {
+      showNotification("Please provide a name for the food item", true);
+      return;
+    }
 
-  // ✅ SAVE (ADD / EDIT)
-  const handleSubmit = async () => {
     try {
       const formData = new FormData();
       formData.append("name", form.name);
-      formData.append("calories", form.calories);
-      formData.append("protein", form.protein);
-      formData.append("carbs", form.carbs);
+      formData.append("calories", form.calories || 0);
+      formData.append("protein", form.protein || 0);
+      formData.append("carbs", form.carbs || 0);
 
       if (file) {
         formData.append("image", file);
@@ -83,10 +159,12 @@ function AdminNutrition() {
         await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition/${editItem._id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
+        showNotification("Food item updated successfully");
       } else {
         await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
+        showNotification("New food item created successfully");
       }
 
       setShowModal(false);
@@ -94,17 +172,26 @@ function AdminNutrition() {
       setImageUrl("");
       fetchNutrition();
     } catch (err) {
-      console.log("FRONTEND ERROR:", err);
+      console.error("Save Nutrition Error:", err);
+      showNotification("Error saving food item", true);
     }
   };
 
-  const handlePowderSubmit = async () => {
+  // Submit Powder / Supplement
+  const handlePowderSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!powderForm.name.trim()) {
+      showNotification("Please provide a product name", true);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("name", powderForm.name);
-      formData.append("brand", powderForm.brand);
-      formData.append("price", powderForm.price);
-      formData.append("description", powderForm.description);
+      formData.append("brand", powderForm.brand || "AlphaFit Nutrition");
+      formData.append("category", powderForm.category || "Whey Protein");
+      formData.append("price", powderForm.price || 0);
+      formData.append("description", powderForm.description || "");
       formData.append("inStock", powderForm.inStock);
 
       if (file) {
@@ -117,10 +204,12 @@ function AdminNutrition() {
         await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders/${editPowder._id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
+        showNotification("Supplement product updated successfully");
       } else {
         await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
+        showNotification("New supplement product created successfully");
       }
 
       setShowPowderModal(false);
@@ -128,189 +217,432 @@ function AdminNutrition() {
       setImageUrl("");
       fetchPowders();
     } catch (err) {
-      console.log("FRONTEND ERROR:", err);
+      console.error("Save Powder Error:", err);
+      showNotification("Error saving supplement product", true);
     }
   };
 
-  // ✅ DELETE
+  // Delete handlers
   const deleteItem = async (id) => {
-    if (!window.confirm("Are you sure to delete?")) return;
-    await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition/${id}`);
-    fetchNutrition();
+    if (!window.confirm("Are you sure you want to delete this food item?")) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/nutrition/${id}`);
+      showNotification("Food item deleted");
+      fetchNutrition();
+    } catch (err) {
+      console.error("Delete Error:", err);
+      showNotification("Failed to delete item", true);
+    }
   };
 
   const deletePowder = async (id) => {
-    if (!window.confirm("Are you sure to delete this product?")) return;
-    await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders/${id}`);
-    fetchPowders();
+    if (!window.confirm("Are you sure you want to delete this supplement product?")) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/protein-powders/${id}`);
+      showNotification("Product deleted from store");
+      fetchPowders();
+    } catch (err) {
+      console.error("Delete Error:", err);
+      showNotification("Failed to delete product", true);
+    }
   };
 
   return (
     <div className="admin-layout">
       <AdminSidebar />
 
-      <div className="nutrition-admin" style={{ flex: 1, padding: "40px", backgroundColor: "#111", color: "#fff", minHeight: "100vh" }}>
-        <h1 className="title"> Nutrition & Supplements Management</h1>
+      <div className="nutrition-admin">
+        {/* Notification Toast */}
+        {statusMessage && (
+          <div
+            style={{
+              position: "fixed",
+              top: "20px",
+              right: "20px",
+              background: statusMessage.isError ? "#ef4444" : "#B5F23D",
+              color: statusMessage.isError ? "#fff" : "#000",
+              padding: "12px 20px",
+              borderRadius: "8px",
+              fontWeight: 800,
+              zIndex: 9999,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.5)"
+            }}
+          >
+            {statusMessage.text}
+          </div>
+        )}
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-          <button 
-            style={{ background: 'transparent', border: 'none', color: activeTab === 'nutrition' ? '#B5F23D' : '#fff', fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer' }}
-            onClick={() => setActiveTab('nutrition')}
+        {/* Top Header & Stat Badges */}
+        <div className="admin-header-row">
+          <div>
+            <h1 className="title">Nutrition &amp; Supplements Manager</h1>
+            <p style={{ color: "#888", margin: "6px 0 0 0" }}>
+              Manage Whole Foods macro database and Store Protein/Supplements inventory
+            </p>
+          </div>
+
+          <div className="stat-badges-row">
+            <div className="stat-badge">
+              <span className="stat-label">Whole Foods</span>
+              <span className="stat-num">{items.length}</span>
+            </div>
+            <div className="stat-badge">
+              <span className="stat-label">Store Products</span>
+              <span className="stat-num">{powders.length}</span>
+            </div>
+            <div className="stat-badge">
+              <span className="stat-label">In Stock</span>
+              <span className="stat-num">{powders.filter((p) => p.inStock !== false).length}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="admin-tabs-row">
+          <button
+            className={`admin-tab-btn ${activeTab === "nutrition" ? "active" : ""}`}
+            onClick={() => setActiveTab("nutrition")}
           >
-            Nutrition Database
+            Whole Foods Database ({items.length})
           </button>
-          <button 
-            style={{ background: 'transparent', border: 'none', color: activeTab === 'powders' ? '#B5F23D' : '#fff', fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer' }}
-            onClick={() => setActiveTab('powders')}
+          <button
+            className={`admin-tab-btn ${activeTab === "powders" ? "active" : ""}`}
+            onClick={() => setActiveTab("powders")}
           >
-            Protein Powders
+            Protein &amp; Supplements Store ({powders.length})
           </button>
         </div>
 
-        {/* Top Actions */}
+        {/* Search & Add Action Bar */}
         <div className="top-bar">
           <input
             className="search"
-            placeholder={activeTab === 'nutrition' ? "Search food..." : "Search products..."}
+            placeholder={
+              activeTab === "nutrition"
+                ? "Search foods by name..."
+                : "Search products by name, brand, or category..."
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <button className="add-btn" onClick={() => activeTab === 'nutrition' ? openModal() : openPowderModal()}>
-            + {activeTab === 'nutrition' ? "Add Food" : "Add Product"}
+          <button
+            className="add-btn"
+            onClick={() => (activeTab === "nutrition" ? openModal() : openPowderModal())}
+          >
+            + {activeTab === "nutrition" ? "Add Whole Food" : "Add Store Product"}
           </button>
         </div>
 
-        {activeTab === 'nutrition' && (
+        {loading ? (
+          <div style={{ padding: "40px", textAlign: "center", color: "#888" }}>
+            Loading Database Records...
+          </div>
+        ) : (
           <>
-            {/* Chart */}
-            <div className="chart-box">
-              <h3>Calories Chart</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={items}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="calories" fill="#B5F23D" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Table */}
-            <div className="table">
-              <div className="row header">
-                <span>Image</span>
-                <span>Name</span>
-                <span>Calories</span>
-                <span>Protein</span>
-                <span>Carbs</span>
-                <span>Actions</span>
-              </div>
-
-              {filteredItems.map((item) => (
-                <div className="row" key={item._id}>
-                  <span>{item.image && <img src={item.image} alt={item.name} style={{width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover'}} />}</span>
-                  <span>{item.name}</span>
-                  <span>{item.calories}</span>
-                  <span>{item.protein}</span>
-                  <span>{item.carbs}</span>
-
-                  <div className="actions">
-                    <button onClick={() => openModal(item)}>Edit</button>
-                    <button onClick={() => deleteItem(item._id)}>Delete</button>
+            {/* --- TAB 1: WHOLE FOODS --- */}
+            {activeTab === "nutrition" && (
+              <>
+                {items.length > 0 && (
+                  <div className="chart-box">
+                    <h3>Macronutrient Profile (Calories Overview)</h3>
+                    <ResponsiveContainer width="100%" height={230}>
+                      <BarChart data={items.slice(0, 10)}>
+                        <XAxis dataKey="name" stroke="#888" />
+                        <YAxis stroke="#888" />
+                        <Tooltip
+                          contentStyle={{ background: "#111", border: "1px solid #333", borderRadius: "6px" }}
+                        />
+                        <Bar dataKey="calories" fill="#B5F23D" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
+                )}
+
+                <div className="admin-table-wrap">
+                  <div className="admin-grid-header food-columns">
+                    <span>Image</span>
+                    <span>Food Name</span>
+                    <span>Calories</span>
+                    <span>Protein</span>
+                    <span>Carbs</span>
+                    <span>Actions</span>
+                  </div>
+
+                  {filteredItems.length === 0 ? (
+                    <div className="admin-empty-state">
+                      <h3>No food items found</h3>
+                      <p>Add your first whole food item to make it visible in the nutrition calculator.</p>
+                      <button className="add-btn" onClick={() => openModal()}>
+                        + Add Food
+                      </button>
+                    </div>
+                  ) : (
+                    filteredItems.map((item) => {
+                      const fallback = PRODUCT_FALLBACK_IMAGES.default_product;
+                      const imageSrc = resolveImageUrl(item.image, fallback);
+
+                      return (
+                        <div className="admin-grid-row food-columns" key={item._id}>
+                          <div className="table-img-cell">
+                            <img
+                              src={imageSrc}
+                              alt={item.name}
+                              onError={(e) => onImageError(e, fallback)}
+                            />
+                          </div>
+                          <span className="cell-primary">{item.name}</span>
+                          <span className="cell-sub">{item.calories} kcal</span>
+                          <span className="cell-sub">{item.protein}g</span>
+                          <span className="cell-sub">{item.carbs}g</span>
+
+                          <div className="actions">
+                            <button className="edit-btn" onClick={() => openModal(item)}>
+                              Edit
+                            </button>
+                            <button className="delete-btn" onClick={() => deleteItem(item._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
+
+            {/* --- TAB 2: STORE PRODUCTS (PROTEIN POWDERS & SUPPLEMENTS) --- */}
+            {activeTab === "powders" && (
+              <div className="admin-table-wrap">
+                <div className="admin-grid-header powder-columns">
+                  <span>Image</span>
+                  <span>Product Name</span>
+                  <span>Brand</span>
+                  <span>Category</span>
+                  <span>Price</span>
+                  <span>Status</span>
+                  <span>Actions</span>
+                </div>
+
+                {filteredPowders.length === 0 ? (
+                  <div className="admin-empty-state">
+                    <h3>No supplement products found</h3>
+                    <p>Add items to your store catalog to start selling supplements.</p>
+                    <button className="add-btn" onClick={() => openPowderModal()}>
+                      + Add Product
+                    </button>
+                  </div>
+                ) : (
+                  filteredPowders.map((item) => {
+                    const fallback = getProductFallbackImage(item.name, item.brand, item.category);
+                    const imageSrc = resolveImageUrl(item.image, fallback);
+
+                    return (
+                      <div className="admin-grid-row powder-columns" key={item._id}>
+                        <div className="table-img-cell">
+                          <img
+                            src={imageSrc}
+                            alt={item.name}
+                            onError={(e) => onImageError(e, fallback)}
+                          />
+                        </div>
+                        <span className="cell-primary">{item.name}</span>
+                        <span className="cell-sub">{item.brand || "AlphaFit Nutrition"}</span>
+                        <span className="cell-sub">{item.category || "Whey Protein"}</span>
+                        <span className="cell-primary">${Number(item.price || 0).toFixed(2)}</span>
+                        <span>
+                          <span className={item.inStock !== false ? "pill-in-stock" : "pill-out-stock"}>
+                            {item.inStock !== false ? "IN STOCK" : "OUT OF STOCK"}
+                          </span>
+                        </span>
+
+                        <div className="actions">
+                          <button className="edit-btn" onClick={() => openPowderModal(item)}>
+                            Edit
+                          </button>
+                          <button className="delete-btn" onClick={() => deletePowder(item._id)}>
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </>
         )}
 
-        {activeTab === 'powders' && (
-          <div className="table">
-            <div className="row header">
-              <span>Image</span>
-              <span>Name</span>
-              <span>Brand</span>
-              <span>Price</span>
-              <span>Stock Status</span>
-              <span>Actions</span>
-            </div>
-
-            {filteredPowders.map((item) => (
-              <div className="row" key={item._id}>
-                <span>{item.image && <img src={item.image} alt={item.name} style={{width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover'}} />}</span>
-                <span>{item.name}</span>
-                <span>{item.brand}</span>
-                <span>${item.price}</span>
-                <span style={{ color: item.inStock ? '#B5F23D' : '#FF4D4D' }}>{item.inStock ? "IN STOCK" : "OUT OF STOCK"}</span>
-
-                <div className="actions">
-                  <button onClick={() => openPowderModal(item)}>Edit</button>
-                  <button className="delete-btn" onClick={() => deletePowder(item._id)}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* NUTRITION MODAL */}
+        {/* =========================================
+            NUTRITION FOOD MODAL (ADD / EDIT)
+        ========================================= */}
         {showModal && (
-          <div className="modal">
-            <div className="modal-content">
-              <h2>{editItem ? "Edit Food" : "Add Food"}</h2>
-              <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <input placeholder="Calories" type="number" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} />
-              <input placeholder="Protein" type="number" value={form.protein} onChange={(e) => setForm({ ...form, protein: e.target.value })} />
-              <input placeholder="Carbs" type="number" value={form.carbs} onChange={(e) => setForm({ ...form, carbs: e.target.value })} />
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '15px 0' }}>
-                <label style={{ fontSize: '0.9rem', color: '#888' }}>Upload Image File:</label>
-                <input type="file" onChange={(e) => setFile(e.target.files[0])} style={{ color: '#000' }} />
-                <span style={{ textAlign: 'center', color: '#888', margin: '5px 0' }}>— OR —</span>
-                <label style={{ fontSize: '0.9rem', color: '#888' }}>Enter Image URL:</label>
-                <input type="text" placeholder="https://example.com/food.jpg" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-              </div>
-
-              <div className="modal-actions">
-                <button onClick={handleSubmit}>Save</button>
-                <button onClick={() => setShowModal(false)}>Cancel</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* POWDER MODAL */}
-        {showPowderModal && (
-          <div className="modal">
-            <div className="modal-content">
-              <h2>{editPowder ? "Edit Product" : "Add Product"}</h2>
-              <input placeholder="Product Name" value={powderForm.name} onChange={(e) => setPowderForm({ ...powderForm, name: e.target.value })} />
-              <input placeholder="Brand" value={powderForm.brand} onChange={(e) => setPowderForm({ ...powderForm, brand: e.target.value })} />
-              <input placeholder="Price" type="number" value={powderForm.price} onChange={(e) => setPowderForm({ ...powderForm, price: e.target.value })} />
-              <textarea placeholder="Description" value={powderForm.description} onChange={(e) => setPowderForm({ ...powderForm, description: e.target.value })} />
+          <div className="modal" onClick={() => setShowModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2>{editItem ? "Edit Food Item" : "Add Whole Food Item"}</h2>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '10px 0' }}>
-                <input type="checkbox" checked={powderForm.inStock} onChange={(e) => setPowderForm({ ...powderForm, inStock: e.target.checked })} style={{ width: 'auto' }} />
-                <label>In Stock</label>
-              </div>
+              <label>Food Name</label>
+              <input
+                placeholder="e.g. Grilled Chicken Breast"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '15px 0' }}>
-                <label style={{ fontSize: '0.9rem', color: '#888' }}>Upload Image File:</label>
-                <input type="file" onChange={(e) => setFile(e.target.files[0])} style={{ color: '#000' }} />
-                <span style={{ textAlign: 'center', color: '#888', margin: '5px 0' }}>— OR —</span>
-                <label style={{ fontSize: '0.9rem', color: '#888' }}>Enter Image URL:</label>
-                <input type="text" placeholder="https://example.com/product.jpg" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              <label>Calories (kcal / 100g)</label>
+              <input
+                placeholder="e.g. 165"
+                type="number"
+                value={form.calories}
+                onChange={(e) => setForm({ ...form, calories: e.target.value })}
+              />
+
+              <label>Protein (grams)</label>
+              <input
+                placeholder="e.g. 31"
+                type="number"
+                value={form.protein}
+                onChange={(e) => setForm({ ...form, protein: e.target.value })}
+              />
+
+              <label>Carbohydrates (grams)</label>
+              <input
+                placeholder="e.g. 0"
+                type="number"
+                value={form.carbs}
+                onChange={(e) => setForm({ ...form, carbs: e.target.value })}
+              />
+
+              <div style={{ margin: "15px 0" }}>
+                <label>Upload Image File</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files[0])}
+                  style={{ color: "#aaa" }}
+                />
+                
+                <div style={{ textAlign: "center", color: "#666", margin: "8px 0", fontSize: "0.85rem" }}>
+                  — OR ENTER DIRECT IMAGE URL —
+                </div>
+
+                <label>Image URL</label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/chicken.png"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
               </div>
 
               <div className="modal-actions">
-                <button onClick={handlePowderSubmit}>Save</button>
-                <button onClick={() => setShowPowderModal(false)}>Cancel</button>
+                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-save" onClick={handleSubmit}>
+                  Save Food
+                </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* =========================================
+            SUPPLEMENT PRODUCT MODAL (ADD / EDIT)
+        ========================================= */}
+        {showPowderModal && (
+          <div className="modal" onClick={() => setShowPowderModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2>{editPowder ? "Edit Supplement Product" : "Add Store Supplement"}</h2>
+
+              <label>Product Name</label>
+              <input
+                placeholder="e.g. Gold Standard 100% Whey"
+                value={powderForm.name}
+                onChange={(e) => setPowderForm({ ...powderForm, name: e.target.value })}
+              />
+
+              <label>Brand</label>
+              <input
+                placeholder="e.g. Optimum Nutrition"
+                value={powderForm.brand}
+                onChange={(e) => setPowderForm({ ...powderForm, brand: e.target.value })}
+              />
+
+              <label>Category</label>
+              <select
+                value={powderForm.category}
+                onChange={(e) => setPowderForm({ ...powderForm, category: e.target.value })}
+              >
+                {SUPPLEMENT_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+
+              <label>Price ($ USD)</label>
+              <input
+                placeholder="e.g. 59.99"
+                type="number"
+                step="0.01"
+                value={powderForm.price}
+                onChange={(e) => setPowderForm({ ...powderForm, price: e.target.value })}
+              />
+
+              <label>Description</label>
+              <textarea
+                placeholder="Key benefits, servings per tub, active ingredients..."
+                value={powderForm.description}
+                onChange={(e) => setPowderForm({ ...powderForm, description: e.target.value })}
+              />
+
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "10px 0" }}>
+                <input
+                  type="checkbox"
+                  id="inStockCheckbox"
+                  checked={powderForm.inStock}
+                  onChange={(e) => setPowderForm({ ...powderForm, inStock: e.target.checked })}
+                  style={{ width: "auto", margin: 0 }}
+                />
+                <label htmlFor="inStockCheckbox" style={{ margin: 0, cursor: "pointer", color: "#fff" }}>
+                  Product In Stock
+                </label>
+              </div>
+
+              <div style={{ margin: "15px 0" }}>
+                <label>Upload Product Image (PNG / JPG / WebP)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files[0])}
+                  style={{ color: "#aaa" }}
+                />
+
+                <div style={{ textAlign: "center", color: "#666", margin: "8px 0", fontSize: "0.85rem" }}>
+                  — OR ENTER DIRECT IMAGE URL —
+                </div>
+
+                <label>Image URL</label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/whey-protein.png"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowPowderModal(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-save" onClick={handlePowderSubmit}>
+                  Save Product
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

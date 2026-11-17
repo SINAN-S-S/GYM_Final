@@ -79,6 +79,50 @@
   flex-shrink: 0;
 }
 
+.nav-cart-btn {
+  position: relative;
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-cart-btn:hover {
+  background: var(--neon);
+  color: var(--black);
+  border-color: var(--neon);
+  transform: translateY(-1px);
+}
+
+.nav-cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-cart-toggle {
+  display: none;
+}
+
 .nav-login-btn {
   background-color: var(--neon);
   color: var(--black);
@@ -228,6 +272,12 @@
 @media (max-width: 1024px) {
   .desktop-auth-actions {
     display: none;
+  }
+
+  .mobile-cart-toggle {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
   }
 
   .hamburger {

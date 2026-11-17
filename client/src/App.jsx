@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import CartDrawer from "./components/cart/CartDrawer";
 import Home from "./pages/home/Home";
 import { Programmes } from "./pages/programmes/Programmes";
 import ProgramDetails from "./pages/programDetails/ProgramDetails";
@@ -44,13 +46,16 @@ import Workoutplanner from "./pages/workoutplanner/Workoutplanner";
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/programs" element={<Programmes />} />
-          <Route path="/program/:id" element={<ProgramDetails />} />
-          <Route path="/checkout/:id" element={<Checkout />} />
+      <CartProvider>
+        <BrowserRouter>
+          <CartDrawer />
+          <Routes>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/programs" element={<Programmes />} />
+            <Route path="/program/:id" element={<ProgramDetails />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/exercises" element={<Workouts />} />
           <Route path="/calculator" element={<Calculator />} />
           <Route path="/bmi-calculator" element={<BMICalculator />} />
@@ -193,6 +198,7 @@ export default function App() {
 
         </Routes>
       </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   );
 }

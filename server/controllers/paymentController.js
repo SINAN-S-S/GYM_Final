@@ -95,15 +95,22 @@ export const verifyPayment = async (req, res) => {
     // Check duplicate payment with this transactionId
     let purchase = await Purchase.findOne({ transactionId: razorpay_payment_id });
 
-    if (!purchase && itemId && req.user?._id) {
+    if (!purchase && (itemId || req.body.items?.length) && req.user?._id) {
+      const { items, shippingAddress } = req.body;
+      const formattedType =
+        items && items.length > 0
+          ? "StoreCart"
+          : itemType === "powder" || itemType === "ProteinPowder"
+          ? "ProteinPowder"
+          : "Program";
+
       // Save verified purchase to database
       purchase = await Purchase.create({
         user: req.user._id,
-        itemId,
-        itemType:
-          itemType === "powder" || itemType === "ProteinPowder"
-            ? "ProteinPowder"
-            : "Program",
+        itemId: itemId || null,
+        itemType: formattedType,
+        items: Array.isArray(items) ? items : [],
+        shippingAddress: shippingAddress || null,
         paymentMethod: "Razorpay",
         amount: Number(amount) || 99,
         status: "Completed",
@@ -130,7 +137,7 @@ export const verifyPayment = async (req, res) => {
 // SIMULATE / PROCESS DEMO PAYMENT (NO REAL MONEY)
 export const handleDemoPayment = async (req, res) => {
   try {
-    const { itemId, itemType, amount, simulateFailure } = req.body;
+    const { itemId, itemType, amount, simulateFailure, items, shippingAddress } = req.body;
 
     if (!req.user || !req.user._id) {
       return res.status(401).json({
@@ -139,15 +146,21 @@ export const handleDemoPayment = async (req, res) => {
       });
     }
 
+    const formattedType =
+      items && items.length > 0
+        ? "StoreCart"
+        : itemType === "powder" || itemType === "ProteinPowder"
+        ? "ProteinPowder"
+        : "Program";
+
     // 1. Simulate Failure Test Mode
     if (simulateFailure === true) {
       const failedPurchase = await Purchase.create({
         user: req.user._id,
         itemId: itemId || null,
-        itemType:
-          itemType === "powder" || itemType === "ProteinPowder"
-            ? "ProteinPowder"
-            : "Program",
+        itemType: formattedType,
+        items: Array.isArray(items) ? items : [],
+        shippingAddress: shippingAddress || null,
         paymentMethod: "DEMO",
         amount: Number(amount) || 99,
         status: "Failed",
@@ -162,8 +175,8 @@ export const handleDemoPayment = async (req, res) => {
       });
     }
 
-    // 2. Duplicate Check: If user already owns this program with active status
-    if (itemId) {
+    // 2. Duplicate Check: Only for programs (lifetime access). Physical supplements can be bought multiple times!
+    if (itemId && formattedType === "Program") {
       const existing = await Purchase.findOne({
         user: req.user._id,
         itemId,
@@ -187,10 +200,9 @@ export const handleDemoPayment = async (req, res) => {
     const purchase = await Purchase.create({
       user: req.user._id,
       itemId: itemId || null,
-      itemType:
-        itemType === "powder" || itemType === "ProteinPowder"
-          ? "ProteinPowder"
-          : "Program",
+      itemType: formattedType,
+      items: Array.isArray(items) ? items : [],
+      shippingAddress: shippingAddress || null,
       paymentMethod: "DEMO",
       amount: Number(amount) || 99,
       status: "SUCCESS",
@@ -200,7 +212,7 @@ export const handleDemoPayment = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Demo Payment Successful! Membership and access activated.",
+      message: "Demo Payment Successful! Order confirmed.",
       purchase,
     });
   } catch (error) {

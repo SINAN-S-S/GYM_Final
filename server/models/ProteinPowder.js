@@ -11,6 +11,11 @@ const proteinPowderSchema = new mongoose.Schema(
       type: String,
     },
 
+    category: {
+      type: String,
+      default: "Whey Protein",
+    },
+
     price: {
       type: Number,
       required: true,

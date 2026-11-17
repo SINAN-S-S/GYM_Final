@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { CartContext } from "../../context/CartContext";
+import {
+  resolveImageUrl,
+  getProductFallbackImage,
+  onImageError,
+} from "../../utils/imageUrl";
 import "./Checkout.css";
 
 function Checkout() {
@@ -9,23 +15,48 @@ function Checkout() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const type = queryParams.get("type") || "program";
+  const isCartMode = queryParams.get("mode") === "cart" || !id;
 
-  const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { cartItems, cartSubtotal, clearCart } = useContext(CartContext);
+
+  const [singleItem, setSingleItem] = useState(null);
+  const [loading, setLoading] = useState(!isCartMode);
   const [paymentMethod, setPaymentMethod] = useState("Razorpay");
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
-  const [user, setUser] = useState(null);
+  const [confirmedOrder, setConfirmedOrder] = useState(null);
+
+  // Customer Information & Delivery Address Form
+  const [customerInfo, setCustomerInfo] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "",
+    postalCode: "",
+  });
 
   useEffect(() => {
-    // Read cached user for prefill
+    // Read logged-in user to prefill info
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const u = JSON.parse(storedUser);
+        setCustomerInfo((prev) => ({
+          ...prev,
+          fullName: u.name || u.username || "",
+          email: u.email || "",
+          phone: u.phone || "",
+        }));
       } catch (e) {
         console.error("Failed to parse cached user:", e);
       }
+    }
+
+    if (isCartMode) {
+      setLoading(false);
+      return;
     }
 
     const fetchItem = async () => {
@@ -33,19 +64,81 @@ function Checkout() {
         const endpoint =
           type === "powder" ? `/api/protein-powders/${id}` : `/api/programs/${id}`;
         const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}${endpoint}`);
-        setItem(res.data);
+        setSingleItem(res.data);
       } catch (err) {
-        console.error("Error fetching item:", err);
-        setStatusMessage({
-          type: "error",
-          text: "Failed to load checkout details. Please check connection.",
-        });
+        console.error("Error fetching checkout item:", err);
+        // Fallback for demo supplements if clicked from catalog
+        if (id?.startsWith("supp-")) {
+          setSingleItem({
+            _id: id,
+            name: "AlphaFit Pro Supplement",
+            brand: "AlphaFit Lab Series",
+            price: 999,
+            image: "",
+          });
+        } else {
+          setStatusMessage({
+            type: "error",
+            text: "Failed to load checkout details. Please check connection.",
+          });
+        }
       } finally {
         setLoading(false);
       }
     };
+
     fetchItem();
-  }, [id, type]);
+  }, [id, type, isCartMode]);
+
+  const handleInputChange = (e) => {
+    setCustomerInfo({ ...customerInfo, [e.target.name]: e.target.value });
+  };
+
+  // Compile items to buy
+  const itemsToCheckout = isCartMode
+    ? cartItems
+    : singleItem
+    ? [
+        {
+          _id: singleItem._id,
+          name: singleItem.title || singleItem.name,
+          brand: singleItem.brand || "AlphaFit",
+          price: Number(singleItem.price) || 99,
+          quantity: 1,
+          image: singleItem.image,
+          category: type === "powder" ? "Supplement" : "Program",
+        },
+      ]
+    : [];
+
+  const totalAmount = isCartMode
+    ? cartSubtotal
+    : singleItem
+    ? Number(singleItem.price) || 99
+    : 0;
+
+  const validateCustomerForm = () => {
+    if (!customerInfo.fullName.trim()) {
+      setStatusMessage({ type: "error", text: "Please provide your Full Name." });
+      return false;
+    }
+    if (!customerInfo.phone.trim()) {
+      setStatusMessage({ type: "error", text: "Please enter your Contact Phone Number." });
+      return false;
+    }
+    // If physical product / cart, require delivery address
+    const isPhysical = isCartMode || type === "powder";
+    if (isPhysical) {
+      if (!customerInfo.street.trim() || !customerInfo.city.trim() || !customerInfo.postalCode.trim()) {
+        setStatusMessage({
+          type: "error",
+          text: "Please provide your complete Delivery Address (Street, City, Postal Code) for supplement dispatch.",
+        });
+        return false;
+      }
+    }
+    return true;
+  };
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -61,14 +154,18 @@ function Checkout() {
     });
   };
 
+  // ===================================================
   // 1. RAZORPAY TEST PAYMENT HANDLER
+  // ===================================================
   const handleRazorpayPayment = async () => {
-    setIsProcessing(true);
     setStatusMessage(null);
+    if (!validateCustomerForm()) return;
+
+    setIsProcessing(true);
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("You must be logged in to make a purchase.");
+      alert("You must be logged in to complete payment.");
       navigate("/login");
       return;
     }
@@ -84,13 +181,11 @@ function Checkout() {
         return;
       }
 
-      const amount = item.price || 99;
-
       // 1. Create Order on Backend
       const orderRes = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/payment/order`,
         {
-          amount,
+          amount: totalAmount,
           currency: "INR",
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -102,13 +197,15 @@ function Checkout() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SqsqeZeAEUmA2p",
         amount: order.amount,
         currency: order.currency,
-        name: "AlphaFit Gym",
-        description: `Payment for ${item.title || item.name}`,
+        name: "AlphaFit Nutrition & Fitness",
+        description: isCartMode
+          ? `Cart Order (${itemsToCheckout.length} items)`
+          : `Order for ${itemsToCheckout[0]?.name}`,
         order_id: order.id,
         prefill: {
-          name: user?.name || user?.username || "AlphaFit Athlete",
-          email: user?.email || "athlete@alphafit.com",
-          contact: user?.phone || "9999999999",
+          name: customerInfo.fullName,
+          email: customerInfo.email || "athlete@alphafit.com",
+          contact: customerInfo.phone || "9999999999",
         },
         theme: {
           color: "#B5F23D",
@@ -118,7 +215,7 @@ function Checkout() {
             setIsProcessing(false);
             setStatusMessage({
               type: "warning",
-              text: "Payment was cancelled or closed. No amount was deducted.",
+              text: "Payment was cancelled or closed. No funds were charged.",
             });
           },
         },
@@ -131,26 +228,24 @@ function Checkout() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                itemId: id,
-                itemType: type,
-                amount,
+                itemId: !isCartMode ? id : undefined,
+                itemType: isCartMode ? "StoreCart" : type === "powder" ? "ProteinPowder" : "Program",
+                amount: totalAmount,
+                items: itemsToCheckout,
+                shippingAddress: customerInfo,
               },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (verifyRes.data.success) {
-              setStatusMessage({
-                type: "success",
-                text: `Payment verified successfully! Transaction ID: ${response.razorpay_payment_id}. Membership activated!`,
+              if (isCartMode) clearCart();
+              setConfirmedOrder(verifyRes.data.purchase || {
+                transactionId: response.razorpay_payment_id,
+                amount: totalAmount,
+                paymentMethod: "Razorpay",
+                shippingAddress: customerInfo,
+                items: itemsToCheckout,
               });
-
-              setTimeout(() => {
-                if (type === "program") {
-                  navigate("/trainers");
-                } else {
-                  navigate("/profile");
-                }
-              }, 1800);
             }
           } catch (err) {
             console.error("Verification error:", err);
@@ -166,7 +261,6 @@ function Checkout() {
 
       const paymentObject = new window.Razorpay(options);
 
-      // Handle card decline / network failures
       paymentObject.on("payment.failed", function (response) {
         setIsProcessing(false);
         const reason =
@@ -175,7 +269,7 @@ function Checkout() {
           "Payment was declined by bank.";
         setStatusMessage({
           type: "error",
-          text: `Payment Failed: ${reason}. You can retry or switch to Demo Payment.`,
+          text: `Payment Failed: ${reason}. You can retry or use Demo Payment.`,
         });
       });
 
@@ -192,10 +286,14 @@ function Checkout() {
     }
   };
 
+  // ===================================================
   // 2. DEMO PAYMENT HANDLER (NO REAL MONEY)
+  // ===================================================
   const handleDemoPayment = async (simulateFailure = false) => {
-    setIsProcessing(true);
     setStatusMessage(null);
+    if (!simulateFailure && !validateCustomerForm()) return;
+
+    setIsProcessing(true);
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -205,14 +303,15 @@ function Checkout() {
     }
 
     try {
-      const amount = item.price || 99;
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/payment/demo`,
         {
-          itemId: id,
-          itemType: type,
-          amount,
+          itemId: !isCartMode ? id : undefined,
+          itemType: isCartMode ? "StoreCart" : type === "powder" ? "ProteinPowder" : "Program",
+          amount: totalAmount,
           simulateFailure,
+          items: itemsToCheckout,
+          shippingAddress: customerInfo,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -228,18 +327,15 @@ function Checkout() {
         return;
       }
 
-      setStatusMessage({
-        type: "success",
-        text: `Demo Payment Confirmed! Transaction ID: ${res.data.purchase?.transactionId}. Membership and features activated.`,
-      });
+      if (isCartMode) clearCart();
 
-      setTimeout(() => {
-        if (type === "program") {
-          navigate("/trainers");
-        } else {
-          navigate("/profile");
-        }
-      }, 1800);
+      setConfirmedOrder(res.data.purchase || {
+        transactionId: `DEMO_TXN_${Date.now()}`,
+        amount: totalAmount,
+        paymentMethod: "DEMO",
+        shippingAddress: customerInfo,
+        items: itemsToCheckout,
+      });
     } catch (err) {
       console.error("Demo Payment error:", err);
       const msg =
@@ -257,27 +353,129 @@ function Checkout() {
   if (loading) {
     return (
       <div className="checkout-page">
-        <div className="loading-state">Loading Checkout...</div>
+        <div className="loading-state">Loading Checkout Details...</div>
       </div>
     );
   }
 
-  if (!item) {
+  // ===================================================
+  // 3. ORDER CONFIRMATION SCREEN
+  // ===================================================
+  if (confirmedOrder) {
     return (
       <div className="checkout-page">
-        <div className="empty-state">Item not found.</div>
+        <div className="checkout-container">
+          <div className="order-confirmation-card">
+            <div className="confirmation-header">
+              <span className="success-icon">✓</span>
+              <span className="order-tag">ORDER CONFIRMED &amp; DISPATCH QUEUED</span>
+              <h1 className="confirmation-title">THANK YOU FOR YOUR ORDER</h1>
+              <p className="order-subtext">
+                Your order has been registered in the database. A confirmation has been generated
+                for your athlete profile.
+              </p>
+            </div>
+
+            <div className="confirmation-grid">
+              <div className="conf-details-box">
+                <h3>ORDER INFORMATION</h3>
+                <div className="conf-row">
+                  <span>Transaction ID:</span>
+                  <strong className="code-text">{confirmedOrder.transactionId}</strong>
+                </div>
+                <div className="conf-row">
+                  <span>Payment Method:</span>
+                  <span className={`method-pill ${confirmedOrder.paymentMethod === "DEMO" ? "demo" : "real"}`}>
+                    {confirmedOrder.paymentMethod === "DEMO" ? "DEMO / SIMULATED" : "RAZORPAY VERIFIED"}
+                  </span>
+                </div>
+                <div className="conf-row">
+                  <span>Total Amount Paid:</span>
+                  <strong className="amount-highlight">${Number(confirmedOrder.amount).toFixed(2)}</strong>
+                </div>
+                <div className="conf-row">
+                  <span>Order Status:</span>
+                  <span className="status-pill-success">PAID &amp; CONFIRMED</span>
+                </div>
+              </div>
+
+              {customerInfo.street && (
+                <div className="conf-details-box">
+                  <h3>DELIVERY DESTINATION</h3>
+                  <p><strong>{customerInfo.fullName}</strong> ({customerInfo.phone})</p>
+                  <p>{customerInfo.street}</p>
+                  <p>{customerInfo.city}, {customerInfo.state} - {customerInfo.postalCode}</p>
+                  <p className="delivery-eta">📦 Estimated Delivery: 2-4 Business Days</p>
+                </div>
+              )}
+            </div>
+
+            <div className="conf-items-summary">
+              <h3>ITEMS IN THIS ORDER</h3>
+              <div className="conf-items-list">
+                {itemsToCheckout.map((item, idx) => (
+                  <div key={idx} className="conf-item-row">
+                    <span>{item.name} <strong>× {item.quantity || 1}</strong></span>
+                    <span>${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="confirmation-actions">
+              <button className="view-profile-btn" onClick={() => navigate("/profile")}>
+                VIEW ORDER IN PROFILE
+              </button>
+              <button className="continue-shop-btn" onClick={() => navigate("/nutrition")}>
+                RETURN TO NUTRITION STORE
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const itemPrice = item.price || 99;
+  // If cart mode but cart is empty
+  if (isCartMode && itemsToCheckout.length === 0) {
+    return (
+      <div className="checkout-page">
+        <div className="checkout-container">
+          <div className="empty-cart-checkout">
+            <h2>YOUR CART IS EMPTY</h2>
+            <p>Add some supplements or fitness programs before heading to checkout.</p>
+            <button className="browse-store-btn" onClick={() => navigate("/nutrition")}>
+              BROWSE NUTRITION STORE
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If single item not found
+  if (!isCartMode && !singleItem) {
+    return (
+      <div className="checkout-page">
+        <div className="checkout-container">
+          <div className="empty-state">Item details not found.</div>
+          <button className="continue-shop-btn" onClick={() => navigate("/nutrition")}>
+            BACK TO STORE
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="checkout-page">
       <div className="checkout-container">
-        <h1 className="heavy-title">
-          COMPLETE <br /> PURCHASE
-        </h1>
+        <header className="checkout-header">
+          <span className="section-kicker">05 — SECURE CHECKOUT</span>
+          <h1 className="heavy-title">
+            COMPLETE <br /> PURCHASE
+          </h1>
+        </header>
 
         {statusMessage && (
           <div className={`status-alert ${statusMessage.type}`}>
@@ -285,138 +483,258 @@ function Checkout() {
           </div>
         )}
 
-        <div className="checkout-grid">
-          {/* Item Details Side */}
-          <div className="program-summary">
-            <h3>ORDER SUMMARY</h3>
-            <div className="summary-card">
-              <h4>{item.title || item.name}</h4>
-              {type === "program" ? (
-                <p>
-                  {item.level || item.difficulty || "All Levels"} • {item.duration || "Multi-Week"}
-                </p>
-              ) : (
-                <p>{item.brand || "AlphaFit Nutrition"} • Physical Product</p>
-              )}
-              <div className="price-tag">${itemPrice}.00</div>
+        <div className="checkout-main-grid">
+          {/* =========================================
+              LEFT COLUMN: PRODUCTS & CUSTOMER DETAILS
+          ========================================= */}
+          <div className="checkout-details-column">
+            {/* 1. Items Summary */}
+            <div className="checkout-card">
+              <div className="card-top-bar">
+                <h3>ORDER SUMMARY ({itemsToCheckout.length} {itemsToCheckout.length === 1 ? "ITEM" : "ITEMS"})</h3>
+                {isCartMode && (
+                  <button className="edit-cart-link" onClick={() => navigate("/nutrition")}>
+                    + Add More Items
+                  </button>
+                )}
+              </div>
+
+              <div className="checkout-items-list">
+                {itemsToCheckout.map((item, idx) => {
+                  const fallback = getProductFallbackImage(item.name, item.brand, item.category);
+                  const imageSrc = resolveImageUrl(item.image, fallback);
+
+                  return (
+                    <div key={idx} className="checkout-item-card">
+                      <div className="checkout-img-wrap">
+                        <img
+                          src={imageSrc}
+                          alt={item.name}
+                          onError={(e) => onImageError(e, fallback)}
+                          className="checkout-item-img"
+                        />
+                      </div>
+
+                      <div className="checkout-item-info">
+                        <div className="checkout-item-head">
+                          <span className="brand-name">{item.brand || "AlphaFit"}</span>
+                          <span className="unit-cost">${Number(item.price).toFixed(2)}</span>
+                        </div>
+                        <h4 className="item-title">{item.name}</h4>
+                        <div className="item-qty-row">
+                          <span>Qty: <strong>{item.quantity || 1}</strong></span>
+                          <span className="line-cost">
+                            Subtotal: ${(item.price * (item.quantity || 1)).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Customer Information & Delivery Address */}
+            <div className="checkout-card">
+              <h3>CUSTOMER &amp; DELIVERY DETAILS</h3>
+              <div className="customer-form-grid">
+                <div className="form-field full-width">
+                  <label>FULL NAME *</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    placeholder="Athlete Name"
+                    value={customerInfo.fullName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>EMAIL ADDRESS</label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="athlete@alphafit.com"
+                    value={customerInfo.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>PHONE NUMBER *</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="+91 9876543210"
+                    value={customerInfo.phone}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-field full-width">
+                  <label>DELIVERY STREET ADDRESS *</label>
+                  <input
+                    type="text"
+                    name="street"
+                    placeholder="House/Apartment #, Street, Locality"
+                    value={customerInfo.street}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>CITY *</label>
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="City / Region"
+                    value={customerInfo.city}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>STATE / PROVINCE</label>
+                  <input
+                    type="text"
+                    name="state"
+                    placeholder="State"
+                    value={customerInfo.state}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>POSTAL / PIN CODE *</label>
+                  <input
+                    type="text"
+                    name="postalCode"
+                    placeholder="560001"
+                    value={customerInfo.postalCode}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Payment Selection Side */}
-          <div className="payment-section">
-            <h3>SELECT PAYMENT METHOD</h3>
-
-            <div className="payment-options">
-              {/* Option 1: Razorpay Test Gateway */}
-              <label
-                className={`payment-option ${paymentMethod === "Razorpay" ? "selected" : ""
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Razorpay"
-                  checked={paymentMethod === "Razorpay"}
-                  onChange={(e) => {
-                    setPaymentMethod(e.target.value);
-                    setStatusMessage(null);
-                  }}
-                />
-                <div className="option-content">
-                  <div className="option-header">
-                    <span className="option-title">Razorpay Test Payment</span>
-                    <span className="option-badge gateway">TEST GATEWAY</span>
-                  </div>
-                  <span className="option-desc">
-                    Cards, UPI, NetBanking via official Razorpay test gateway
-                  </span>
+          {/* =========================================
+              RIGHT COLUMN: PAYMENT METHOD & REVIEW
+          ========================================= */}
+          <div className="checkout-sidebar-column">
+            {/* Price Breakdown */}
+            <div className="checkout-card">
+              <h3>PRICE BREAKDOWN</h3>
+              <div className="price-breakdown-list">
+                <div className="breakdown-row">
+                  <span>Items Subtotal</span>
+                  <strong>${totalAmount.toFixed(2)}</strong>
                 </div>
-              </label>
 
-              {/* Option 2: Demo Payment (No Real Money) */}
-              <label
-                className={`payment-option ${paymentMethod === "DEMO" ? "selected" : ""
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value="DEMO"
-                  checked={paymentMethod === "DEMO"}
-                  onChange={(e) => {
-                    setPaymentMethod(e.target.value);
-                    setStatusMessage(null);
-                  }}
-                />
-                <div className="option-content">
-                  <div className="option-header">
-                    <span className="option-title">Demo Payment (No Real Money)</span>
-                    <span className="option-badge demo">SIMULATED</span>
-                  </div>
-                  <span className="option-desc">
-                    Instant simulated checkout for demonstration & evaluation
-                  </span>
+                <div className="breakdown-row">
+                  <span>Shipping &amp; Handling</span>
+                  <span className="free-shipping-tag">FREE (DISPATCH WAIVED)</span>
                 </div>
-              </label>
+
+                <div className="breakdown-row total">
+                  <span>Total Amount Due</span>
+                  <span className="grand-total">${totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
 
-            {/* Dynamic Panel Depending on Selected Method */}
-            {paymentMethod === "Razorpay" ? (
-              <div className="pay-panel">
-                <h4>💳 Razorpay Test Checkout</h4>
-                <p className="panel-note">
-                  Click below to open the Razorpay secure test dialog. In test mode, you can test UPI (`success@razorpay`) or standard test card details without real transactions.
-                </p>
+            {/* Payment Method Selector */}
+            <div className="checkout-card payment-options-card">
+              <h3>SELECT PAYMENT METHOD</h3>
 
-                <div className="test-helper-card">
-                  <strong>💡 Test Mode Hint:</strong> Use test card <code>4000 0000 0000 0002</code> or UPI <code>success@razorpay</code>. Any valid expiry &amp; OTP will succeed.
-                </div>
-
-                <button
-                  className="pay-now-btn"
-                  onClick={handleRazorpayPayment}
-                  disabled={isProcessing}
+              <div className="payment-options">
+                {/* Razorpay Test Gateway */}
+                <label
+                  className={`payment-option ${paymentMethod === "Razorpay" ? "selected" : ""}`}
                 >
-                  {isProcessing
-                    ? "OPENING GATEWAY..."
-                    : `PAY $${itemPrice}.00 VIA RAZORPAY`}
-                </button>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Razorpay"
+                    checked={paymentMethod === "Razorpay"}
+                    onChange={(e) => {
+                      setPaymentMethod(e.target.value);
+                      setStatusMessage(null);
+                    }}
+                  />
+                  <div className="option-content">
+                    <div className="option-header">
+                      <span className="option-title">Razorpay Test Gateway</span>
+                      <span className="option-badge gateway">TEST GATEWAY</span>
+                    </div>
+                    <span className="option-desc">
+                      UPI, Cards, NetBanking via official Razorpay test mode
+                    </span>
+                  </div>
+                </label>
+
+                {/* Demo Payment */}
+                <label
+                  className={`payment-option ${paymentMethod === "DEMO" ? "selected" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="DEMO"
+                    checked={paymentMethod === "DEMO"}
+                    onChange={(e) => {
+                      setPaymentMethod(e.target.value);
+                      setStatusMessage(null);
+                    }}
+                  />
+                  <div className="option-content">
+                    <div className="option-header">
+                      <span className="option-title">Demo Payment (No Real Money)</span>
+                      <span className="option-badge demo">SIMULATED</span>
+                    </div>
+                    <span className="option-desc">
+                      Simulate payment success or failure without deducting funds
+                    </span>
+                  </div>
+                </label>
               </div>
-            ) : (
-              <div className="pay-panel">
-                <h4>🧪 Demo Payment Confirmation</h4>
-                <p className="panel-note">
-                  This simulated checkout activates the selected membership and logs a <code>DEMO</code> transaction in the database without collecting payment information.
-                </p>
 
-                <div className="demo-confirm-details">
-                  <div className="demo-row">
-                    <span>Plan / Item:</span>
-                    <strong>{item.title || item.name}</strong>
+              {/* Action Box based on Selected Method */}
+              {paymentMethod === "Razorpay" ? (
+                <div className="pay-panel">
+                  <div className="test-helper-card">
+                    <strong>💡 Razorpay Test Mode:</strong> Use UPI <code>success@razorpay</code> or test card <code>4000 0000 0000 0002</code> with any valid future date &amp; OTP.
                   </div>
-                  <div className="demo-row">
-                    <span>Amount:</span>
-                    <strong>${itemPrice}.00 USD</strong>
-                  </div>
-                  <div className="demo-row">
-                    <span>Method:</span>
-                    <span>DEMO (Zero Deductions)</span>
-                  </div>
-                  <div className="demo-row">
-                    <span>Access Grant:</span>
-                    <span>Instant Membership Activation</span>
-                  </div>
+
+                  <button
+                    className="pay-now-btn"
+                    onClick={handleRazorpayPayment}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing
+                      ? "OPENING GATEWAY..."
+                      : `PAY $${totalAmount.toFixed(2)} VIA RAZORPAY`}
+                  </button>
                 </div>
+              ) : (
+                <div className="pay-panel">
+                  <p className="demo-notice-text">
+                    🧪 Simulated Demo Checkout: Confirms the order, logs a <code>DEMO</code> transaction in MongoDB, and updates your profile order history.
+                  </p>
 
-                <div className="demo-actions">
                   <button
                     className="pay-now-btn"
                     onClick={() => handleDemoPayment(false)}
                     disabled={isProcessing}
                   >
                     {isProcessing
-                      ? "CONFIRMING DEMO..."
-                      : `CONFIRM DEMO PAYMENT ($${itemPrice}.00)`}
+                      ? "PROCESSING DEMO..."
+                      : `CONFIRM DEMO ORDER ($${totalAmount.toFixed(2)})`}
                   </button>
 
                   <button
@@ -427,8 +745,8 @@ function Checkout() {
                     SIMULATE PAYMENT FAILURE (TEST ERROR HANDLING)
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
