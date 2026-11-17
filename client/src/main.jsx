@@ -24,6 +24,15 @@ axios.interceptors.request.use(request => {
     request.url = request.url.replace(/([^:])\/\/+/g, '$1/');
   }
 
+  // Automatically attach Bearer token from localStorage if present and not already attached
+  if (typeof window !== "undefined" && window.localStorage) {
+    const token = localStorage.getItem("token");
+    if (token && !request.headers?.["Authorization"] && !request.headers?.["authorization"]) {
+      if (!request.headers) request.headers = {};
+      request.headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
   console.log(`\n[Frontend]  API Request: ${request.method?.toUpperCase()} ${request.url}`);
   if (request.data) {
     console.log('[Frontend]  Request Payload:', request.data);

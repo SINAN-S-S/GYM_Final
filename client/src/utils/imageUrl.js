@@ -54,6 +54,30 @@ export const getProductFallbackImage = (name = "", brand = "", category = "") =>
   if (text.includes("vitamin") || text.includes("mineral") || text.includes("omega")) {
     return PRODUCT_FALLBACK_IMAGES.vitamins;
   }
+  if (text.includes("shaker")) {
+    return "https://www.optimumnutrition.com/cdn/shop/files/C101268_Image_01_aligned.png?v=1787732132&width=1000";
+  }
+  if (text.includes("glove")) {
+    return "https://pngimg.com/uploads/gloves/gloves_PNG80314.png";
+  }
+  if (text.includes("dumbbell")) {
+    return "https://pngimg.com/uploads/dumbbell/dumbbell_PNG16378.png";
+  }
+  if (text.includes("yoga") || text.includes("mat")) {
+    return "https://www.pngmart.com/files/5/Yoga-Mat-PNG-Transparent-Image.png";
+  }
+  if (text.includes("belt")) {
+    return "https://pngimg.com/uploads/belt/belt_PNG9570.png";
+  }
+  if (text.includes("rope")) {
+    return "https://pngimg.com/uploads/rope/rope_PNG18080.png";
+  }
+  if (text.includes("bag") || text.includes("duffel")) {
+    return "https://pngimg.com/uploads/backpack/backpack_PNG6353.png";
+  }
+  if (text.includes("bottle") || text.includes("flask")) {
+    return "https://pngimg.com/uploads/water_bottle/water_bottle_PNG10152.png";
+  }
   return PRODUCT_FALLBACK_IMAGES.default_product;
 };
 

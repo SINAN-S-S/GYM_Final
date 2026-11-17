@@ -18,7 +18,8 @@ const SUPPLEMENT_CATEGORIES = [
   "Mass Gainers",
   "Creatine",
   "Pre-Workout",
-  "Vitamins and Minerals"
+  "Vitamins and Minerals",
+  "Fitness Accessories"
 ];
 
 function AdminNutrition() {

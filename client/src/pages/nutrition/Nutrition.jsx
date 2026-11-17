@@ -18,6 +18,7 @@ const CATEGORIES = [
   "Creatine",
   "Pre-Workout",
   "Vitamins and Minerals",
+  "Fitness Accessories",
 ];
 
 function Nutrition() {
