@@ -14,10 +14,10 @@ axios.interceptors.request.use(request => {
       request.url = request.url.replace(/^undefined/, "");
     }
 
-    // In production (Vercel / live domain), if the bundle has hardcoded localhost:5000,
-    // reroute to same-origin relative path so Vercel serverless function /api routes work seamlessly
+    // In production (Vercel / live domain), normalize localhost or obsolete backend hosts
+    // to same-origin relative path so Vercel serverless function /api routes work seamlessly
     if (typeof window !== "undefined" && window.location && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      request.url = request.url.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, "");
+      request.url = request.url.replace(/^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app)/, "");
     }
 
     // Clean up duplicate slashes after protocol (e.g. http://localhost:5000//api -> http://localhost:5000/api)

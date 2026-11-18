@@ -1,6 +1,7 @@
 const rawBaseURL = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "");
 const isProductionRemote = typeof window !== "undefined" && window.location && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
-const baseURL = (isProductionRemote && rawBaseURL.includes("localhost:5000")) ? "" : rawBaseURL;
+const isObsoleteHost = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five/.test(rawBaseURL);
+const baseURL = (isProductionRemote && isObsoleteHost) ? "" : rawBaseURL;
 const API = `${baseURL}/api`;
 
 export const registerUser = async (data) => {

@@ -120,7 +120,8 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
   // Safely resolve backend base URL in both local and production Vercel environments
   const rawBase = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "");
   const isProductionRemote = typeof window !== "undefined" && window.location && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
-  const backendBase = (isProductionRemote && rawBase.includes("localhost:5000")) ? "" : rawBase;
+  const isObsoleteHost = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five/.test(rawBase);
+  const backendBase = (isProductionRemote && isObsoleteHost) ? "" : rawBase;
 
   // If URL has localhost:5000/uploads, point to current active backend base
   if (trimmed.includes("localhost:5000/uploads/")) {
