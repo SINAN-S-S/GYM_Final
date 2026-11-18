@@ -118,11 +118,18 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
   const trimmed = url.trim();
 
   // Safely resolve backend base URL in both local and production Vercel environments
-  const DEFAULT_BACKEND_URL = "https://gym-final-qsuh.vercel.app";
-  const rawBase = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
-  const isProductionRemote = typeof window !== "undefined" && window.location && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
-  const isObsoleteHost = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five/.test(rawBase);
-  const backendBase = (isProductionRemote && (isObsoleteHost || !rawBase)) ? DEFAULT_BACKEND_URL : (rawBase || (isProductionRemote ? DEFAULT_BACKEND_URL : "http://localhost:5000"));
+  const DEFAULT_PROD_BACKEND = "https://gym-final-qsuh.vercel.app";
+  const DEFAULT_DEV_BACKEND = "http://localhost:5000";
+  const isLocal = typeof window !== "undefined" && window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+  const getBackendBase = () => {
+    if (isLocal) return DEFAULT_DEV_BACKEND;
+    const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
+    const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five/.test(configured);
+    if (!configured || isObsolete) return DEFAULT_PROD_BACKEND;
+    return configured;
+  };
+  const backendBase = getBackendBase();
 
   // If URL has localhost:5000/uploads, point to current active backend base
   if (trimmed.includes("localhost:5000/uploads/")) {
