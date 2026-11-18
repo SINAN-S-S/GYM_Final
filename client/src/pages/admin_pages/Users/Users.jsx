@@ -248,7 +248,12 @@ function Users() {
                     <div className="row" key={user._id}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {user.profileImage ? (
-                          <img src={user.profileImage} alt="avatar" style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />
+                          <img
+                            src={user.profileImage}
+                            alt="avatar"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
                         ) : (
                           <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#333', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#B5F23D', fontWeight: 'bold' }}>
                             {user.username.charAt(0).toUpperCase()}

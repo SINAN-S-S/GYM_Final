@@ -64,11 +64,15 @@ function Workoutplanner() {
     const exerciseData = e.dataTransfer.getData("application/json") || e.dataTransfer.getData("exercise") || e.dataTransfer.getData("text/plain");
     if (!exerciseData) return;
     
-    const exercise = JSON.parse(exerciseData);
-    setSchedule(prev => ({
-      ...prev,
-      [day]: [...prev[day], { ...exercise, uniqueId: Date.now() }]
-    }));
+    try {
+      const exercise = JSON.parse(exerciseData);
+      setSchedule(prev => ({
+        ...prev,
+        [day]: [...(prev[day] || []), { ...exercise, uniqueId: Date.now() }]
+      }));
+    } catch (err) {
+      console.warn("Invalid drop data:", err);
+    }
   };
 
   const removeExercise = (day, uniqueId) => {

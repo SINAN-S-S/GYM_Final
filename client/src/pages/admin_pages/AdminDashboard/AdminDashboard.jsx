@@ -49,7 +49,7 @@ function AdminDashboard() {
       // Update local state instantly
       setStats(prev => ({
         ...prev,
-        broadcasts: [res.data.broadcast, ...prev.broadcasts]
+        broadcasts: [res.data.broadcast, ...(prev?.broadcasts || [])]
       }));
 
       setShowBroadcastModal(false);
@@ -70,7 +70,7 @@ function AdminDashboard() {
 
       setStats(prev => ({
         ...prev,
-        broadcasts: prev.broadcasts.filter(b => b._id !== id)
+        broadcasts: (prev?.broadcasts || []).filter(b => b._id !== id)
       }));
     } catch (err) {
       console.error("Failed to delete broadcast", err);

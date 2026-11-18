@@ -14,8 +14,7 @@ export default function Home() {
 
   const handleAuth = () => {
     if (isAuthenticated) {
-      logout();
-      navigate("/login");
+      navigate("/profile");
     } else {
       navigate("/login");
     }
@@ -42,7 +41,7 @@ export default function Home() {
          
           <div className="cta-group">
             <button className="btn-solid" onClick={handleAuth}>
-              {isAuthenticated ? "LOGOUT" : "GET STARTED"}
+              {isAuthenticated ? "MEMBER DASHBOARD" : "GET STARTED"}
             </button>
 
             <button 
