@@ -5,15 +5,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/app.js"
+      "destination": "/api/index.js"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "/api/app.js"
+      "destination": "/api/index.js"
     },
     {
       "source": "/((?!api/|uploads/).*)",
-      "destination": "app.js"
+      "destination": "/index.html"
     }
   ]
 }
