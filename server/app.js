@@ -45,15 +45,13 @@ app.use(cors({
     // Allow non-browser requests (e.g. mobile apps, curl, uptime monitors)
     if (!origin) return callback(null, true);
 
-    // Allow explicitly listed origins or any Vercel deployment preview / subdomains
-    if (
-      allowedOrigins.includes(origin) ||
-      origin.endsWith(".vercel.app")
-    ) {
+    // Allow strictly allowed production frontend and local development origins
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    return callback(null, true);
+    // Reject all other unverified or arbitrary origins
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
