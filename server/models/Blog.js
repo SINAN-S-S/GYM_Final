@@ -4,6 +4,10 @@ const blogSchema = new mongoose.Schema(
   {
     title: String,
     content: String,
+    category: {
+      type: String,
+      default: "Training",
+    },
     image: String,
     videoUrl: String,
     author: String,

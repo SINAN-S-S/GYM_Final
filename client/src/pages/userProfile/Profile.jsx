@@ -89,6 +89,7 @@ export default function Profile() {
     chest: "",
     waist: "",
     arms: "",
+    photoUrl: "",
     notes: "",
   });
   const [bookingForm, setBookingForm] = useState({
@@ -374,6 +375,16 @@ export default function Profile() {
       const newProg = res.data.progress || res.data;
       setProgressLogs([newProg, ...progressLogs]);
       alert(`Progress logged! Calculated BMI: ${newProg.bmi || "Recorded"} (${newProg.category || "Normal"})`);
+      setProgressForm({
+        weight: "",
+        height: "",
+        bodyFat: "",
+        chest: "",
+        waist: "",
+        arms: "",
+        photoUrl: "",
+        notes: "",
+      });
     } catch (err) {
       alert(err.response?.data?.msg || "Failed to log progress");
     }
@@ -708,6 +719,78 @@ export default function Profile() {
         {/* TAB 2: WORKOUT TRACKING */}
         {activeTab === "workouts" && (
           <div className="tab-pane-content">
+            {/* Workout Volume & Frequency Analytics */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "12px", marginBottom: "22px" }}>
+              <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
+                <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>THIS WEEK</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#B5F23D", marginTop: "4px" }}>
+                  {workouts.filter(w => new Date(w.date || w.createdAt) >= new Date(Date.now() - 7 * 86400000)).length}
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#666" }}>Workouts</div>
+              </div>
+              <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
+                <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>THIS MONTH</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#38bdf8", marginTop: "4px" }}>
+                  {workouts.filter(w => new Date(w.date || w.createdAt) >= new Date(Date.now() - 30 * 86400000)).length}
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#666" }}>Workouts</div>
+              </div>
+              <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
+                <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>ACTIVE TIME</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#fff", marginTop: "4px" }}>
+                  {workouts.reduce((sum, w) => sum + (Number(w.durationMinutes) || 0), 0)}m
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#666" }}>Logged Minutes</div>
+              </div>
+              <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
+                <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>CALORIES BURNED</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#ff4757", marginTop: "4px" }}>
+                  {workouts.reduce((sum, w) => sum + (Number(w.caloriesBurned) || 0), 0)}
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#666" }}>Total kcal</div>
+              </div>
+            </div>
+
+            {/* Daily Assigned Coach Workout Protocol */}
+            <div style={{ backgroundColor: "#14141a", border: "1px solid rgba(181, 242, 61, 0.35)", borderRadius: "10px", padding: "18px 22px", marginBottom: "22px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ backgroundColor: "#B5F23D", color: "#111", fontSize: "0.68rem", fontWeight: "900", padding: "2px 8px", borderRadius: "3px" }}>DAILY PROTOCOL</span>
+                  <span style={{ color: "#8c8c9a", fontSize: "0.78rem" }}>Goal: {profile.goal || "Hypertrophy & Strength"}</span>
+                </div>
+                <h4 style={{ margin: "4px 0", fontSize: "1.1rem", color: "#fff" }}>Alpha Compound Strength & Hypertrophy Split</h4>
+                <p style={{ margin: 0, color: "#aaa", fontSize: "0.82rem" }}>
+                  4 Sets x 10-12 Reps • Barbell Compound Lifts • 45 Minutes • Target: Full Body Power
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setWorkoutForm({
+                    title: "Alpha Compound Strength Split",
+                    category: "Full Body",
+                    durationMinutes: 50,
+                    caloriesBurned: 420,
+                    exercises: [{ name: "Barbell Squats & Bench Press", sets: [{ reps: 10, weight: 70 }] }],
+                  });
+                  alert("Protocol loaded into form! Adjust weights/reps and hit '+ LOG COMPLETED WORKOUT'.");
+                }}
+                style={{
+                  backgroundColor: "#B5F23D",
+                  color: "#111",
+                  border: "none",
+                  padding: "10px 18px",
+                  borderRadius: "6px",
+                  fontWeight: "800",
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                + LOAD PROTOCOL
+              </button>
+            </div>
+
             <div className="two-column-layout">
               {/* Form to log a workout */}
               <div className="dashboard-card">
@@ -891,6 +974,15 @@ export default function Profile() {
                     />
                   </div>
 
+                  <div className="input-field">
+                    <label>PROGRESS PHOTO URL (OPTIONAL)</label>
+                    <input
+                      placeholder="e.g. https://... progress photo link"
+                      value={progressForm.photoUrl}
+                      onChange={(e) => setProgressForm({ ...progressForm, photoUrl: e.target.value })}
+                    />
+                  </div>
+
                   <button type="submit" className="save-btn">RECORD PROGRESS</button>
                 </form>
               </div>
@@ -930,6 +1022,79 @@ export default function Profile() {
                 )}
               </div>
             </div>
+
+            {/* Before & After Visual Comparison */}
+            {progressLogs.length > 0 && (
+              <div className="dashboard-card" style={{ marginTop: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ margin: 0 }}>BEFORE & AFTER COMPARISON</h3>
+                  <span style={{ fontSize: "0.8rem", color: "#B5F23D", fontWeight: 700 }}>
+                    {progressLogs.length} Checkpoints Logged
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
+                  {/* Baseline / Starting */}
+                  <div style={{ backgroundColor: "#181822", padding: "18px", borderRadius: "8px", textAlign: "center" }}>
+                    <p style={{ color: "#8c8c9a", fontSize: "0.75rem", fontWeight: "800", letterSpacing: "1px", margin: "0 0 10px" }}>
+                      FIRST RECORD ({new Date(progressLogs[progressLogs.length - 1].date || progressLogs[progressLogs.length - 1].createdAt).toLocaleDateString()})
+                    </p>
+                    {progressLogs[progressLogs.length - 1].photos?.[0]?.url ? (
+                      <img
+                        src={progressLogs[progressLogs.length - 1].photos[0].url}
+                        alt="Baseline Progress"
+                        style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "6px", marginBottom: "12px" }}
+                      />
+                    ) : (
+                      <div style={{ height: "140px", backgroundColor: "#101014", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", color: "#666", marginBottom: "12px", fontSize: "0.85rem" }}>
+                        Photo Not Provided
+                      </div>
+                    )}
+                    <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#fff" }}>
+                      {progressLogs[progressLogs.length - 1].weight || latestWeight} kg
+                    </div>
+                    <div style={{ fontSize: "0.82rem", color: "#8c8c9a", marginTop: "4px" }}>
+                      BMI: {progressLogs[progressLogs.length - 1].bmi || calculatedBMI} • {progressLogs[progressLogs.length - 1].bodyFat ? `${progressLogs[progressLogs.length - 1].bodyFat}% BF` : "Baseline"}
+                    </div>
+                  </div>
+
+                  {/* Current / Latest */}
+                  <div style={{ backgroundColor: "#181822", padding: "18px", borderRadius: "8px", textAlign: "center", border: "1px solid rgba(181, 242, 61, 0.4)" }}>
+                    <p style={{ color: "#B5F23D", fontSize: "0.75rem", fontWeight: "800", letterSpacing: "1px", margin: "0 0 10px" }}>
+                      LATEST CHECKPOINT ({new Date(progressLogs[0].date || progressLogs[0].createdAt).toLocaleDateString()})
+                    </p>
+                    {progressLogs[0].photos?.[0]?.url ? (
+                      <img
+                        src={progressLogs[0].photos[0].url}
+                        alt="Latest Progress"
+                        style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "6px", marginBottom: "12px" }}
+                      />
+                    ) : (
+                      <div style={{ height: "140px", backgroundColor: "#101014", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", color: "#666", marginBottom: "12px", fontSize: "0.85rem" }}>
+                        Photo Not Provided
+                      </div>
+                    )}
+                    <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#B5F23D" }}>
+                      {progressLogs[0].weight || latestWeight} kg
+                    </div>
+                    <div style={{ fontSize: "0.82rem", color: "#8c8c9a", marginTop: "4px" }}>
+                      BMI: {progressLogs[0].bmi || calculatedBMI} • {progressLogs[0].bodyFat ? `${progressLogs[0].bodyFat}% BF` : "Latest"}
+                    </div>
+                  </div>
+                </div>
+
+                {progressLogs.length > 1 && (
+                  <div style={{ marginTop: "16px", padding: "12px", backgroundColor: "#121218", borderRadius: "6px", textAlign: "center", fontSize: "0.9rem", color: "#ccc" }}>
+                    Total Weight Delta: <strong style={{ color: "#B5F23D" }}>
+                      {((progressLogs[0].weight || latestWeight) - (progressLogs[progressLogs.length - 1].weight || latestWeight)).toFixed(1)} kg
+                    </strong>
+                    {" "}• Time Span: <strong style={{ color: "#fff" }}>
+                      {Math.max(1, Math.round((new Date(progressLogs[0].date || progressLogs[0].createdAt) - new Date(progressLogs[progressLogs.length - 1].date || progressLogs[progressLogs.length - 1].createdAt)) / (1000 * 60 * 60 * 24)))} Days
+                    </strong>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Recharts Graphical Progression */}
             <div className="dashboard-card" style={{ marginTop: "24px" }}>

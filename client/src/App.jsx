@@ -43,6 +43,7 @@ const AdminBMIHistory = lazy(() => import("./pages/admin_pages/BMIHistory/AdminB
 const AdminCommunity = lazy(() => import("./pages/admin_pages/Community/AdminCommunity"));
 const AdminAttendance = lazy(() => import("./pages/admin_pages/Attendance/AdminAttendance"));
 const AdminBookings = lazy(() => import("./pages/admin_pages/Bookings/AdminBookings"));
+const AdminChallenges = lazy(() => import("./pages/admin_pages/Challenges/AdminChallenges"));
 
 // Route Loading Spinner Fallback
 const PageLoader = () => (
@@ -207,6 +208,15 @@ export default function App() {
                 element={
                   <AdminRoute>
                     <AdminBookings />
+                  </AdminRoute>
+                }
+              />
+
+              <Route
+                path="/admin/challenges"
+                element={
+                  <AdminRoute>
+                    <AdminChallenges />
                   </AdminRoute>
                 }
               />

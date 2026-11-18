@@ -9,6 +9,37 @@ function Users() {
 
   const [activeTab, setActiveTab] = useState("users");
   const [bookings, setBookings] = useState([]);
+  const [dietModalUser, setDietModalUser] = useState(null);
+  const [dietForm, setDietForm] = useState({
+    title: "Custom High-Protein Protocol",
+    goal: "Muscle Gain",
+    targetCalories: 2600,
+    targetProtein: 180,
+    targetCarbs: 260,
+    targetFats: 60,
+    waterLiters: 3.5,
+    instructions: "Strict nutrient timing. Keep hydration above 3.5L.",
+  });
+
+  const handleAssignDiet = async (e) => {
+    e.preventDefault();
+    if (!dietModalUser) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/diet-plans/assign`,
+        {
+          userId: dietModalUser._id,
+          ...dietForm,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`Diet plan assigned successfully to ${dietModalUser.username}!`);
+      setDietModalUser(null);
+    } catch (err) {
+      alert("Failed to assign diet plan: " + (err.response?.data?.msg || err.message));
+    }
+  };
 
 
   const fetchUsers = async () => {
@@ -225,7 +256,12 @@ function Users() {
                         )}
                         {user.username}
                       </span>
-                      <span>{user.email}</span>
+                      <span>
+                        <div>{user.email}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#B5F23D", marginTop: "3px" }}>
+                          {user.membership?.plan || "Pro Athlete"} ({user.membership?.status || "Active"})
+                        </div>
+                      </span>
 
                       <span style={{ fontWeight: 'bold', color: user.role === 'admin' ? '#FF4D4D' : '#B5F23D' }}>
                         {user.role}
@@ -236,6 +272,10 @@ function Users() {
                       </span>
 
                       <div className="actions" style={{ gap: '5px' }}>
+                        <button onClick={() => setDietModalUser(user)} style={{ padding: '5px', fontSize: '0.78rem', background: '#38bdf8', color: '#111', border: 'none', borderRadius: '4px', fontWeight: 'bold' }} title="Assign Diet & Nutrition Plan">
+                          Plan
+                        </button>
+
                         <button onClick={() => toggleRole(user)} style={{ padding: '5px', fontSize: '0.8rem' }}>
                           Role
                         </button>
@@ -272,7 +312,12 @@ function Users() {
                   filtered.filter(u => u.isDeleted).map((user) => (
                     <div className="row" key={user._id}>
                       <span>{user.username}</span>
-                      <span>{user.email}</span>
+                      <span>
+                        <div>{user.email}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#B5F23D", marginTop: "3px" }}>
+                          {user.membership?.plan || "Pro Athlete"} ({user.membership?.status || "Active"})
+                        </div>
+                      </span>
                       
                       <span style={{ fontWeight: 'bold', color: user.role === 'admin' ? '#FF4D4D' : '#B5F23D' }}>
                         {user.role}
@@ -353,6 +398,138 @@ function Users() {
           )}
         </div>
       </div>
+
+      {/* DIET PLAN ASSIGNMENT MODAL */}
+      {dietModalUser && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0,0,0,0.8)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000,
+          padding: "20px"
+        }}>
+          <div style={{
+            backgroundColor: "#14141a",
+            border: "1px solid #333344",
+            borderRadius: "10px",
+            padding: "28px",
+            width: "100%",
+            maxWidth: "520px",
+            color: "#fff"
+          }}>
+            <h3 style={{ margin: "0 0 6px", color: "#B5F23D", fontSize: "1.2rem" }}>
+              ASSIGN NUTRITION PLAN
+            </h3>
+            <p style={{ margin: "0 0 18px", color: "#aaa", fontSize: "0.85rem" }}>
+              Member: <strong style={{ color: "#fff" }}>{dietModalUser.username}</strong> ({dietModalUser.email})
+            </p>
+
+            <form onSubmit={handleAssignDiet}>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>PLAN TITLE</label>
+                <input
+                  type="text"
+                  value={dietForm.title}
+                  onChange={(e) => setDietForm({ ...dietForm, title: e.target.value })}
+                  required
+                  style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>GOAL</label>
+                  <select
+                    value={dietForm.goal}
+                    onChange={(e) => setDietForm({ ...dietForm, goal: e.target.value })}
+                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                  >
+                    <option value="Muscle Gain">Muscle Gain</option>
+                    <option value="Fat Loss">Fat Loss</option>
+                    <option value="Recomposition">Recomposition</option>
+                    <option value="Endurance">Endurance</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>DAILY CALORIES</label>
+                  <input
+                    type="number"
+                    value={dietForm.targetCalories}
+                    onChange={(e) => setDietForm({ ...dietForm, targetCalories: Number(e.target.value) })}
+                    required
+                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>PROTEIN (g)</label>
+                  <input
+                    type="number"
+                    value={dietForm.targetProtein}
+                    onChange={(e) => setDietForm({ ...dietForm, targetProtein: Number(e.target.value) })}
+                    required
+                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>CARBS (g)</label>
+                  <input
+                    type="number"
+                    value={dietForm.targetCarbs}
+                    onChange={(e) => setDietForm({ ...dietForm, targetCarbs: Number(e.target.value) })}
+                    required
+                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>FATS (g)</label>
+                  <input
+                    type="number"
+                    value={dietForm.targetFats}
+                    onChange={(e) => setDietForm({ ...dietForm, targetFats: Number(e.target.value) })}
+                    required
+                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>COACH INSTRUCTIONS</label>
+                <textarea
+                  rows="2"
+                  value={dietForm.instructions}
+                  onChange={(e) => setDietForm({ ...dietForm, instructions: e.target.value })}
+                  style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setDietModalUser(null)}
+                  style={{ padding: "10px 18px", backgroundColor: "#222", border: "1px solid #444", color: "#ccc", borderRadius: "5px", cursor: "pointer", fontWeight: "700" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: "10px 22px", backgroundColor: "#B5F23D", border: "none", color: "#111", borderRadius: "5px", cursor: "pointer", fontWeight: "800" }}
+                >
+                  ASSIGN PLAN
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

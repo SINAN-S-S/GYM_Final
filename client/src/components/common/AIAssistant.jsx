@@ -198,6 +198,17 @@ export default function AIAssistant() {
               <FaPaperPlane />
             </button>
           </div>
+
+          {/* Medical Disclaimer */}
+          <p style={{
+            margin: "6px 12px 10px",
+            fontSize: "0.68rem",
+            color: "#6b6b7a",
+            textAlign: "center",
+            lineHeight: 1.3
+          }}>
+            AlphaFit AI provides fitness and nutritional guidance only. It does not provide medical diagnoses or replace professional medical advice.
+          </p>
         </div>
       )}
     </div>

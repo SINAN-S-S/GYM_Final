@@ -11,6 +11,7 @@ import {
 function AdminBlog() {
   const [blogs, setBlogs] = useState([]);
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("Training");
   const [content, setContent] = useState("");
   const [file, setFile] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
@@ -38,6 +39,7 @@ const fetchBlogs = async () => {
 
     const formData = new FormData();
     formData.append("title", title);
+    formData.append("category", category);
     formData.append("content", content);
     if (file) {
       formData.append("image", file);
@@ -57,6 +59,7 @@ const fetchBlogs = async () => {
       });
 
       setTitle("");
+      setCategory("Training");
       setContent("");
       setFile(null);
       setImageUrl("");
@@ -96,7 +99,29 @@ const fetchBlogs = async () => {
               placeholder="Blog Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              required
             />
+
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "12px",
+                backgroundColor: "#181820",
+                color: "#fff",
+                border: "1px solid #333",
+                borderRadius: "4px",
+                outline: "none"
+              }}
+            >
+              <option value="Training">Training & Strength</option>
+              <option value="Nutrition">Nutrition & Macros</option>
+              <option value="Cardio">Cardio & Conditioning</option>
+              <option value="Health">Health & Science</option>
+              <option value="Home">Home Training</option>
+            </select>
 
             <textarea
               placeholder="Blog Content"
