@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaPlay, FaTimes, FaSearch, FaDumbbell, FaClock, FaLayerGroup } from 'react-icons/fa';
 import { AuthContext } from '../../context/AuthContext';
@@ -13,6 +14,7 @@ const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core",
 const LEVELS = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
 function Workouts() {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,7 +209,7 @@ function Workouts() {
             </div>
             
             <button 
-              onClick={() => window.location.href = '/profile'} 
+              onClick={() => navigate('/profile')} 
               style={{ marginTop: '40px', background: '#B5F23D', color: '#000', border: 'none', padding: '15px 30px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', borderRadius: '4px' }}
             >
               UPGRADE MEMBERSHIP IN PROFILE

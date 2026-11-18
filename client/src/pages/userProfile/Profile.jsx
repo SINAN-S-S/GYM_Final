@@ -148,82 +148,109 @@ export default function Profile() {
         const accessRes = await axios.get(`${backendUrl}/api/users/access-status`, { headers }).catch(() => null);
         if (accessRes?.data) setAccess(accessRes.data);
 
-        // 2. Attendance & QR
-        const qrRes = await axios.get(`${backendUrl}/api/attendance/my-qr`, { headers }).catch(() => null);
-        if (qrRes?.data) setQrData(qrRes.data);
+        // Fetch remaining secondary dashboard data concurrently
+        const [
+          qrRes,
+          attHistRes,
+          workoutRes,
+          progRes,
+          dietRes,
+          trainerRes,
+          bookingRes,
+          chalRes,
+          leaderRes,
+          plansRes,
+          purchaseRes,
+          notifRes,
+        ] = await Promise.allSettled([
+          axios.get(`${backendUrl}/api/attendance/my-qr`, { headers }),
+          axios.get(`${backendUrl}/api/attendance/my-history`, { headers }),
+          axios.get(`${backendUrl}/api/workout-logs/my`, { headers }),
+          axios.get(`${backendUrl}/api/progress/my`, { headers }),
+          axios.get(`${backendUrl}/api/diet-plans/my`, { headers }),
+          axios.get(`${backendUrl}/api/trainers`),
+          axios.get(`${backendUrl}/api/bookings/mybookings`, { headers }),
+          axios.get(`${backendUrl}/api/challenges`, { headers }),
+          axios.get(`${backendUrl}/api/challenges/leaderboard`, { headers }),
+          axios.get(`${backendUrl}/api/memberships/plans`),
+          axios.get(`${backendUrl}/api/purchases/my-purchases`, { headers }),
+          axios.get(`${backendUrl}/api/notifications/my`, { headers }),
+        ]);
 
-        const attHistRes = await axios.get(`${backendUrl}/api/attendance/my-history`, { headers }).catch(() => null);
-        if (attHistRes?.data) {
-          const list = attHistRes.data.history || attHistRes.data.records || (Array.isArray(attHistRes.data) ? attHistRes.data : []);
+        // 2. Attendance & QR
+        if (qrRes.status === "fulfilled" && qrRes.value?.data) {
+          setQrData(qrRes.value.data);
+        }
+
+        if (attHistRes.status === "fulfilled" && attHistRes.value?.data) {
+          const aData = attHistRes.value.data;
+          const list = aData.history || aData.records || (Array.isArray(aData) ? aData : []);
           const safeList = Array.isArray(list) ? list : [];
           setAttendanceHistory(safeList);
           setAttendanceStats({
-            totalCheckIns: attHistRes.data.totalCheckIns || attHistRes.data.totalDays || safeList.length,
-            streak: attHistRes.data.streak || 0,
+            totalCheckIns: aData.totalCheckIns || aData.totalDays || safeList.length,
+            streak: aData.streak || 0,
           });
         }
 
         // 3. Workouts
-        const workoutRes = await axios.get(`${backendUrl}/api/workout-logs/my`, { headers }).catch(() => null);
-        if (workoutRes?.data) {
-          const wList = workoutRes.data.logs || workoutRes.data.workouts || (Array.isArray(workoutRes.data) ? workoutRes.data : []);
+        if (workoutRes.status === "fulfilled" && workoutRes.value?.data) {
+          const wData = workoutRes.value.data;
+          const wList = wData.logs || wData.workouts || (Array.isArray(wData) ? wData : []);
           setWorkouts(Array.isArray(wList) ? wList : []);
         }
 
         // 4. Progress
-        const progRes = await axios.get(`${backendUrl}/api/progress/my`, { headers }).catch(() => null);
-        if (progRes?.data) {
-          const pList = Array.isArray(progRes.data) ? progRes.data : (progRes.data.progress || []);
+        if (progRes.status === "fulfilled" && progRes.value?.data) {
+          const pData = progRes.value.data;
+          const pList = Array.isArray(pData) ? pData : (pData.progress || []);
           setProgressLogs(Array.isArray(pList) ? pList : []);
         }
 
         // 5. Diet Plan
-        const dietRes = await axios.get(`${backendUrl}/api/diet-plans/my`, { headers }).catch(() => null);
-        if (dietRes?.data) setDietPlan(dietRes.data);
+        if (dietRes.status === "fulfilled" && dietRes.value?.data) {
+          setDietPlan(dietRes.value.data);
+        }
 
         // 6. Trainers & Bookings
-        const trainerRes = await axios.get(`${backendUrl}/api/trainers`).catch(() => null);
-        if (trainerRes?.data) {
-          const tList = Array.isArray(trainerRes.data) ? trainerRes.data : [];
+        if (trainerRes.status === "fulfilled" && trainerRes.value?.data) {
+          const tList = Array.isArray(trainerRes.value.data) ? trainerRes.value.data : [];
           setTrainers(tList);
           if (tList.length > 0) {
             setBookingForm((prev) => ({ ...prev, trainerId: tList[0]._id }));
           }
         }
 
-        const bookingRes = await axios.get(`${backendUrl}/api/bookings/mybookings`, { headers }).catch(() => null);
-        if (bookingRes?.data) {
-          const bList = Array.isArray(bookingRes.data) ? bookingRes.data : (bookingRes.data.bookings || []);
+        if (bookingRes.status === "fulfilled" && bookingRes.value?.data) {
+          const bData = bookingRes.value.data;
+          const bList = Array.isArray(bData) ? bData : (bData.bookings || []);
           setBookings(Array.isArray(bList) ? bList : []);
         }
 
         // 7. Challenges & Leaderboard
-        const chalRes = await axios.get(`${backendUrl}/api/challenges`, { headers }).catch(() => null);
-        if (chalRes?.data) {
-          setChallenges(Array.isArray(chalRes.data) ? chalRes.data : []);
+        if (chalRes.status === "fulfilled" && chalRes.value?.data) {
+          setChallenges(Array.isArray(chalRes.value.data) ? chalRes.value.data : []);
         }
 
-        const leaderRes = await axios.get(`${backendUrl}/api/challenges/leaderboard`, { headers }).catch(() => null);
-        if (leaderRes?.data) {
-          setLeaderboard(Array.isArray(leaderRes.data) ? leaderRes.data : []);
+        if (leaderRes.status === "fulfilled" && leaderRes.value?.data) {
+          setLeaderboard(Array.isArray(leaderRes.value.data) ? leaderRes.value.data : []);
         }
 
         // 8. Memberships & Purchases
-        const plansRes = await axios.get(`${backendUrl}/api/memberships/plans`).catch(() => null);
-        if (plansRes?.data) {
-          setMembershipPlans(Array.isArray(plansRes.data) ? plansRes.data : []);
+        if (plansRes.status === "fulfilled" && plansRes.value?.data) {
+          setMembershipPlans(Array.isArray(plansRes.value.data) ? plansRes.value.data : []);
         }
 
-        const purchaseRes = await axios.get(`${backendUrl}/api/purchases/my-purchases`, { headers }).catch(() => null);
-        if (purchaseRes?.data) {
-          const purList = Array.isArray(purchaseRes.data) ? purchaseRes.data : (purchaseRes.data.purchases || []);
+        if (purchaseRes.status === "fulfilled" && purchaseRes.value?.data) {
+          const purData = purchaseRes.value.data;
+          const purList = Array.isArray(purData) ? purData : (purData.purchases || []);
           setPurchases(Array.isArray(purList) ? purList : []);
         }
 
         // 9. Notifications
-        const notifRes = await axios.get(`${backendUrl}/api/notifications/my`, { headers }).catch(() => null);
-        if (notifRes?.data) {
-          const nList = notifRes.data.notifications || (Array.isArray(notifRes.data) ? notifRes.data : []);
+        if (notifRes.status === "fulfilled" && notifRes.value?.data) {
+          const nData = notifRes.value.data;
+          const nList = nData.notifications || (Array.isArray(nData) ? nData : []);
           setNotifications(Array.isArray(nList) ? nList : []);
         }
 

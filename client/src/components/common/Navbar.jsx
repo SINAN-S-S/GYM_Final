@@ -91,7 +91,7 @@ export default function Navbar() {
                 Community
               </NavLink>
             </li>
-            {isAuthenticated && user && (
+            {isAuthenticated && (
               <li>
                 <NavLink to="/profile" className={({ isActive }) => (isActive ? "active-nav" : "")} onClick={closeMenu}>
                   Profile
@@ -101,7 +101,7 @@ export default function Navbar() {
 
             {/* Mobile Auth Actions */}
             <li className="mobile-auth-section">
-              {isAuthenticated && user ? (
+              {isAuthenticated ? (
                 <div className="mobile-auth-group">
                   <NavLink
                     to="/profile"
@@ -111,7 +111,7 @@ export default function Navbar() {
                     <FaUser /> My Dashboard
                   </NavLink>
 
-                  {user.role === "admin" && (
+                  {user?.role === "admin" && (
                     <NavLink to="/admin" className="mobile-admin-link" onClick={closeMenu}>
                       <FaShieldAlt /> Admin Panel
                     </NavLink>
@@ -133,9 +133,9 @@ export default function Navbar() {
 
           {/* Desktop Auth Section */}
           <div className="desktop-auth-actions">
-            {isAuthenticated && user ? (
+            {isAuthenticated ? (
               <div className="auth-pill-group">
-                {user.role === "admin" && (
+                {user?.role === "admin" && (
                   <Link to="/admin" className="nav-admin-badge" title="Admin Panel">
                     <FaShieldAlt /> ADMIN
                   </Link>
@@ -144,10 +144,10 @@ export default function Navbar() {
                 <NavLink
                   to="/profile"
                   className={({ isActive }) => `user-profile-pill ${isActive ? "active-nav" : ""}`}
-                  title={`Logged in as ${user.username}`}
+                  title={user?.username ? `Logged in as ${user.username}` : "My Profile"}
                 >
                   <FaUser className="user-icon" />
-                  <span className="user-name">{user.username}</span>
+                  <span className="user-name">{user?.username || "Profile"}</span>
                 </NavLink>
 
                 <button onClick={handleLogout} className="nav-logout-btn" title="Sign Out">
