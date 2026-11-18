@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import "mongodb/lib/resource_management.js";
 
 let cached = global.mongoose;
 
