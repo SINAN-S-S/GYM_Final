@@ -813,32 +813,51 @@ export default function Profile() {
                   4 Sets x 10-12 Reps • Barbell Compound Lifts • 45 Minutes • Target: Full Body Power
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setWorkoutForm({
-                    title: "Alpha Compound Strength Split",
-                    category: "Full Body",
-                    durationMinutes: 50,
-                    caloriesBurned: 420,
-                    exercises: [{ name: "Barbell Squats & Bench Press", sets: [{ reps: 10, weight: 70 }] }],
-                  });
-                  alert("Protocol loaded into form! Adjust weights/reps and hit '+ LOG COMPLETED WORKOUT'.");
-                }}
-                style={{
-                  backgroundColor: "#B5F23D",
-                  color: "#111",
-                  border: "none",
-                  padding: "10px 18px",
-                  borderRadius: "6px",
-                  fontWeight: "800",
-                  fontSize: "0.8rem",
-                  cursor: "pointer",
-                  letterSpacing: "0.5px"
-                }}
-              >
-                + LOAD PROTOCOL
-              </button>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWorkoutForm({
+                      title: "Alpha Compound Strength Split",
+                      category: "Full Body",
+                      durationMinutes: 50,
+                      caloriesBurned: 420,
+                      exercises: [{ name: "Barbell Squats & Bench Press", sets: [{ reps: 10, weight: 70 }] }],
+                    });
+                    alert("Protocol loaded into form! Adjust weights/reps and hit '+ LOG COMPLETED WORKOUT'.");
+                  }}
+                  style={{
+                    backgroundColor: "#B5F23D",
+                    color: "#111",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "6px",
+                    fontWeight: "800",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  + LOAD PROTOCOL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/videos")}
+                  style={{
+                    backgroundColor: "#1e1e28",
+                    color: "#B5F23D",
+                    border: "1px solid #3a3a4c",
+                    padding: "10px 18px",
+                    borderRadius: "6px",
+                    fontWeight: "800",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  🎬 VIDEO LIBRARY
+                </button>
+              </div>
             </div>
 
             <div className="two-column-layout">

@@ -33,9 +33,13 @@ import challengeRoutes from "./routes/challengeRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import membershipRoutes from "./routes/membershipRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import workoutVideoRoutes from "./routes/workoutVideoRoutes.js";
+
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 
@@ -151,6 +155,7 @@ app.use("/api/challenges", challengeRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/memberships", membershipRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/workout-videos", workoutVideoRoutes);
 
 // 404 Handler
 app.use((req, res) => {

@@ -27,6 +27,7 @@ const TrainerProfile = lazy(() => import("./pages/trainers/TrainerProfile"));
 const FitnessLanding = lazy(() => import("./pages/FitnessLanding/FitnessLanding"));
 const Checkout = lazy(() => import("./pages/Checkout/Checkout"));
 const Workoutplanner = lazy(() => import("./pages/workoutplanner/Workoutplanner"));
+const WorkoutVideos = lazy(() => import("./pages/videos/WorkoutVideos"));
 
 // Lazy-loaded Admin Pages (Isolated Chunking)
 const AdminDashboard = lazy(() => import("./pages/admin_pages/AdminDashboard/AdminDashboard"));
@@ -39,6 +40,7 @@ const AdminProgress = lazy(() => import("./pages/admin_pages/Programs/AdminProgr
 const AdminTrainers = lazy(() => import("./pages/admin_pages/Trainers/AdminTrainers"));
 const AdminExerciseBank = lazy(() => import("./pages/admin_pages/ExerciseBank/AdminExerciseBank"));
 const AdminWorkouts = lazy(() => import("./pages/admin_pages/Workouts/AdminWorkouts"));
+const AdminVideos = lazy(() => import("./pages/admin_pages/Videos/AdminVideos"));
 const AdminBMIHistory = lazy(() => import("./pages/admin_pages/BMIHistory/AdminBMIHistory"));
 const AdminCommunity = lazy(() => import("./pages/admin_pages/Community/AdminCommunity"));
 const AdminAttendance = lazy(() => import("./pages/admin_pages/Attendance/AdminAttendance"));
@@ -80,6 +82,8 @@ export default function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/:id" element={<Checkout />} />
                 <Route path="/exercises" element={<Workouts />} />
+                <Route path="/videos" element={<WorkoutVideos />} />
+                <Route path="/workout-videos" element={<WorkoutVideos />} />
                 <Route path="/calculator" element={<Calculator />} />
                 <Route path="/bmi-calculator" element={<BMICalculator />} />
                 <Route path="/bmi-history" element={<BMIHistory />} />
@@ -172,6 +176,15 @@ export default function App() {
                 element={
                   <AdminRoute>
                     <AdminWorkouts />
+                  </AdminRoute>
+                }
+              />
+
+              <Route
+                path="/admin/videos"
+                element={
+                  <AdminRoute>
+                    <AdminVideos />
                   </AdminRoute>
                 }
               />
