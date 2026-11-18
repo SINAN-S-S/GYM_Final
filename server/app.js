@@ -128,9 +128,28 @@ app.use((req, res) => {
   });
 });
 
+// Global Error Handler - Prevents Serverless Function crashes on unhandled errors
+app.use((err, req, res, next) => {
+  console.error("[Backend] Unhandled Error:", err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
-if (!process.env.VERCEL && process.env.NODE_ENV !== "test") {
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.VERCEL_ENV ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT
+);
+
+if (!isServerless && process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
