@@ -4,17 +4,22 @@ import Notification from "../models/Notification.js";
 // CREATE BOOKING (With Conflict Prevention)
 export const createBooking = async (req, res) => {
   try {
-    const { trainer, sessionDate, timeSlot, notes } = req.body;
+    const trainer = req.body.trainer || req.body.trainerId;
+    const sessionDate = req.body.sessionDate || req.body.date;
+    const timeSlot = req.body.timeSlot || "10:00 AM - 11:00 AM";
+    const notes = req.body.notes || req.body.sessionType || "";
     const user = req.user._id;
 
     if (!trainer) {
       return res.status(400).json({ msg: "Trainer is required" });
     }
 
-    const slot = timeSlot || "10:00 AM - 11:00 AM";
+    const slot = timeSlot;
     const targetDate = sessionDate ? new Date(sessionDate) : new Date();
-    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
     // Conflict prevention check: same trainer, same date, same time slot, not cancelled
     const conflict = await Booking.findOne({
@@ -52,7 +57,11 @@ export const createBooking = async (req, res) => {
     }
 
     const populated = await Booking.findById(booking._id).populate("trainer", "name image expertise availableTime");
-    res.status(201).json(populated);
+    res.status(201).json({
+      success: true,
+      booking: populated,
+      ...populated.toObject(),
+    });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
