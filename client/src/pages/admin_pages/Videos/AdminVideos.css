@@ -16,6 +16,15 @@
   overflow-x: hidden;
 }
 
+.admin-embedded-wrap {
+  width: 100%;
+}
+
+.admin-main-content-embedded {
+  width: 100%;
+  padding: 10px 0 30px;
+}
+
 /* Header */
 .admin-videos-header {
   display: flex;

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminWorkouts.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
+import AdminVideos from "../Videos/AdminVideos";
 
 function AdminWorkouts() {
+  const [activeTab, setActiveTab] = useState("routines"); // "routines" | "videos"
   const [workouts, setWorkouts] = useState([]);
   const [form, setForm] = useState({
     title: "",
@@ -170,9 +172,55 @@ function AdminWorkouts() {
       <AdminSidebar />
 
       <div className="workout-page">
-        <h1 className="title">Workouts Management</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px", borderBottom: "1px solid #232330", paddingBottom: "18px" }}>
+          <div>
+            <span style={{ fontSize: "0.72rem", color: "#B5F23D", fontWeight: "800", letterSpacing: "1.5px" }}>WORKOUT MANAGEMENT</span>
+            <h1 className="title" style={{ margin: "4px 0 0", fontSize: "1.8rem" }}>Workouts Management</h1>
+          </div>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab("routines")}
+              style={{
+                backgroundColor: activeTab === "routines" ? "#B5F23D" : "#14141a",
+                color: activeTab === "routines" ? "#08080a" : "#8c8c9a",
+                border: activeTab === "routines" ? "1px solid #B5F23D" : "1px solid #282836",
+                padding: "10px 18px",
+                borderRadius: "6px",
+                fontWeight: "800",
+                fontSize: "0.82rem",
+                cursor: "pointer",
+                letterSpacing: "0.5px",
+                transition: "all 0.2s"
+              }}
+            >
+              🏋️ WORKOUT ROUTINES ({workouts.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("videos")}
+              style={{
+                backgroundColor: activeTab === "videos" ? "#B5F23D" : "#14141a",
+                color: activeTab === "videos" ? "#08080a" : "#8c8c9a",
+                border: activeTab === "videos" ? "1px solid #B5F23D" : "1px solid #282836",
+                padding: "10px 18px",
+                borderRadius: "6px",
+                fontWeight: "800",
+                fontSize: "0.82rem",
+                cursor: "pointer",
+                letterSpacing: "0.5px",
+                transition: "all 0.2s"
+              }}
+            >
+              🎬 EXERCISE & WORKOUT VIDEOS
+            </button>
+          </div>
+        </div>
 
-        <div className="workout-content">
+        {activeTab === "videos" ? (
+          <AdminVideos embedded={true} />
+        ) : (
+          <div className="workout-content">
 
           {/* FORM */}
           <form className="workout-form" onSubmit={handleSubmit}>
@@ -426,9 +474,10 @@ function AdminWorkouts() {
 
           </div>
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
 
 export default AdminWorkouts;

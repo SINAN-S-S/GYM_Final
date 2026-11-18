@@ -31,7 +31,7 @@ const CATEGORIES = [
 
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"];
 
-export default function AdminVideos() {
+export default function AdminVideos({ embedded = false }) {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -274,10 +274,10 @@ export default function AdminVideos() {
     /\.(mp4|webm|ogg)|cloudinary/i.test(previewVideo.videoUrl);
 
   return (
-    <div className="admin-page-container">
-      <AdminSidebar />
+    <div className={embedded ? "admin-embedded-wrap" : "admin-page-container"}>
+      {!embedded && <AdminSidebar />}
 
-      <main className="admin-main-content">
+      <main className={embedded ? "admin-main-content-embedded" : "admin-main-content"}>
         {/* HEADER */}
         <header className="admin-videos-header">
           <div>

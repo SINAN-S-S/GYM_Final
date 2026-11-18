@@ -81,7 +81,7 @@ export default function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/:id" element={<Checkout />} />
                 <Route path="/workouts" element={<Workouts />} />
-                <Route path="/exercises" element={<Workouts />} />
+                <Route path="/exercises" element={<Navigate to="/workouts" replace />} />
                 <Route path="/videos" element={<Navigate to="/workouts" replace />} />
                 <Route path="/workout-videos" element={<Navigate to="/workouts" replace />} />
                 <Route path="/calculator" element={<Calculator />} />
@@ -182,11 +182,7 @@ export default function App() {
 
               <Route
                 path="/admin/videos"
-                element={
-                  <AdminRoute>
-                    <AdminVideos />
-                  </AdminRoute>
-                }
+                element={<Navigate to="/admin/workouts" replace />}
               />
 
               <Route
