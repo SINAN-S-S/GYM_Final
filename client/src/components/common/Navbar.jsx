@@ -62,11 +62,6 @@ export default function Navbar() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/videos" className={({ isActive }) => (isActive ? "active-nav" : "")} onClick={closeMenu}>
-                Videos
-              </NavLink>
-            </li>
-            <li>
               <NavLink to="/nutrition" className={({ isActive }) => (isActive ? "active-nav" : "")} onClick={closeMenu}>
                 Nutrition
               </NavLink>

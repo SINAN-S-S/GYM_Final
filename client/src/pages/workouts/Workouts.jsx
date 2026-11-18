@@ -1,159 +1,358 @@
-import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { FaPlay, FaTimes, FaSearch, FaDumbbell, FaClock, FaLayerGroup } from 'react-icons/fa';
-import { AuthContext } from '../../context/AuthContext';
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import {
+  FaPlay,
+  FaTimes,
+  FaSearch,
+  FaClock,
+  FaDumbbell,
+  FaLayerGroup,
+  FaUserCheck,
+  FaFire,
+  FaExternalLinkAlt,
+  FaLock,
+} from "react-icons/fa";
+import { AuthContext } from "../../context/AuthContext";
 import {
   resolveImageUrl,
   getWorkoutFallbackImage,
   onImageError,
-} from '../../utils/imageUrl';
-import './Workouts.css';
+} from "../../utils/imageUrl";
+import { getEmbedUrl, isDirectVideoUrl } from "../../utils/videoUtils";
+import "./Workouts.css";
 
-const CATEGORIES = ["All", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Cardio", "Full Body"];
-const LEVELS = ["All Levels", "Beginner", "Intermediate", "Advanced"];
+const CATEGORIES = [
+  "All",
+  "Chest",
+  "Back",
+  "Legs",
+  "Shoulders",
+  "Arms",
+  "Abs",
+  "Cardio",
+  "Full Body",
+];
 
-function Workouts() {
+const DIFFICULTIES = ["All Levels", "Beginner", "Intermediate", "Advanced"];
+
+export default function Workouts() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const [workouts, setWorkouts] = useState([]);
+
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeWorkout, setActiveWorkout] = useState(null);
+  const [error, setError] = useState(null);
 
   // Filters
+  const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedLevel, setSelectedLevel] = useState("All Levels");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels");
 
-  const [accessData, setAccessData] = useState({ isLocked: true, hasPurchased: false, hasTrainer: false, isApproved: false });
+  // Active / Selected Video Modal
+  const [activeItem, setActiveItem] = useState(null);
+  const [relatedVideos, setRelatedVideos] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
-        
-        // Fetch access status
-        if (token) {
-          try {
-            const accessRes = await axios.get(`${backendUrl}/api/users/access-status`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            setAccessData(accessRes.data);
-          } catch (accessErr) {
-            console.error("Error fetching access status", accessErr);
-          }
-        }
+  // Guard against duplicate view increments in the same session
+  const viewedIdsRef = useRef(new Set());
 
-        // Fetch workouts
-        const res = await axios.get(`${backendUrl}/api/workouts`);
-        setWorkouts(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error("Error fetching workouts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+  // Access status state
+  const [accessData, setAccessData] = useState({
+    isLocked: true,
+    hasPurchased: false,
+    hasTrainer: false,
+    isApproved: false,
+  });
+
+  const backendUrl = useMemo(() => {
+    const isLocal =
+      typeof window !== "undefined" &&
+      window.location &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1");
+    if (isLocal) return "http://localhost:5000";
+    const configured = (
+      import.meta.env.VITE_API_URL ||
+      import.meta.env.VITE_BACKEND_URL ||
+      ""
+    )
+      .replace(/\/+$/, "")
+      .replace(/\/api$/, "");
+    if (
+      !configured ||
+      /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(
+        configured
+      )
+    ) {
+      return "https://gym-final-3uya.vercel.app";
+    }
+    return configured;
   }, []);
 
-  const getImageUrl = (workout) => {
-    const fallback = getWorkoutFallbackImage(workout?.title);
-    return resolveImageUrl(workout?.image, fallback);
-  };
+  // Fetch access status and all exercises/workout videos
+  useEffect(() => {
+    let isMounted = true;
 
-  const closeVideo = () => setActiveWorkout(null);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem("token");
 
-  const getEmbedUrl = (url) => {
-    if (!url) return null;
-    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-    if (shortMatch && shortMatch[1]) {
-      return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
-    }
-    const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-    if (longMatch && longMatch[1]) {
-      return `https://www.youtube.com/embed/${longMatch[1]}?autoplay=1`;
-    }
-    const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-    if (embedMatch && embedMatch[1]) {
-      return `https://www.youtube.com/embed/${embedMatch[1]}?autoplay=1`;
-    }
-    return null;
-  };
+        // Concurrent fetch for access status, workout videos, and workout routines
+        const [accessRes, videosRes, workoutsRes] = await Promise.allSettled([
+          token
+            ? axios.get(`${backendUrl}/api/users/access-status`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+            : Promise.resolve({ data: null }),
+          axios.get(`${backendUrl}/api/workout-videos`),
+          axios.get(`${backendUrl}/api/workouts`),
+        ]);
+
+        if (!isMounted) return;
+
+        if (accessRes.status === "fulfilled" && accessRes.value?.data) {
+          setAccessData(accessRes.value.data);
+        }
+
+        const rawVideos =
+          videosRes.status === "fulfilled" && Array.isArray(videosRes.value?.data)
+            ? videosRes.value.data
+            : [];
+
+        const rawWorkouts =
+          workoutsRes.status === "fulfilled" && Array.isArray(workoutsRes.value?.data)
+            ? workoutsRes.value.data
+            : [];
+
+        // Normalize workout videos
+        const normalizedVideos = rawVideos.map((v) => ({
+          _id: v._id,
+          title: v.title,
+          description: v.description || "",
+          category: v.category || "Full Body",
+          difficulty: v.difficulty || "Beginner",
+          duration: v.duration || 15,
+          thumbnail:
+            v.thumbnail ||
+            "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&auto=format&fit=crop&q=80",
+          videoUrl: v.videoUrl || "",
+          targetedMuscles: Array.isArray(v.targetedMuscles) ? v.targetedMuscles : [],
+          equipment: Array.isArray(v.equipment) ? v.equipment : [],
+          trainerName: v.trainerName || "AlphaFit Master Coach",
+          views: typeof v.views === "number" ? v.views : 0,
+          isActive: v.isActive !== false,
+          source: "video",
+        }));
+
+        // Normalize workout routines from legacy collection (if not already represented)
+        const existingTitles = new Set(
+          normalizedVideos.map((v) => v.title.trim().toLowerCase())
+        );
+
+        const normalizedWorkouts = rawWorkouts
+          .filter((w) => !existingTitles.has((w.title || "").trim().toLowerCase()))
+          .map((w) => {
+            const cat = w.category === "Core" ? "Abs" : w.category || "Full Body";
+            const fallbackImg = getWorkoutFallbackImage(w.title);
+            return {
+              _id: w._id,
+              title: w.title,
+              description: w.description || "",
+              category: cat,
+              difficulty: w.level || "Beginner",
+              duration: w.duration || 20,
+              thumbnail: resolveImageUrl(w.image, fallbackImg),
+              videoUrl: w.videoUrl || w.video || "",
+              targetedMuscles: w.targetMuscle
+                ? [w.targetMuscle]
+                : Array.isArray(w.exercises) && w.exercises.length > 0
+                ? [w.exercises[0]]
+                : [cat],
+              equipment: ["Standard Gym"],
+              trainerName: "AlphaFit Head Coach",
+              views: 120,
+              exercises: Array.isArray(w.exercises) ? w.exercises : [],
+              instructions: w.instructions || "",
+              source: "workout",
+            };
+          });
+
+        const combined = [...normalizedVideos, ...normalizedWorkouts];
+        setItems(combined);
+      } catch (err) {
+        console.error("Error fetching exercise and workout library:", err);
+        if (isMounted) {
+          setError("Failed to load exercise videos. Please refresh or try again.");
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [backendUrl]);
 
   // Access rule: admins, active members, or approved program purchasers
   const isUnlocked =
-    user?.role === 'admin' ||
-    user?.membership?.status === 'Active' ||
+    user?.role === "admin" ||
+    user?.membership?.status === "Active" ||
     accessData.isLocked === false ||
     accessData.hasPurchased;
 
-  // Filtered Workouts
-  const filteredWorkouts = workouts.filter((w) => {
-    const matchesCat =
-      selectedCategory === "All" ||
-      (w.category && w.category.toLowerCase() === selectedCategory.toLowerCase()) ||
-      (w.title && w.title.toLowerCase().includes(selectedCategory.toLowerCase()));
+  // Handle opening video modal with view count tracking
+  const handleOpenVideo = async (item) => {
+    setActiveItem(item);
+    setModalLoading(true);
 
-    const matchesLevel =
-      selectedLevel === "All Levels" ||
-      (w.level && w.level.toLowerCase() === selectedLevel.toLowerCase());
+    // Compute immediate fallback related items from current list
+    const fallbackRelated = items
+      .filter((it) => it._id !== item._id && it.category === item.category)
+      .slice(0, 3);
+    setRelatedVideos(fallbackRelated);
 
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      !q ||
-      (w.title && w.title.toLowerCase().includes(q)) ||
-      (w.description && w.description.toLowerCase().includes(q)) ||
-      (w.targetMuscle && w.targetMuscle.toLowerCase().includes(q)) ||
-      (Array.isArray(w.exercises) && w.exercises.some((ex) => ex.toLowerCase().includes(q)));
+    // Track views accurately and guard against duplicate view counting
+    if (!viewedIdsRef.current.has(item._id)) {
+      viewedIdsRef.current.add(item._id);
 
-    return matchesCat && matchesLevel && matchesSearch;
-  });
+      if (item.source === "video") {
+        try {
+          const res = await axios.get(`${backendUrl}/api/workout-videos/${item._id}`);
+          if (res.data?.video) {
+            const updatedVideo = res.data.video;
+            setActiveItem((prev) => (prev ? { ...prev, ...updatedVideo } : updatedVideo));
+            // Update view count in main list state
+            setItems((prevItems) =>
+              prevItems.map((it) =>
+                it._id === item._id ? { ...it, views: updatedVideo.views } : it
+              )
+            );
+          }
+          if (Array.isArray(res.data?.relatedVideos) && res.data.relatedVideos.length > 0) {
+            setRelatedVideos(res.data.relatedVideos);
+          }
+        } catch (err) {
+          console.warn("Could not increment views via endpoint:", err);
+        }
+      } else {
+        // For legacy workout items, increment locally
+        setItems((prevItems) =>
+          prevItems.map((it) =>
+            it._id === item._id ? { ...it, views: (it.views || 0) + 1 } : it
+          )
+        );
+        setActiveItem((prev) => (prev ? { ...prev, views: (prev.views || 0) + 1 } : prev));
+      }
+    }
+
+    setModalLoading(false);
+  };
+
+  const handleCloseModal = () => {
+    setActiveItem(null);
+    setRelatedVideos([]);
+  };
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") handleCloseModal();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Filter items
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // Category filter (support Abs/Core interchange)
+      const matchesCategory =
+        selectedCategory === "All" ||
+        item.category?.toLowerCase() === selectedCategory.toLowerCase() ||
+        (selectedCategory === "Abs" && item.category?.toLowerCase() === "core");
+
+      // Difficulty filter
+      const matchesDifficulty =
+        selectedDifficulty === "All Levels" ||
+        item.difficulty?.toLowerCase() === selectedDifficulty.toLowerCase();
+
+      // Search query filter (matches title, description, muscles, equipment, exercises, trainer)
+      const q = search.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        item.title?.toLowerCase().includes(q) ||
+        item.description?.toLowerCase().includes(q) ||
+        item.category?.toLowerCase().includes(q) ||
+        (Array.isArray(item.targetedMuscles) &&
+          item.targetedMuscles.some((m) => m.toLowerCase().includes(q))) ||
+        (Array.isArray(item.equipment) &&
+          item.equipment.some((eq) => eq.toLowerCase().includes(q))) ||
+        (Array.isArray(item.exercises) &&
+          item.exercises.some((ex) => ex.toLowerCase().includes(q))) ||
+        item.trainerName?.toLowerCase().includes(q);
+
+      return matchesCategory && matchesDifficulty && matchesSearch;
+    });
+  }, [items, selectedCategory, selectedDifficulty, search]);
+
+  const embedUrl = activeItem ? getEmbedUrl(activeItem.videoUrl) : null;
+  const isDirect = activeItem ? isDirectVideoUrl(activeItem.videoUrl) : false;
 
   return (
     <div className="workouts-page">
       <div className="workouts-container">
+        {/* HEADER SECTION */}
         <header className="workouts-header">
           <div className="header-left">
-            <p className="kicker">03 — WORKOUT & VIDEO LIBRARY</p>
-            <h1 className="heavy-title">ELITE <br/> ROUTINES</h1>
+            <span className="kicker-pill">03 — MASTER EXERCISE & VIDEO LIBRARY</span>
+            <h1 className="heavy-title">
+              ELITE <br />
+              <span className="accent-text">ROUTINES & EXERCISES</span>
+            </h1>
           </div>
           <div className="header-right">
             <p className="header-desc">
-              Explore exercise demonstration videos, technique breakdowns, and structured training routines designed by AlphaFit head coaches.
+              Explore high-definition exercise demonstration videos, technique breakdowns, and
+              structured training routines designed by AlphaFit head coaches.
             </p>
           </div>
         </header>
 
-        {/* Search & Filter Controls */}
-        <div className="workout-filter-controls" style={{ marginBottom: "30px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {/* Search bar */}
-          <div style={{ position: "relative", maxWidth: "480px" }}>
+        {/* SEARCH & FILTER CONTROLS */}
+        <section className="filter-controls-wrapper">
+          {/* Search Box */}
+          <div className="search-box-container">
+            <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search by routine, muscle, or exercise..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 14px 12px 38px",
-                backgroundColor: "#141418",
-                border: "1px solid #2a2a34",
-                borderRadius: "8px",
-                color: "#fff",
-                fontSize: "0.9rem",
-                outline: "none"
-              }}
+              placeholder="Search by movement, target muscle, equipment, routine..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="search-input"
             />
-            <FaSearch style={{ position: "absolute", left: "14px", top: "14px", color: "#8c8c9a" }} />
+            {search && (
+              <button
+                className="clear-search-btn"
+                onClick={() => setSearch("")}
+                title="Clear Search"
+              >
+                <FaTimes />
+              </button>
+            )}
           </div>
 
-          {/* Category Tabs */}
-          <div className="filter-bar" style={{ marginBottom: "10px", paddingBottom: "10px", borderBottom: "1px solid #1c1c24" }}>
+          {/* Muscle Group & Category Filter Tabs */}
+          <div className="category-scroll-bar">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
-                className={`filter-btn ${selectedCategory === cat ? 'active' : ''}`}
+                className={`cat-tab-btn ${selectedCategory === cat ? "active" : ""}`}
                 onClick={() => setSelectedCategory(cat)}
               >
                 {cat}
@@ -161,256 +360,379 @@ function Workouts() {
             ))}
           </div>
 
-          {/* Difficulty Level Pills */}
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: "0.78rem", color: "#8c8c9a", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px", marginRight: "6px" }}>
-              DIFFICULTY:
-            </span>
-            {LEVELS.map((lvl) => (
+          {/* Difficulty Level Filter Pills & Reset */}
+          <div className="difficulty-pills-row">
+            <span className="difficulty-label">DIFFICULTY:</span>
+            {DIFFICULTIES.map((diff) => (
               <button
-                key={lvl}
-                onClick={() => setSelectedLevel(lvl)}
-                style={{
-                  background: selectedLevel === lvl ? "rgba(181, 242, 61, 0.15)" : "#181820",
-                  color: selectedLevel === lvl ? "#B5F23D" : "#8c8c9a",
-                  border: selectedLevel === lvl ? "1px solid #B5F23D" : "1px solid #282834",
-                  padding: "5px 12px",
-                  borderRadius: "20px",
-                  fontSize: "0.75rem",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  transition: "all 0.2s"
-                }}
+                key={diff}
+                className={`diff-pill-btn ${selectedDifficulty === diff ? "active" : ""}`}
+                onClick={() => setSelectedDifficulty(diff)}
               >
-                {lvl}
+                {diff}
               </button>
             ))}
+            {(selectedCategory !== "All" ||
+              selectedDifficulty !== "All Levels" ||
+              search) && (
+              <button
+                className="reset-filters-btn"
+                onClick={() => {
+                  setSelectedCategory("All");
+                  setSelectedDifficulty("All Levels");
+                  setSearch("");
+                }}
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
-        </div>
+        </section>
 
+        {/* CONTENT STATES */}
         {loading ? (
-          <div className="loading-state">Loading workout routines...</div>
+          <div className="video-state-box loading">
+            <div className="spinner"></div>
+            <p>LOADING EXERCISE & WORKOUT ARCHIVE...</p>
+          </div>
+        ) : error ? (
+          <div className="video-state-box error">
+            <p>{error}</p>
+            <button className="retry-btn" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
         ) : !isUnlocked ? (
-          <div className="locked-state" style={{ textAlign: 'center', padding: '100px 20px', background: '#111', borderRadius: '12px', border: '1px solid #333' }}>
-            <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', color: '#FF4D4D' }}>🔒 ACCESS RESTRICTED</h2>
-            <p style={{ fontSize: '1.2rem', color: '#aaa', maxWidth: '600px', margin: '0 auto 30px' }}>
-              The Elite Exercise & Video Library is exclusive to AlphaFit members with an active membership plan.
+          /* LOCKED STATE (Exclusive Member Access) */
+          <div className="locked-state">
+            <div className="lock-icon-wrap">
+              <FaLock />
+            </div>
+            <h2>EXCLUSIVE MEMBER CONTENT</h2>
+            <p className="locked-desc">
+              The Elite Exercise & Video Library is exclusive to AlphaFit members with an
+              active membership plan or enrolled training program.
             </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px', margin: '0 auto', textAlign: 'left', background: '#0a0a0a', padding: '20px', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+
+            <div className="access-check-card">
+              <div className="access-check-row">
                 <span>Active Alpha Membership</span>
-                <span>{user?.membership?.status === 'Active' ? "✅" : "❌"}</span>
+                <span>{user?.membership?.status === "Active" ? "✅ Active" : "❌ Inactive"}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Program Purchased</span>
-                <span>{accessData.hasPurchased ? "✅" : "❌"}</span>
+              <div className="access-check-row">
+                <span>Training Program Enrolled</span>
+                <span>{accessData.hasPurchased ? "✅ Enrolled" : "❌ None"}</span>
               </div>
             </div>
-            
-            <button 
-              onClick={() => navigate('/profile')} 
-              style={{ marginTop: '40px', background: '#B5F23D', color: '#000', border: 'none', padding: '15px 30px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', borderRadius: '4px' }}
-            >
+
+            <button className="upgrade-btn" onClick={() => navigate("/profile")}>
               UPGRADE MEMBERSHIP IN PROFILE
             </button>
           </div>
-        ) : filteredWorkouts.length === 0 ? (
-          <div className="empty-state" style={{ padding: "60px 20px", textAlign: "center", color: "#8c8c9a" }}>
-            No routines found matching your filter criteria. Try selecting another category or clearing your search.
+        ) : filteredItems.length === 0 ? (
+          <div className="video-state-box empty">
+            <FaDumbbell className="empty-icon" />
+            <h3>No Exercises or Routines Found</h3>
+            <p>
+              We couldn&apos;t find any exercises or workout routines matching your selected filters.
+            </p>
+            <button
+              className="reset-btn"
+              onClick={() => {
+                setSelectedCategory("All");
+                setSelectedDifficulty("All Levels");
+                setSearch("");
+              }}
+            >
+              View All Exercises
+            </button>
           </div>
         ) : (
+          /* EXERCISE & WORKOUT VIDEO GRID */
           <div className="exercise-grid">
-            {filteredWorkouts.map(workout => (
-              <div 
-                className="exercise-card" 
-                key={workout._id} 
-                onClick={() => setActiveWorkout(workout)}
-                style={{ cursor: 'pointer' }}
+            {filteredItems.map((item) => (
+              <article
+                key={item._id}
+                className="exercise-card"
+                onClick={() => handleOpenVideo(item)}
               >
-                <div className="exercise-image-box" style={{ position: "relative" }}>
+                {/* Thumbnail Container */}
+                <div className="exercise-image-box">
                   <img
-                    src={getImageUrl(workout)}
-                    alt={workout.title}
+                    src={item.thumbnail}
+                    alt={item.title}
                     className="workout-img"
                     loading="lazy"
-                    onError={(e) => onImageError(e, getWorkoutFallbackImage(workout.title))}
+                    onError={(e) =>
+                      onImageError(e, getWorkoutFallbackImage(item.title))
+                    }
                   />
                   <div className="image-overlay"></div>
-                  {(workout.video || workout.videoUrl) && (
-                    <div className="play-icon-overlay">
-                      <FaPlay />
-                    </div>
-                  )}
-                  {workout.category && (
-                    <span style={{
-                      position: "absolute",
-                      top: "12px",
-                      left: "12px",
-                      backgroundColor: "rgba(0,0,0,0.75)",
-                      color: "#B5F23D",
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      fontSize: "0.72rem",
-                      fontWeight: "800",
-                      letterSpacing: "0.5px"
-                    }}>
-                      {workout.category}
-                    </span>
-                  )}
+
+                  {/* Play Button Overlay */}
+                  <div className="play-icon-overlay">
+                    <FaPlay />
+                  </div>
+
+                  {/* Badges */}
+                  <span className="card-badge category-badge">
+                    {item.category}
+                  </span>
+                  <span className="card-badge duration-badge">
+                    <FaClock /> {item.duration} MIN
+                  </span>
                 </div>
+
+                {/* Card Content Body */}
                 <div className="card-content">
-                  <h3 className="exercise-name">{workout.title}</h3>
-                  <p className="muscle-group">{workout.description}</p>
-                  
-                  {workout.exercises && workout.exercises.length > 0 && (
-                    <div className="exercises-list" style={{ marginTop: '10px', fontSize: '0.82rem', color: '#888' }}>
-                      <strong>Movement:</strong> {workout.exercises.slice(0, 3).join(", ")}{workout.exercises.length > 3 ? "..." : ""}
+                  <div className="card-meta-row">
+                    <span
+                      className={`difficulty-tag ${item.difficulty?.toLowerCase()}`}
+                    >
+                      {item.difficulty}
+                    </span>
+                    <span className="views-count">
+                      <FaFire /> {item.views || 0} views
+                    </span>
+                  </div>
+
+                  <h3 className="exercise-name">{item.title}</h3>
+                  <p className="exercise-desc">{item.description}</p>
+
+                  {/* Movement previews if available */}
+                  {Array.isArray(item.exercises) && item.exercises.length > 0 && (
+                    <div className="exercise-movements-preview">
+                      <strong>Movement:</strong> {item.exercises.slice(0, 3).join(", ")}
+                      {item.exercises.length > 3 ? "..." : ""}
                     </div>
                   )}
 
-                  <div className="tag-group" style={{ marginTop: '15px', display: 'flex', gap: '8px' }}>
-                    <span className="tag">{workout.level || 'Beginner'}</span>
-                    <span className="tag tool-tag">{workout.duration ? `${workout.duration} mins` : '20 mins'}</span>
+                  {/* Target Muscle and Equipment Tags */}
+                  <div className="card-tags-list">
+                    {item.targetedMuscles?.slice(0, 2).map((m, idx) => (
+                      <span key={idx} className="muscle-tag">
+                        {m}
+                      </span>
+                    ))}
+                    {item.equipment?.slice(0, 1).map((eq, idx) => (
+                      <span key={idx} className="equipment-tag">
+                        {eq}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="card-footer">
+                    <span className="trainer-name">
+                      <FaUserCheck /> {item.trainerName || "AlphaFit Coach"}
+                    </span>
+                    <span className="watch-action-link">
+                      Watch Video &rarr;
+                    </span>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
       </div>
 
-      {/* Video Demonstration & Details Modal */}
-      {activeWorkout && (
-        <div className="video-modal-overlay" onClick={closeVideo} style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.85)",
-          backdropFilter: "blur(8px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9999,
-          padding: "20px"
-        }}>
-          <div className="video-modal-content" onClick={e => e.stopPropagation()} style={{
-            position: "relative",
-            backgroundColor: "#14141a",
-            border: "1px solid #2e2e3e",
-            borderRadius: "14px",
-            maxWidth: "760px",
-            width: "100%",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            padding: "24px"
-          }}>
+      {/* FULL RESPONSIVE VIDEO DETAILS & TECHNIQUE MODAL */}
+      {activeItem && (
+        <div className="video-modal-overlay" onClick={handleCloseModal}>
+          <div
+            className="video-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
             <button
               className="close-video-btn"
-              onClick={closeVideo}
-              style={{
-                position: "absolute",
-                top: "16px",
-                right: "16px",
-                background: "transparent",
-                border: "none",
-                color: "#8c8c9a",
-                fontSize: "1.2rem",
-                cursor: "pointer",
-                zIndex: 10
-              }}
+              onClick={handleCloseModal}
+              aria-label="Close video player"
             >
               <FaTimes />
             </button>
 
-            {/* Video Player */}
-            {(activeWorkout.video || activeWorkout.videoUrl) ? (
-              <div style={{ marginBottom: "20px", borderRadius: "8px", overflow: "hidden", background: "#000" }}>
-                {getEmbedUrl(activeWorkout.video || activeWorkout.videoUrl) ? (
-                  <iframe
-                    src={getEmbedUrl(activeWorkout.video || activeWorkout.videoUrl)}
-                    title={activeWorkout.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="workout-video-player"
-                    style={{ width: '100%', height: '380px', border: 'none' }}
-                  />
-                ) : (
-                  <video
-                    src={activeWorkout.video || activeWorkout.videoUrl}
-                    controls
-                    autoPlay
-                    className="workout-video-player"
-                    style={{ width: '100%', maxHeight: '380px' }}
-                  />
-                )}
-              </div>
-            ) : (
-              <div style={{
-                height: "220px",
-                background: "#1c1c24",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: "20px",
-                color: "#8c8c9a"
-              }}>
-                <FaPlay style={{ fontSize: "2rem", opacity: 0.4 }} />
-              </div>
-            )}
-
-            {/* Workout Details */}
-            <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-              <span style={{ backgroundColor: "rgba(181, 242, 61, 0.15)", color: "#B5F23D", padding: "4px 10px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "800" }}>
-                {activeWorkout.category || "General"}
-              </span>
-              <span style={{ backgroundColor: "#20202c", color: "#8c8c9a", padding: "4px 10px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "700" }}>
-                {activeWorkout.level || "Beginner"}
-              </span>
-              <span style={{ backgroundColor: "#20202c", color: "#8c8c9a", padding: "4px 10px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "700" }}>
-                {activeWorkout.duration ? `${activeWorkout.duration} mins` : "20 mins"}
-              </span>
+            {/* VIDEO PLAYER SECTION */}
+            <div className="video-player-frame">
+              {embedUrl ? (
+                <iframe
+                  src={embedUrl}
+                  title={activeItem.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="responsive-iframe"
+                />
+              ) : isDirect ? (
+                <video
+                  src={activeItem.videoUrl}
+                  controls
+                  autoPlay
+                  className="responsive-video-element"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : activeItem.videoUrl ? (
+                <div className="unsupported-video-fallback">
+                  <FaPlay className="fallback-play-icon" />
+                  <h4>External Video Demonstration</h4>
+                  <p>This exercise tutorial is streamed via an external provider.</p>
+                  <a
+                    href={activeItem.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="open-external-btn"
+                  >
+                    Open Demonstration in New Tab <FaExternalLinkAlt />
+                  </a>
+                </div>
+              ) : (
+                <div className="unsupported-video-fallback">
+                  <FaDumbbell className="fallback-play-icon" />
+                  <h4>Coached Routine Breakdown</h4>
+                  <p>Detailed technique notes and exercise protocol provided below.</p>
+                </div>
+              )}
             </div>
 
-            <h2 style={{ fontSize: "1.6rem", color: "#fff", margin: "0 0 10px" }}>{activeWorkout.title}</h2>
-            <p style={{ color: "#aaa", fontSize: "0.95rem", lineHeight: 1.5, margin: "0 0 16px" }}>
-              {activeWorkout.description}
-            </p>
-
-            {activeWorkout.targetMuscle && (
-              <div style={{ marginBottom: "14px" }}>
-                <strong style={{ color: "#B5F23D", fontSize: "0.85rem" }}>Target Muscle: </strong>
-                <span style={{ color: "#fff", fontSize: "0.85rem" }}>{activeWorkout.targetMuscle}</span>
+            {/* MODAL DETAILS BODY */}
+            <div className="video-modal-body">
+              {/* Meta Row */}
+              <div className="modal-meta-row">
+                <span className="modal-pill category-pill">
+                  {activeItem.category}
+                </span>
+                <span
+                  className={`modal-pill diff-pill ${activeItem.difficulty?.toLowerCase()}`}
+                >
+                  {activeItem.difficulty}
+                </span>
+                <span className="modal-pill duration-pill">
+                  <FaClock /> {activeItem.duration} Minutes
+                </span>
+                <span className="modal-pill views-pill">
+                  <FaFire /> {activeItem.views || 0} Views
+                </span>
               </div>
-            )}
 
-            {activeWorkout.exercises && activeWorkout.exercises.length > 0 && (
-              <div style={{ marginBottom: "16px", backgroundColor: "#181822", padding: "14px", borderRadius: "8px" }}>
-                <h4 style={{ margin: "0 0 8px", color: "#B5F23D", fontSize: "0.9rem" }}>EXERCISES IN THIS PROTOCOL</h4>
-                <ul style={{ margin: 0, paddingLeft: "18px", color: "#ccc", fontSize: "0.85rem", lineHeight: 1.6 }}>
-                  {activeWorkout.exercises.map((ex, idx) => (
-                    <li key={idx}>{ex}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              {/* Title & Coach Attribution */}
+              <h2 className="modal-video-title">{activeItem.title}</h2>
+              <p className="modal-coach-credit">
+                Instructor:{" "}
+                <strong>{activeItem.trainerName || "AlphaFit Master Coach"}</strong>
+              </p>
 
-            {activeWorkout.instructions && (
-              <div style={{ backgroundColor: "#181822", padding: "14px", borderRadius: "8px" }}>
-                <h4 style={{ margin: "0 0 8px", color: "#B5F23D", fontSize: "0.9rem" }}>COACH TECHNIQUE NOTES</h4>
-                <p style={{ margin: 0, color: "#ccc", fontSize: "0.85rem", lineHeight: 1.5 }}>
-                  {activeWorkout.instructions}
-                </p>
+              {/* Description & Execution Notes */}
+              <div className="modal-description-box">
+                <h4>Movement Technique & Execution Notes</h4>
+                <p>{activeItem.description || "Master the proper kinetic chain and tempo for maximum muscular recruitment."}</p>
               </div>
-            )}
+
+              {/* Exercises in Protocol (if routine) */}
+              {Array.isArray(activeItem.exercises) && activeItem.exercises.length > 0 && (
+                <div className="modal-exercises-box">
+                  <h4>EXERCISES IN THIS PROTOCOL</h4>
+                  <ul className="modal-exercises-list">
+                    {activeItem.exercises.map((ex, idx) => (
+                      <li key={idx}>{ex}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Coach Technique Notes (if routine instructions) */}
+              {activeItem.instructions && (
+                <div className="modal-instructions-box">
+                  <h4>COACH TECHNIQUE NOTES</h4>
+                  <p>{activeItem.instructions}</p>
+                </div>
+              )}
+
+              {/* Targeted Muscles & Equipment Breakdown */}
+              <div className="modal-specs-grid">
+                <div className="specs-column">
+                  <h4>
+                    <FaLayerGroup /> TARGETED MUSCLES
+                  </h4>
+                  <div className="specs-tags-wrap">
+                    {Array.isArray(activeItem.targetedMuscles) &&
+                    activeItem.targetedMuscles.length > 0 ? (
+                      activeItem.targetedMuscles.map((muscle, idx) => (
+                        <span key={idx} className="spec-tag muscle">
+                          {muscle}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="spec-tag">{activeItem.category || "Full Body"}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="specs-column">
+                  <h4>
+                    <FaDumbbell /> REQUIRED EQUIPMENT
+                  </h4>
+                  <div className="specs-tags-wrap">
+                    {Array.isArray(activeItem.equipment) &&
+                    activeItem.equipment.length > 0 ? (
+                      activeItem.equipment.map((item, idx) => (
+                        <span key={idx} className="spec-tag equipment">
+                          {item}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="spec-tag">Standard Gym Setup</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* RELATED EXERCISES & WORKOUTS */}
+              <div className="related-videos-section">
+                <h3>RELATED {activeItem.category.toUpperCase()} ROUTINES</h3>
+                {modalLoading ? (
+                  <div className="related-loading">Loading related tutorials...</div>
+                ) : relatedVideos.length === 0 ? (
+                  <p className="no-related-note">
+                    More {activeItem.category} tutorials coming soon to the archive.
+                  </p>
+                ) : (
+                  <div className="related-videos-grid">
+                    {relatedVideos.map((related) => (
+                      <div
+                        key={related._id}
+                        className="related-video-card"
+                        onClick={() => handleOpenVideo(related)}
+                      >
+                        <div className="related-thumb-box">
+                          <img
+                            src={
+                              related.thumbnail ||
+                              "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&auto=format&fit=crop&q=80"
+                            }
+                            alt={related.title}
+                            className="related-thumb"
+                            onError={(e) =>
+                              onImageError(e, getWorkoutFallbackImage(related.title))
+                            }
+                          />
+                          <span className="related-duration">
+                            {related.duration}m
+                          </span>
+                        </div>
+                        <div className="related-details">
+                          <h5 className="related-title">{related.title}</h5>
+                          <span className="related-diff">{related.difficulty}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
-
-export default Workouts;

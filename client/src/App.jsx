@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import CartDrawer from "./components/cart/CartDrawer";
@@ -27,7 +27,6 @@ const TrainerProfile = lazy(() => import("./pages/trainers/TrainerProfile"));
 const FitnessLanding = lazy(() => import("./pages/FitnessLanding/FitnessLanding"));
 const Checkout = lazy(() => import("./pages/Checkout/Checkout"));
 const Workoutplanner = lazy(() => import("./pages/workoutplanner/Workoutplanner"));
-const WorkoutVideos = lazy(() => import("./pages/videos/WorkoutVideos"));
 
 // Lazy-loaded Admin Pages (Isolated Chunking)
 const AdminDashboard = lazy(() => import("./pages/admin_pages/AdminDashboard/AdminDashboard"));
@@ -82,8 +81,9 @@ export default function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/:id" element={<Checkout />} />
                 <Route path="/exercises" element={<Workouts />} />
-                <Route path="/videos" element={<WorkoutVideos />} />
-                <Route path="/workout-videos" element={<WorkoutVideos />} />
+                <Route path="/workouts" element={<Workouts />} />
+                <Route path="/videos" element={<Navigate to="/exercises" replace />} />
+                <Route path="/workout-videos" element={<Navigate to="/exercises" replace />} />
                 <Route path="/calculator" element={<Calculator />} />
                 <Route path="/bmi-calculator" element={<BMICalculator />} />
                 <Route path="/bmi-history" element={<BMIHistory />} />

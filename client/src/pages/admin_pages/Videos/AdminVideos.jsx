@@ -15,7 +15,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
-import { getEmbedUrl } from "../../videos/WorkoutVideos";
+import { getEmbedUrl } from "../../../utils/videoUtils";
 import "./AdminVideos.css";
 
 const CATEGORIES = [
