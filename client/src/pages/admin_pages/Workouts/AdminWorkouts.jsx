@@ -7,10 +7,12 @@ function AdminWorkouts() {
   const [workouts, setWorkouts] = useState([]);
   const [form, setForm] = useState({
     title: "",
+    category: "Chest",
     description: "",
-    level: "",
+    level: "Beginner",
     duration: "",
     exercises: "",
+    instructions: "",
   });
 
   const [file, setFile] = useState(null);
@@ -22,7 +24,7 @@ function AdminWorkouts() {
 
   const token = localStorage.getItem("token");
 
-const fetchWorkouts = async () => {
+  const fetchWorkouts = async () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/workouts`
@@ -33,7 +35,7 @@ const fetchWorkouts = async () => {
     }
   };
 
-  
+
   useEffect(() => {
     fetchWorkouts();
   }, []);
@@ -48,10 +50,12 @@ const fetchWorkouts = async () => {
     const formData = new FormData();
 
     formData.append("title", form.title);
+    formData.append("category", form.category || "Chest");
     formData.append("description", form.description);
-    formData.append("level", form.level);
+    formData.append("level", form.level || "Beginner");
     formData.append("duration", form.duration);
     formData.append("exercises", form.exercises);
+    formData.append("instructions", form.instructions || "");
 
     if (file) {
       formData.append("image", file);
@@ -92,10 +96,12 @@ const fetchWorkouts = async () => {
 
       setForm({
         title: "",
+        category: "Chest",
         description: "",
-        level: "",
+        level: "Beginner",
         duration: "",
         exercises: "",
+        instructions: "",
       });
 
       setFile(null);
@@ -115,7 +121,7 @@ const fetchWorkouts = async () => {
       console.log(err);
       alert(
         "Failed to save workout: " +
-          (err.response?.data?.msg || err.message)
+        (err.response?.data?.msg || err.message)
       );
     }
   };
@@ -123,12 +129,14 @@ const fetchWorkouts = async () => {
   const handleEdit = (workout) => {
     setForm({
       title: workout.title || "",
+      category: workout.category || "Chest",
       description: workout.description || "",
-      level: workout.level || "",
+      level: workout.level || "Beginner",
       duration: workout.duration || "",
       exercises: workout.exercises
         ? workout.exercises.join(", ")
         : "",
+      instructions: workout.instructions || "",
     });
 
     setEditingId(workout._id);
@@ -181,10 +189,35 @@ const fetchWorkouts = async () => {
               required
             />
 
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "12px",
+                background: "#18181c",
+                border: "1px solid #333",
+                color: "#fff",
+                borderRadius: "4px",
+                outline: "none"
+              }}
+            >
+              <option value="Chest">Chest</option>
+              <option value="Back">Back</option>
+              <option value="Legs">Legs</option>
+              <option value="Shoulders">Shoulders</option>
+              <option value="Arms">Arms</option>
+              <option value="Core">Core</option>
+              <option value="Cardio">Cardio</option>
+              <option value="Full Body">Full Body</option>
+            </select>
+
             <input
               type="text"
               name="level"
-              placeholder="Level"
+              placeholder="Level (e.g. Beginner, Intermediate, Advanced)"
               value={form.level}
               onChange={handleChange}
               required
@@ -193,7 +226,7 @@ const fetchWorkouts = async () => {
             <input
               type="number"
               name="duration"
-              placeholder="Duration"
+              placeholder="Duration in Minutes"
               value={form.duration}
               onChange={handleChange}
               required
@@ -207,10 +240,28 @@ const fetchWorkouts = async () => {
               required
             />
 
+            <textarea
+              name="instructions"
+              placeholder="Coach Instructions / Form Cues"
+              value={form.instructions}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "12px",
+                background: "#18181c",
+                border: "1px solid #333",
+                color: "#fff",
+                borderRadius: "4px",
+                outline: "none",
+                minHeight: "70px"
+              }}
+            />
+
             <input
               type="text"
               name="exercises"
-              placeholder="Exercises"
+              placeholder="Exercises (comma separated, e.g. Bench Press, Incline DB, Dips)"
               value={form.exercises}
               onChange={handleChange}
               required
@@ -319,10 +370,9 @@ const fetchWorkouts = async () => {
                   <div
                     className="workout-image"
                     style={{
-                      backgroundImage: `url(${
-                        workout.image ||
+                      backgroundImage: `url(${workout.image ||
                         "https://via.placeholder.com/300"
-                      })`,
+                        })`,
                     }}
                   ></div>
 

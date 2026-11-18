@@ -21,8 +21,18 @@ import {
   FaFire,
   FaRunning,
   FaLock,
-  FaUnlock
+  FaUnlock,
+  FaTrash
 } from "react-icons/fa";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 import "./Profile.css";
 
 export default function Profile() {
@@ -239,14 +249,94 @@ export default function Profile() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (attHistRes?.data) {
-        setAttendanceHistory(attHistRes.data.history || []);
+        const list = attHistRes.data.history || attHistRes.data.records || [];
+        setAttendanceHistory(list);
         setAttendanceStats({
-          totalCheckIns: attHistRes.data.totalCheckIns || 0,
+          totalCheckIns: attHistRes.data.totalCheckIns || list.length,
           streak: attHistRes.data.streak || 0,
         });
       }
     } catch (err) {
       alert(err.response?.data?.msg || "Check-in failed");
+    }
+  };
+
+  // Self Check-Out
+  const handleCheckOut = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${backendUrl}/api/attendance/check-out`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(res.data.msg || "Check-out logged successfully! Great session.");
+      // Refresh attendance history
+      const attHistRes = await axios.get(`${backendUrl}/api/attendance/my-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (attHistRes?.data) {
+        const list = attHistRes.data.history || attHistRes.data.records || [];
+        setAttendanceHistory(list);
+        setAttendanceStats({
+          totalCheckIns: attHistRes.data.totalCheckIns || list.length,
+          streak: attHistRes.data.streak || 0,
+        });
+      }
+    } catch (err) {
+      alert(err.response?.data?.msg || "Check-out failed. You might not have checked in today.");
+    }
+  };
+
+  // Delete Workout Log
+  const handleDeleteWorkout = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this workout log?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${backendUrl}/api/workout-logs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setWorkouts(workouts.filter((w) => w._id !== id));
+      alert("Workout log removed.");
+    } catch (err) {
+      alert("Failed to delete workout log");
+    }
+  };
+
+  // Delete Progress Entry
+  const handleDeleteProgress = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this progress entry?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${backendUrl}/api/progress/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProgressLogs(progressLogs.filter((p) => p._id !== id));
+      alert("Progress entry removed.");
+    } catch (err) {
+      alert("Failed to delete progress entry");
+    }
+  };
+
+  // Update Challenge Progress
+  const handleUpdateChallengeProgress = async (challengeId, increment = 1) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${backendUrl}/api/challenges/${challengeId}/progress`,
+        { increment },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(res.data.msg || "Challenge progress updated!");
+      // Refresh challenges and leaderboard
+      const [chalRes, leadRes] = await Promise.all([
+        axios.get(`${backendUrl}/api/challenges`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${backendUrl}/api/challenges/leaderboard`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (chalRes?.data) setChallenges(chalRes.data);
+      if (leadRes?.data) setLeaderboard(leadRes.data);
+    } catch (err) {
+      alert(err.response?.data?.msg || "Failed to update challenge progress. Join challenge first!");
     }
   };
 
@@ -384,6 +474,15 @@ export default function Profile() {
   const latestHeight = Number(progressLogs[0]?.height || profile.height || 178);
   const calculatedBMI = latestHeight > 0 ? (latestWeight / Math.pow(latestHeight / 100, 2)).toFixed(1) : "22.5";
   const bmiCategory = calculatedBMI < 18.5 ? "Underweight" : calculatedBMI < 25 ? "Normal" : calculatedBMI < 30 ? "Overweight" : "Obese";
+
+  // Progression Chart Data
+  const chartData = [...progressLogs]
+    .sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt))
+    .map((p) => ({
+      date: new Date(p.date || p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      weight: Number(p.weight) || latestWeight,
+      bmi: Number(p.bmi) || Number(calculatedBMI),
+    }));
 
   if (loading) {
     return (
@@ -695,6 +794,14 @@ export default function Profile() {
                         <div className="history-meta">
                           <span className="calorie-badge"><FaFire /> {w.caloriesBurned} kcal</span>
                           <span className="status-pill active">COMPLETED</span>
+                          <button
+                            className="cancel-booking-btn"
+                            onClick={() => handleDeleteWorkout(w._id)}
+                            title="Delete Log"
+                            style={{ padding: "4px 8px" }}
+                          >
+                            <FaTrash />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -808,12 +915,44 @@ export default function Profile() {
                         </div>
                         <div className="history-meta">
                           {p.bodyFat && <span className="status-pill">{p.bodyFat}% BF</span>}
+                          <button
+                            className="cancel-booking-btn"
+                            onClick={() => handleDeleteProgress(p._id)}
+                            title="Delete Entry"
+                            style={{ padding: "4px 8px" }}
+                          >
+                            <FaTrash />
+                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Recharts Graphical Progression */}
+            <div className="dashboard-card" style={{ marginTop: "24px" }}>
+              <h3>WEIGHT & BMI PROGRESSION (INTERACTIVE CHART)</h3>
+              {chartData.length > 0 ? (
+                <div style={{ width: "100%", height: 260, marginTop: "16px" }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+                      <CartesianGrid stroke="#222" strokeDasharray="3 3" />
+                      <XAxis dataKey="date" stroke="#8c8c9a" fontSize={11} />
+                      <YAxis stroke="#8c8c9a" fontSize={11} domain={["auto", "auto"]} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: "#181820", border: "1px solid #333", borderRadius: "6px", color: "#fff" }}
+                        labelStyle={{ color: "#B5F23D", fontWeight: "bold" }}
+                      />
+                      <Line type="monotone" dataKey="weight" stroke="#B5F23D" strokeWidth={3} dot={{ fill: "#B5F23D", r: 4 }} name="Weight (kg)" />
+                      <Line type="monotone" dataKey="bmi" stroke="#38bdf8" strokeWidth={2} dot={{ fill: "#38bdf8", r: 3 }} name="BMI" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="empty-msg">Log at least one measurement to view your progression curve.</p>
+              )}
             </div>
           </div>
         )}
@@ -889,9 +1028,18 @@ export default function Profile() {
                   )}
                   <h4 className="qr-member-title">{profile.username}</h4>
                   <p className="qr-member-sub">TOKEN: {qrData?.qrToken || "AP-MEMBER-PASS"}</p>
-                  <button className="checkin-test-btn" onClick={handleSelfCheckIn}>
-                    <FaCheck /> SIMULATE RECEPTION SCAN
-                  </button>
+                  <div style={{ display: "flex", gap: "10px", marginTop: "14px", width: "100%", maxWidth: "340px" }}>
+                    <button className="checkin-test-btn" onClick={handleSelfCheckIn} style={{ flex: 1, justifyContent: "center" }}>
+                      <FaCheck /> CHECK IN
+                    </button>
+                    <button
+                      className="checkin-test-btn"
+                      onClick={handleCheckOut}
+                      style={{ flex: 1, justifyContent: "center", borderColor: "#ff4757", color: "#ff4757" }}
+                    >
+                      <FaSignOutAlt /> CHECK OUT
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -975,6 +1123,27 @@ export default function Profile() {
                         <option value="06:00 PM">06:00 PM</option>
                         <option value="08:00 PM">08:00 PM</option>
                       </select>
+                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "6px" }}>
+                        {["07:00 AM", "09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM"].map((s) => (
+                          <button
+                            type="button"
+                            key={s}
+                            onClick={() => setBookingForm({ ...bookingForm, timeSlot: s })}
+                            style={{
+                              background: bookingForm.timeSlot === s ? "#B5F23D" : "#1e1e26",
+                              color: bookingForm.timeSlot === s ? "#111" : "#8c8c9a",
+                              border: "1px solid #282834",
+                              borderRadius: "4px",
+                              padding: "3px 6px",
+                              fontSize: "0.68rem",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -1060,9 +1229,19 @@ export default function Profile() {
                       </div>
                       <h4>{c.title}</h4>
                       <p>{c.description}</p>
-                      <button className="join-challenge-btn" onClick={() => handleJoinChallenge(c._id)}>
-                        JOIN CHALLENGE
-                      </button>
+                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "12px" }}>
+                        <button className="join-challenge-btn" onClick={() => handleJoinChallenge(c._id)}>
+                          {c.isJoined ? "JOINED" : "JOIN CHALLENGE"}
+                        </button>
+                        <button
+                          className="join-challenge-btn"
+                          onClick={() => handleUpdateChallengeProgress(c._id, 1)}
+                          style={{ borderColor: "#38bdf8", color: "#38bdf8" }}
+                          title="Record 1 unit of progress toward this goal"
+                        >
+                          +1 LOG PROGRESS
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
