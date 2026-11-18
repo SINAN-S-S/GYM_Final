@@ -14,6 +14,7 @@ function AdminSidebar() {
       <NavLink to="/admin/nutrition" className={({ isActive }) => isActive ? "active-link" : ""}>Nutrition</NavLink>
       <NavLink to="/admin/programs" className={({ isActive }) => isActive ? "active-link" : ""}>Programs</NavLink>
       <NavLink to="/admin/workouts" className={({ isActive }) => isActive ? "active-link" : ""}>Workouts</NavLink>
+      <NavLink to="/admin/videos" className={({ isActive }) => isActive ? "active-link" : ""}>Workout Videos</NavLink>
       <NavLink to="/admin/bmi-history" className={({ isActive }) => isActive ? "active-link" : ""}>BMI History</NavLink>
       <NavLink to="/admin/community" className={({ isActive }) => isActive ? "active-link" : ""}>Community</NavLink>
       <NavLink to="/admin/goals" className={({ isActive }) => isActive ? "active-link" : ""}>Goals</NavLink>

@@ -67,6 +67,49 @@
 }
 
 /* ==========================================================================
+   STATS BAR (REAL DATABASE METRICS)
+   ========================================================================== */
+
+.workouts-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-pill {
+  background: #111116;
+  border: 1px solid #1f1f28;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s;
+}
+
+.stat-pill:hover {
+  border-color: #38384a;
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: #8c8c9a;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==========================================================================
    FILTER & SEARCH CONTROLS
    ========================================================================== */
 

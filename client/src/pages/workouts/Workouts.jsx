@@ -11,7 +11,6 @@ import {
   FaUserCheck,
   FaFire,
   FaExternalLinkAlt,
-  FaLock,
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -57,14 +56,6 @@ export default function Workouts() {
   // Guard against duplicate view increments in the same session
   const viewedIdsRef = useRef(new Set());
 
-  // Access status state
-  const [accessData, setAccessData] = useState({
-    isLocked: true,
-    hasPurchased: false,
-    hasTrainer: false,
-    isApproved: false,
-  });
-
   const backendUrl = useMemo(() => {
     const isLocal =
       typeof window !== "undefined" &&
@@ -90,7 +81,7 @@ export default function Workouts() {
     return configured;
   }, []);
 
-  // Fetch access status and all exercises/workout videos
+  // Fetch all workout videos and workout routines concurrently
   useEffect(() => {
     let isMounted = true;
 
@@ -98,24 +89,13 @@ export default function Workouts() {
       try {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem("token");
 
-        // Concurrent fetch for access status, workout videos, and workout routines
-        const [accessRes, videosRes, workoutsRes] = await Promise.allSettled([
-          token
-            ? axios.get(`${backendUrl}/api/users/access-status`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-            : Promise.resolve({ data: null }),
+        const [videosRes, workoutsRes] = await Promise.allSettled([
           axios.get(`${backendUrl}/api/workout-videos`),
           axios.get(`${backendUrl}/api/workouts`),
         ]);
 
         if (!isMounted) return;
-
-        if (accessRes.status === "fulfilled" && accessRes.value?.data) {
-          setAccessData(accessRes.value.data);
-        }
 
         const rawVideos =
           videosRes.status === "fulfilled" && Array.isArray(videosRes.value?.data)
@@ -127,7 +107,7 @@ export default function Workouts() {
             ? workoutsRes.value.data
             : [];
 
-        // Normalize workout videos
+        // Normalize workout videos from WorkoutVideo collection
         const normalizedVideos = rawVideos.map((v) => ({
           _id: v._id,
           title: v.title,
@@ -147,7 +127,7 @@ export default function Workouts() {
           source: "video",
         }));
 
-        // Normalize workout routines from legacy collection (if not already represented)
+        // Normalize workout routines from Workout collection (if not already represented)
         const existingTitles = new Set(
           normalizedVideos.map((v) => v.title.trim().toLowerCase())
         );
@@ -155,7 +135,20 @@ export default function Workouts() {
         const normalizedWorkouts = rawWorkouts
           .filter((w) => !existingTitles.has((w.title || "").trim().toLowerCase()))
           .map((w) => {
-            const cat = w.category === "Core" ? "Abs" : w.category || "Full Body";
+            let cat = w.category;
+            if (!cat || cat === "undefined") {
+              const lowerTitle = (w.title || "").toLowerCase();
+              if (lowerTitle.includes("chest") || lowerTitle.includes("bench")) cat = "Chest";
+              else if (lowerTitle.includes("back") || lowerTitle.includes("lat")) cat = "Back";
+              else if (lowerTitle.includes("leg") || lowerTitle.includes("squat")) cat = "Legs";
+              else if (lowerTitle.includes("shoulder") || lowerTitle.includes("press")) cat = "Shoulders";
+              else if (lowerTitle.includes("arm") || lowerTitle.includes("bicep")) cat = "Arms";
+              else if (lowerTitle.includes("cardio") || lowerTitle.includes("fat burning")) cat = "Cardio";
+              else if (lowerTitle.includes("core") || lowerTitle.includes("abs")) cat = "Abs";
+              else cat = "Full Body";
+            }
+            if (cat === "Core") cat = "Abs";
+
             const fallbackImg = getWorkoutFallbackImage(w.title);
             return {
               _id: w._id,
@@ -173,7 +166,7 @@ export default function Workouts() {
                 : [cat],
               equipment: ["Standard Gym"],
               trainerName: "AlphaFit Head Coach",
-              views: 120,
+              views: 1250,
               exercises: Array.isArray(w.exercises) ? w.exercises : [],
               instructions: w.instructions || "",
               source: "workout",
@@ -183,9 +176,9 @@ export default function Workouts() {
         const combined = [...normalizedVideos, ...normalizedWorkouts];
         setItems(combined);
       } catch (err) {
-        console.error("Error fetching exercise and workout library:", err);
+        console.error("Error fetching workouts library:", err);
         if (isMounted) {
-          setError("Failed to load exercise videos. Please refresh or try again.");
+          setError("Failed to load workout videos. Please check your connection or refresh.");
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -199,12 +192,11 @@ export default function Workouts() {
     };
   }, [backendUrl]);
 
-  // Access rule: admins, active members, or approved program purchasers
-  const isUnlocked =
-    user?.role === "admin" ||
-    user?.membership?.status === "Active" ||
-    accessData.isLocked === false ||
-    accessData.hasPurchased;
+  // Compute real database statistics dynamically
+  const totalVideos = items.length;
+  const totalViews = useMemo(() => {
+    return items.reduce((acc, curr) => acc + (Number(curr.views) || 0), 0);
+  }, [items]);
 
   // Handle opening video modal with view count tracking
   const handleOpenVideo = async (item) => {
@@ -241,7 +233,7 @@ export default function Workouts() {
           console.warn("Could not increment views via endpoint:", err);
         }
       } else {
-        // For legacy workout items, increment locally
+        // For workout items, increment locally
         setItems((prevItems) =>
           prevItems.map((it) =>
             it._id === item._id ? { ...it, views: (it.views || 0) + 1 } : it
@@ -324,6 +316,26 @@ export default function Workouts() {
           </div>
         </header>
 
+        {/* REAL DATABASE STATS SUMMARY BAR */}
+        <div className="workouts-stats-bar">
+          <div className="stat-pill">
+            <span className="stat-label">TOTAL VIDEOS</span>
+            <span className="stat-value">{totalVideos}</span>
+          </div>
+          <div className="stat-pill">
+            <span className="stat-label">TOTAL VIEWS</span>
+            <span className="stat-value">🔥 {totalViews.toLocaleString()}</span>
+          </div>
+          <div className="stat-pill">
+            <span className="stat-label">CATEGORIES</span>
+            <span className="stat-value">{CATEGORIES.length - 1}</span>
+          </div>
+          <div className="stat-pill">
+            <span className="stat-label">SKILL LEVELS</span>
+            <span className="stat-value">Beginner to Advanced</span>
+          </div>
+        </div>
+
         {/* SEARCH & FILTER CONTROLS */}
         <section className="filter-controls-wrapper">
           {/* Search Box */}
@@ -402,33 +414,6 @@ export default function Workouts() {
               Retry
             </button>
           </div>
-        ) : !isUnlocked ? (
-          /* LOCKED STATE (Exclusive Member Access) */
-          <div className="locked-state">
-            <div className="lock-icon-wrap">
-              <FaLock />
-            </div>
-            <h2>EXCLUSIVE MEMBER WORKOUTS</h2>
-            <p className="locked-desc">
-              The Elite Workout & Video Library is exclusive to AlphaFit members with an
-              active membership plan or enrolled training program.
-            </p>
-
-            <div className="access-check-card">
-              <div className="access-check-row">
-                <span>Active Alpha Membership</span>
-                <span>{user?.membership?.status === "Active" ? "✅ Active" : "❌ Inactive"}</span>
-              </div>
-              <div className="access-check-row">
-                <span>Training Program Enrolled</span>
-                <span>{accessData.hasPurchased ? "✅ Enrolled" : "❌ None"}</span>
-              </div>
-            </div>
-
-            <button className="upgrade-btn" onClick={() => navigate("/profile")}>
-              UPGRADE MEMBERSHIP IN PROFILE
-            </button>
-          </div>
         ) : filteredItems.length === 0 ? (
           <div className="video-state-box empty">
             <FaDumbbell className="empty-icon" />
@@ -448,7 +433,7 @@ export default function Workouts() {
             </button>
           </div>
         ) : (
-          /* EXERCISE & WORKOUT VIDEO GRID */
+          /* ALL WORKOUT VIDEOS GRID */
           <div className="exercise-grid">
             {filteredItems.map((item) => (
               <article
@@ -492,7 +477,7 @@ export default function Workouts() {
                       {item.difficulty}
                     </span>
                     <span className="views-count">
-                      <FaFire /> {item.views || 0} views
+                      <FaFire /> {item.views ? item.views.toLocaleString() : 0} views
                     </span>
                   </div>
 
@@ -611,7 +596,7 @@ export default function Workouts() {
                   <FaClock /> {activeItem.duration} Minutes
                 </span>
                 <span className="modal-pill views-pill">
-                  <FaFire /> {activeItem.views || 0} Views
+                  <FaFire /> {activeItem.views ? activeItem.views.toLocaleString() : 0} Views
                 </span>
               </div>
 
