@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { resolveImageUrl, getProgramFallbackImage } from "../../utils/imageUrl";
 import "./ProgramDetails.css";
 
 function ProgramDetails() {
@@ -45,7 +46,8 @@ function ProgramDetails() {
     );
   }
 
-  const imageUrl = program.image || program.img || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
+  const fallbackImage = getProgramFallbackImage(program.title);
+  const imageUrl = resolveImageUrl(program.image || program.img, fallbackImage);
 
   return (
     <div className="program-details-page">

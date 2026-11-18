@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlay, FaTimes } from 'react-icons/fa';
+import {
+  resolveImageUrl,
+  getWorkoutFallbackImage,
+  onImageError,
+} from '../../utils/imageUrl';
 import './Workouts.css';
 
 function Workouts() {
@@ -39,8 +44,9 @@ function Workouts() {
     fetchData();
   }, []);
 
-  const getImageUrl = (url) => {
-    return url ? url : "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
+  const getImageUrl = (workout) => {
+    const fallback = getWorkoutFallbackImage(workout?.title);
+    return resolveImageUrl(workout?.image, fallback);
   };
 
   const closeVideo = () => setActiveVideo(null);
@@ -120,7 +126,13 @@ function Workouts() {
                 style={{ cursor: workout.video ? 'pointer' : 'default' }}
               >
                 <div className="exercise-image-box">
-                  <img src={getImageUrl(workout.image)} alt={workout.title} className="workout-img" loading="lazy" />
+                  <img
+                    src={getImageUrl(workout)}
+                    alt={workout.title}
+                    className="workout-img"
+                    loading="lazy"
+                    onError={(e) => onImageError(e, getWorkoutFallbackImage(workout.title))}
+                  />
                   <div className="image-overlay"></div>
                   {workout.video && (
                     <div className="play-icon-overlay">

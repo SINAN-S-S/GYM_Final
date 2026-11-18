@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Trainers.css";
+import {
+  resolveImageUrl,
+  getTrainerFallbackImage,
+  onImageError,
+} from "../../utils/imageUrl";
 
 function TrainerProfile() {
   const { id } = useParams();
@@ -45,12 +50,11 @@ function TrainerProfile() {
     }
   };
 
-  const getImageUrl = (url) => {
-    return url ? url : "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1000&auto=format&fit=crop";
-  };
-
   if (loading) return <div className="trainers-page"><div className="loading-state">Loading Trainer Profile...</div></div>;
   if (!trainer) return <div className="trainers-page"><div className="empty-state">Trainer not found.</div></div>;
+
+  const fallbackImage = getTrainerFallbackImage(trainer?.name, trainer?.expertise);
+  const imageUrl = resolveImageUrl(trainer?.image, fallbackImage);
 
   return (
     <div className="trainers-page">
@@ -62,12 +66,13 @@ function TrainerProfile() {
         <div className="trainer-profile-card" style={{ background: '#111', borderRadius: '12px', overflow: 'hidden', border: '1px solid #222' }}>
           <div 
             className="trainer-profile-header-wrapper" 
-            style={{ height: '400px', backgroundColor: '#000', overflow: 'hidden', position: 'relative' }}
+            style={{ height: '420px', backgroundColor: '#141414', overflow: 'hidden', position: 'relative' }}
           >
             <img 
-              src={getImageUrl(trainer.image)} 
+              src={imageUrl} 
               alt={trainer.name} 
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+              onError={(e) => onImageError(e, fallbackImage)}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} 
             />
           </div>
           

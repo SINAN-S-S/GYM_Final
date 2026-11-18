@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Trainers.css";
 import { useNavigate } from "react-router-dom";
+import {
+  resolveImageUrl,
+  getTrainerFallbackImage,
+  onImageError,
+} from "../../utils/imageUrl";
 
 function Trainers() {
   const [trainers, setTrainers] = useState([]);
@@ -22,8 +27,9 @@ function Trainers() {
     fetchTrainers();
   }, []);
 
-  const getImageUrl = (url) => {
-    return url ? url : "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1000&auto=format&fit=crop";
+  const getImageUrl = (trainer) => {
+    const fallback = getTrainerFallbackImage(trainer?.name, trainer?.expertise);
+    return resolveImageUrl(trainer?.image, fallback);
   };
 
   return (
@@ -53,7 +59,12 @@ function Trainers() {
                 style={{ cursor: "pointer" }}
               >
                 <div className="trainer-image-wrapper">
-                  <img src={getImageUrl(trainer.image)} alt={trainer.name} className="trainer-image" />
+                  <img
+                    src={getImageUrl(trainer)}
+                    alt={trainer.name}
+                    className="trainer-image"
+                    onError={(e) => onImageError(e, getTrainerFallbackImage(trainer.name, trainer.expertise))}
+                  />
                   <div className="status-badge">
                     {trainer.isActive ? (
                       <span className="active-dot"></span>

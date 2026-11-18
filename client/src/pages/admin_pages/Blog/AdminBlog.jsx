@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminBlog.css";
-
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
+import {
+  resolveImageUrl,
+  getBlogFallbackImage,
+  onImageError,
+} from "../../../utils/imageUrl";
 
 function AdminBlog() {
   const [blogs, setBlogs] = useState([]);
@@ -132,7 +136,11 @@ const fetchBlogs = async () => {
               <div className="blog-card" key={blog._id}>
 
                 {blog.image && (
-                  <img src={blog.image} alt="blog" />
+                  <img
+                    src={resolveImageUrl(blog.image, getBlogFallbackImage(blog.title, blog.content))}
+                    alt="blog"
+                    onError={(e) => onImageError(e, getBlogFallbackImage(blog.title, blog.content))}
+                  />
                 )}
 
                 <h3>{blog.title}</h3>

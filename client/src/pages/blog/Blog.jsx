@@ -191,7 +191,7 @@ function Blog() {
                 className={`blog-tab-btn ${activeCategory === cat ? "active" : ""}`}
                 onClick={() => setActiveCategory(cat)}
               >
-                {cat.toUpperCase()}
+                {cat === "ALL" ? "ALL ARTICLES" : cat.toUpperCase()}
               </button>
             ))}
           </div>

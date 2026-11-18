@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminPrograms.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
+import {
+  resolveImageUrl,
+  getProgramFallbackImage,
+  onImageError,
+} from "../../../utils/imageUrl";
 
 function AdminPrograms() {
   const [programs, setPrograms] = useState([]);
@@ -180,9 +185,12 @@ const fetchPrograms = async () => {
           {filtered.map((p) => (
             <div className="row" key={p._id}>
               <span>
-                {(p.image || p.imageUrl) && (
-                  <img src={p.image || p.imageUrl} alt="Program" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
-                )}
+                <img
+                  src={resolveImageUrl(p.image || p.imageUrl, getProgramFallbackImage(p.title))}
+                  alt="Program"
+                  onError={(e) => onImageError(e, getProgramFallbackImage(p.title))}
+                  style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
+                />
               </span>
               <span>{p.title}</span>
               <span>{p.duration}</span>

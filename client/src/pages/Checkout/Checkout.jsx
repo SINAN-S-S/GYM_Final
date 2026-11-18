@@ -5,6 +5,7 @@ import { CartContext } from "../../context/CartContext";
 import {
   resolveImageUrl,
   getProductFallbackImage,
+  getProgramFallbackImage,
   onImageError,
 } from "../../utils/imageUrl";
 import "./Checkout.css";
@@ -537,7 +538,9 @@ function Checkout() {
 
               <div className="checkout-items-list">
                 {itemsToCheckout.map((item, idx) => {
-                  const fallback = getProductFallbackImage(item.name, item.brand, item.category);
+                  const fallback = item.category === "Program" 
+                    ? getProgramFallbackImage(item.name) 
+                    : getProductFallbackImage(item.name, item.brand, item.category);
                   const imageSrc = resolveImageUrl(item.image, fallback);
 
                   return (

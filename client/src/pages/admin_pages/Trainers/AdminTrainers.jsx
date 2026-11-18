@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminTrainers.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
+import {
+  resolveImageUrl,
+  getTrainerFallbackImage,
+  onImageError,
+} from "../../../utils/imageUrl";
 
 function AdminTrainers() {
   const [trainers, setTrainers] = useState([]);
@@ -141,7 +146,12 @@ const fetchTrainers = async () => {
             {trainers.map((t) => (
               <div className="row" key={t._id}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {t.image && <img src={t.image} alt={t.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />}
+                  <img
+                    src={resolveImageUrl(t.image, getTrainerFallbackImage(t.name, t.expertise))}
+                    alt={t.name}
+                    onError={(e) => onImageError(e, getTrainerFallbackImage(t.name, t.expertise))}
+                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
                   {t.name}
                 </span>
                 <span>{t.expertise}</span>

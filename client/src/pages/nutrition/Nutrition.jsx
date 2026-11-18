@@ -5,13 +5,14 @@ import { CartContext } from '../../context/CartContext';
 import {
   resolveImageUrl,
   getProductFallbackImage,
+  getFoodFallbackImage,
   onImageError,
   PRODUCT_FALLBACK_IMAGES,
 } from '../../utils/imageUrl';
 import './Nutrition.css';
 
 const CATEGORIES = [
-  "ALL",
+  "All Products",
   "Whey Protein",
   "Whey Isolate",
   "Mass Gainers",
@@ -32,9 +33,10 @@ function Nutrition() {
   const [selectedFood, setSelectedFood] = useState(null);
 
   // Store filtering & search state
-  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [selectedCategory, setSelectedCategory] = useState("All Products");
   const [searchQuery, setSearchQuery] = useState("");
   const [productQty, setProductQty] = useState(1);
+  const [showAllOnPage, setShowAllOnPage] = useState(true);
 
   const navigate = useNavigate();
   const { addToCart, openCart } = useContext(CartContext);
@@ -77,8 +79,13 @@ function Nutrition() {
   // Filtered store products
   const filteredProducts = useMemo(() => {
     return allStoreProducts.filter((product) => {
+      const isAll =
+        !selectedCategory ||
+        selectedCategory.toUpperCase() === "ALL" ||
+        selectedCategory.toLowerCase() === "all products";
+
       const matchesCategory =
-        selectedCategory === "ALL" ||
+        isAll ||
         product.category?.toLowerCase() === selectedCategory.toLowerCase();
 
       const query = searchQuery.trim().toLowerCase();
@@ -92,6 +99,14 @@ function Nutrition() {
       return matchesCategory && matchesSearch;
     });
   }, [allStoreProducts, selectedCategory, searchQuery]);
+
+  // Displayed products on the main page
+  const displayedProducts = useMemo(() => {
+    if (showAllOnPage || (selectedCategory !== "All Products" && selectedCategory !== "ALL")) {
+      return filteredProducts;
+    }
+    return filteredProducts.slice(0, 8);
+  }, [filteredProducts, showAllOnPage, selectedCategory]);
 
   const handleOpenProductDetails = (product) => {
     setSelectedProduct(product);
@@ -164,19 +179,55 @@ function Nutrition() {
               </div>
             </div>
 
-            {/* --- QUICK SHELF: FEATURED STORE PRODUCTS --- */}
+            {/* --- SUPPLEMENTS & STORE PRODUCTS SHELF --- */}
             <div className="section-title-bar">
-              <h2 className="shelf-heading">FEATURED SUPPLEMENTS</h2>
-              <button className="view-all-link" onClick={() => setIsStoreOpen(true)}>
-                VIEW FULL STORE ({allStoreProducts.length} PRODUCTS) →
-              </button>
+              <div className="shelf-title-group">
+                <h2 className="shelf-heading">ALPHAFIT SUPPLEMENTS &amp; STORE</h2>
+                <span className="shelf-subtitle">
+                  Showing {displayedProducts.length} of {allStoreProducts.length} certified supplements
+                </span>
+              </div>
+              <div className="shelf-right-actions">
+                <button
+                  className={`shelf-toggle-btn ${showAllOnPage ? "active" : ""}`}
+                  onClick={() => setShowAllOnPage(!showAllOnPage)}
+                >
+                  {showAllOnPage ? "SHOW COMPACT" : `VIEW ALL (${filteredProducts.length}) PRODUCTS`}
+                </button>
+                <button className="view-all-link" onClick={() => setIsStoreOpen(true)}>
+                  LAUNCH STORE PORTAL ↗
+                </button>
+              </div>
             </div>
 
-            {allStoreProducts.length === 0 ? (
-              <div className="empty-state">No products available in the store.</div>
+            {/* Category Filter Pills on Main Page */}
+            <div className="main-category-pills">
+              {CATEGORIES.map((cat) => {
+                const count = (cat === "All Products" || cat === "ALL")
+                  ? allStoreProducts.length 
+                  : allStoreProducts.filter(p => p.category?.toLowerCase() === cat.toLowerCase()).length;
+                const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase() || 
+                  ((cat === "All Products" || cat === "ALL") && (selectedCategory === "ALL" || selectedCategory === "All Products"));
+                return (
+                  <button
+                    key={cat}
+                    className={`cat-pill ${isSelected ? "active" : ""}`}
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      setShowAllOnPage(true);
+                    }}
+                  >
+                    {cat.toUpperCase()} {count > 0 ? `(${count})` : ''}
+                  </button>
+                );
+              })}
+            </div>
+
+            {displayedProducts.length === 0 ? (
+              <div className="empty-state">No products found in this category.</div>
             ) : (
               <div className="nutrition-grid" style={{ marginBottom: "70px" }}>
-                {allStoreProducts.slice(0, 4).map((product) => {
+                {displayedProducts.map((product) => {
                   const fallback = getProductFallbackImage(
                     product.name,
                     product.brand,
@@ -252,7 +303,7 @@ function Nutrition() {
             ) : (
               <div className="nutrition-grid">
                 {foods.map((food) => {
-                  const fallback = PRODUCT_FALLBACK_IMAGES.default_product;
+                  const fallback = getFoodFallbackImage(food.name);
                   const imageSrc = resolveImageUrl(food.image, fallback);
 
                   return (
@@ -366,22 +417,26 @@ function Nutrition() {
 
               {/* Category Filter Pills */}
               <div className="category-pills-row">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    className={`cat-pill ${selectedCategory.toLowerCase() === cat.toLowerCase() ? "active" : ""}`}
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat.toUpperCase()}
-                  </button>
-                ))}
+                {CATEGORIES.map((cat) => {
+                  const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase() || 
+                    ((cat === "All Products" || cat === "ALL") && (selectedCategory === "ALL" || selectedCategory === "All Products"));
+                  return (
+                    <button
+                      key={cat}
+                      className={`cat-pill ${isSelected ? "active" : ""}`}
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      {cat.toUpperCase()}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Product Count Indicator */}
             <div className="store-results-info">
               <span>Showing {filteredProducts.length} certified supplements</span>
-              {selectedCategory !== "ALL" && (
+              {selectedCategory !== "ALL" && selectedCategory !== "All Products" && (
                 <span className="active-cat-label">Filtered by: <strong>{selectedCategory}</strong></span>
               )}
             </div>
@@ -396,7 +451,7 @@ function Nutrition() {
                   <button
                     className="reset-filters-btn"
                     onClick={() => {
-                      setSelectedCategory("ALL");
+                      setSelectedCategory("All Products");
                       setSearchQuery("");
                     }}
                   >
@@ -627,9 +682,9 @@ function Nutrition() {
             </button>
             <div className="modal-img-container">
               <img
-                src={resolveImageUrl(selectedFood.image, PRODUCT_FALLBACK_IMAGES.default_product)}
+                src={resolveImageUrl(selectedFood.image, getFoodFallbackImage(selectedFood.name))}
                 alt={selectedFood.name}
-                onError={(e) => onImageError(e, PRODUCT_FALLBACK_IMAGES.default_product)}
+                onError={(e) => onImageError(e, getFoodFallbackImage(selectedFood.name))}
                 className="nutrition-modal-img"
               />
             </div>

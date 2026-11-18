@@ -28,6 +28,105 @@ export const BLOG_FALLBACK_IMAGES = {
   default_blog: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop",
 };
 
+// Curated Trainer High-Res Portraits
+export const TRAINER_FALLBACK_IMAGES = {
+  afsal: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop",
+  shamil: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=1000&auto=format&fit=crop",
+  salman: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1000&auto=format&fit=crop",
+  anas: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1000&auto=format&fit=crop",
+  shibil: "https://images.unsplash.com/photo-1507398941214-572c25f4b1dc?q=80&w=1000&auto=format&fit=crop",
+  misriya: "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1000&auto=format&fit=crop",
+  default_trainer: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1000&auto=format&fit=crop",
+};
+
+// Curated Workout Program Covers
+export const PROGRAM_FALLBACK_IMAGES = {
+  fat_loss: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1000&auto=format&fit=crop",
+  muscle_gain: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1000&auto=format&fit=crop",
+  home: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=1000&auto=format&fit=crop",
+  strength: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop",
+  athlete: "https://images.unsplash.com/photo-1483721310020-03333e577078?q=80&w=1000&auto=format&fit=crop",
+  weight_gain: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1000&auto=format&fit=crop",
+  default_program: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop",
+};
+
+// Curated Workout Routine Covers
+export const WORKOUT_FALLBACK_IMAGES = {
+  strength: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop",
+  beginner: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1000&auto=format&fit=crop",
+  hiit: "https://images.unsplash.com/photo-1483721310020-03333e577078?q=80&w=1000&auto=format&fit=crop",
+  default_workout: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop",
+};
+
+/**
+ * Returns a high-res matching fallback image based on trainer name or expertise.
+ */
+export const getTrainerFallbackImage = (name = "", expertise = "") => {
+  const text = `${name} ${expertise}`.toLowerCase();
+  if (text.includes("misriya") || text.includes("female") || text.includes("yoga") || text.includes("pilates")) {
+    return TRAINER_FALLBACK_IMAGES.misriya;
+  }
+  if (text.includes("afsal") || text.includes("bodybuilding")) return TRAINER_FALLBACK_IMAGES.afsal;
+  if (text.includes("shamil") || text.includes("crossfit")) return TRAINER_FALLBACK_IMAGES.shamil;
+  if (text.includes("salman") || text.includes("hiit")) return TRAINER_FALLBACK_IMAGES.salman;
+  if (text.includes("anas") || text.includes("powerlifting")) return TRAINER_FALLBACK_IMAGES.anas;
+  if (text.includes("shibil") || text.includes("rehab") || text.includes("mobility")) return TRAINER_FALLBACK_IMAGES.shibil;
+  return TRAINER_FALLBACK_IMAGES.default_trainer;
+};
+
+/**
+ * Returns a high-res matching fallback image based on program title.
+ */
+export const getProgramFallbackImage = (title = "") => {
+  const t = (title || "").toLowerCase();
+  if (t.includes("fat loss") || t.includes("cut") || t.includes("shred")) {
+    return PROGRAM_FALLBACK_IMAGES.fat_loss;
+  }
+  if (t.includes("muscle gain") || t.includes("hypertrophy") || t.includes("pro")) {
+    return PROGRAM_FALLBACK_IMAGES.muscle_gain;
+  }
+  if (t.includes("home")) {
+    return PROGRAM_FALLBACK_IMAGES.home;
+  }
+  if (t.includes("strength") || t.includes("conditioning")) {
+    return PROGRAM_FALLBACK_IMAGES.strength;
+  }
+  if (t.includes("athlete")) {
+    return PROGRAM_FALLBACK_IMAGES.athlete;
+  }
+  if (t.includes("weight gain") || t.includes("mass")) {
+    return PROGRAM_FALLBACK_IMAGES.weight_gain;
+  }
+  return PROGRAM_FALLBACK_IMAGES.default_program;
+};
+
+/**
+ * Returns a high-res matching fallback image based on workout title.
+ */
+export const getWorkoutFallbackImage = (title = "") => {
+  const t = (title || "").toLowerCase();
+  if (t.includes("beginner")) return WORKOUT_FALLBACK_IMAGES.beginner;
+  if (t.includes("strength") || t.includes("heavy") || t.includes("upper") || t.includes("lower")) {
+    return WORKOUT_FALLBACK_IMAGES.strength;
+  }
+  if (t.includes("hiit") || t.includes("cardio") || t.includes("conditioning")) {
+    return WORKOUT_FALLBACK_IMAGES.hiit;
+  }
+  return WORKOUT_FALLBACK_IMAGES.default_workout;
+};
+
+/**
+ * Returns a high-res matching fallback image for whole foods macro items.
+ */
+export const getFoodFallbackImage = (name = "") => {
+  const t = (name || "").toLowerCase();
+  if (t.includes("bar")) return "https://images.unsplash.com/photo-1622484212850-eb596d769edc?q=80&w=1000&auto=format&fit=crop";
+  if (t.includes("gainer")) return PRODUCT_FALLBACK_IMAGES.mass_gainer;
+  if (t.includes("oat")) return "https://images.unsplash.com/photo-1586495777744-4413f21062fa?q=80&w=1000&auto=format&fit=crop";
+  if (t.includes("butter") || t.includes("peanut")) return "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?q=80&w=1000&auto=format&fit=crop";
+  return "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1000&auto=format&fit=crop";
+};
+
 /**
  * Returns a high-res matching fallback image based on product name or brand.
  */
@@ -130,6 +229,11 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
     return configured;
   };
   const backendBase = getBackendBase();
+
+  // If in production and URL points to localhost:5000, replace host with active backend base
+  if (!isLocal && (trimmed.includes("localhost:5000") || trimmed.includes("127.0.0.1:5000"))) {
+    return trimmed.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, backendBase);
+  }
 
   // If URL has localhost:5000/uploads, point to current active backend base
   if (trimmed.includes("localhost:5000/uploads/")) {
