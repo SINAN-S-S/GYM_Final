@@ -209,15 +209,17 @@ export default function Workouts() {
       .slice(0, 3);
     setRelatedVideos(fallbackRelated);
 
+    const isVideo = item.source === "video" || item.source !== "workout";
+
     // Track views accurately and guard against duplicate view counting
     if (!viewedIdsRef.current.has(item._id)) {
       viewedIdsRef.current.add(item._id);
 
-      if (item.source === "video") {
+      if (isVideo) {
         try {
           const res = await axios.get(`${backendUrl}/api/workout-videos/${item._id}`);
           if (res.data?.video) {
-            const updatedVideo = res.data.video;
+            const updatedVideo = { ...res.data.video, source: "video" };
             setActiveItem((prev) => (prev ? { ...prev, ...updatedVideo } : updatedVideo));
             // Update view count in main list state
             setItems((prevItems) =>
@@ -227,7 +229,9 @@ export default function Workouts() {
             );
           }
           if (Array.isArray(res.data?.relatedVideos) && res.data.relatedVideos.length > 0) {
-            setRelatedVideos(res.data.relatedVideos);
+            setRelatedVideos(
+              res.data.relatedVideos.map((r) => ({ ...r, source: "video" }))
+            );
           }
         } catch (err) {
           console.warn("Could not increment views via endpoint:", err);

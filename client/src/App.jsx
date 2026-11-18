@@ -39,7 +39,6 @@ const AdminProgress = lazy(() => import("./pages/admin_pages/Programs/AdminProgr
 const AdminTrainers = lazy(() => import("./pages/admin_pages/Trainers/AdminTrainers"));
 const AdminExerciseBank = lazy(() => import("./pages/admin_pages/ExerciseBank/AdminExerciseBank"));
 const AdminWorkouts = lazy(() => import("./pages/admin_pages/Workouts/AdminWorkouts"));
-const AdminVideos = lazy(() => import("./pages/admin_pages/Videos/AdminVideos"));
 const AdminBMIHistory = lazy(() => import("./pages/admin_pages/BMIHistory/AdminBMIHistory"));
 const AdminCommunity = lazy(() => import("./pages/admin_pages/Community/AdminCommunity"));
 const AdminAttendance = lazy(() => import("./pages/admin_pages/Attendance/AdminAttendance"));
