@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useMemo } from 'react';
+import { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CartContext } from '../../context/CartContext';
@@ -7,7 +7,6 @@ import {
   getProductFallbackImage,
   getFoodFallbackImage,
   onImageError,
-  PRODUCT_FALLBACK_IMAGES,
 } from '../../utils/imageUrl';
 import './Nutrition.css';
 
@@ -21,6 +20,317 @@ const CATEGORIES = [
   "Vitamins and Minerals",
   "Fitness Accessories",
 ];
+
+// Helper to highlight matching text in live search suggestions
+function highlightMatch(text, query) {
+  if (!query || !text) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <mark key={i} className="search-highlight">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+}
+
+// GreenBasket-style Live Search Dropdown Component
+function LiveSearchBar({
+  searchQuery,
+  setSearchQuery,
+  allProducts,
+  onSelectProduct,
+  placeholder = "Search 73 certified supplements by name, brand, category (e.g. Optimum, Creatine)...",
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const query = searchQuery.trim().toLowerCase();
+
+  const suggestions = useMemo(() => {
+    if (!query) return [];
+    return allProducts.filter((p) => {
+      return (
+        p.name?.toLowerCase().includes(query) ||
+        p.brand?.toLowerCase().includes(query) ||
+        p.category?.toLowerCase().includes(query)
+      );
+    });
+  }, [allProducts, query]);
+
+  const handleSelect = (product) => {
+    onSelectProduct(product);
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="live-search-wrapper" ref={containerRef}>
+      <div className="live-search-input-box">
+        <span className="live-search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => {
+            if (query) setIsOpen(true);
+          }}
+          onKeyDown={handleKeyDown}
+          className="live-search-field"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            className="live-search-clear"
+            onClick={() => {
+              setSearchQuery("");
+              setIsOpen(false);
+            }}
+            aria-label="Clear Search"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
+      {isOpen && query && (
+        <div className="live-search-dropdown" role="listbox">
+          <div className="dropdown-summary-bar">
+            <span>
+              {suggestions.length > 0
+                ? `FOUND ${suggestions.length} MATCHING SUPPLEMENT${suggestions.length > 1 ? "S" : ""}`
+                : "NO PRODUCTS FOUND"}
+            </span>
+            <span className="dropdown-tag">LIVE SEARCH</span>
+          </div>
+
+          {suggestions.length === 0 ? (
+            <div className="dropdown-empty-state">
+              <span className="empty-ico">🧪</span>
+              <p className="empty-msg">
+                No products found matching "<strong>{searchQuery}</strong>"
+              </p>
+              <span className="empty-hint">
+                Try searching for Whey, Isolate, Creatine, Pre-Workout, or brand names like Optimum Nutrition, MuscleBlaze, Dymatize.
+              </span>
+            </div>
+          ) : (
+            <div className="dropdown-list">
+              {suggestions.slice(0, 8).map((product) => {
+                const fallback = getProductFallbackImage(product.name, product.brand, product.category);
+                const thumbSrc = resolveImageUrl(product.image, fallback);
+
+                return (
+                  <div
+                    key={product._id}
+                    className="dropdown-item"
+                    onClick={() => handleSelect(product)}
+                    role="option"
+                    tabIndex={0}
+                  >
+                    <div className="dropdown-thumb-wrap">
+                      <img
+                        src={thumbSrc}
+                        alt={product.name}
+                        onError={(e) => onImageError(e, fallback)}
+                        className="dropdown-thumb-img"
+                      />
+                    </div>
+
+                    <div className="dropdown-item-info">
+                      <div className="dropdown-item-name">
+                        {highlightMatch(product.name, query)}
+                      </div>
+                      <div className="dropdown-item-meta">
+                        <span className="dropdown-brand-badge">{product.brand}</span>
+                        <span className="dropdown-cat-badge">{product.category}</span>
+                        <span className={`dropdown-stock-badge ${product.inStock ? "in" : "out"}`}>
+                          {product.inStock ? "● IN STOCK" : "✕ OUT OF STOCK"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="dropdown-price-col">
+                      <span className="dropdown-price-val">${Number(product.price).toFixed(2)}</span>
+                      <span className="dropdown-view-btn">VIEW →</span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {suggestions.length > 8 && (
+                <div className="dropdown-more-footer">
+                  + {suggestions.length - 8} more matching products available
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Product Card Component with smooth image loading state and fallback handling
+function ProductCard({ product, onSelect, onAddToCart, onBuyNow }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const fallback = getProductFallbackImage(product.name, product.brand, product.category);
+  const imageSrc = resolveImageUrl(product.image, fallback);
+
+  return (
+    <div className="product-card" onClick={() => onSelect(product)}>
+      <div className="product-image-box">
+        {!imgLoaded && <div className="product-img-skeleton" />}
+        <img
+          src={imageSrc}
+          alt={product.name}
+          loading="lazy"
+          onLoad={() => setImgLoaded(true)}
+          onError={(e) => {
+            setImgLoaded(true);
+            onImageError(e, fallback);
+          }}
+          className={`product-img ${imgLoaded ? "loaded" : "loading"}`}
+        />
+        <span className={`stock-badge ${product.inStock ? "in" : "out"}`}>
+          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+        </span>
+      </div>
+
+      <div className="product-body">
+        <div className="product-category-row">
+          <span className="p-brand">{product.brand}</span>
+          <span className="p-cat">{product.category}</span>
+        </div>
+
+        <h3 className="product-title" title={product.name}>{product.name}</h3>
+        <p className="product-desc">
+          {product.description?.slice(0, 110) || "Certified pharmaceutical-grade fitness supplement engineered for maximum muscle protein synthesis."}...
+        </p>
+
+        <div className="product-footer">
+          <div className="price-box">
+            <span className="price-val">${Number(product.price).toFixed(2)}</span>
+          </div>
+
+          <div className="card-actions">
+            <button
+              className="add-cart-btn"
+              disabled={!product.inStock}
+              onClick={(e) => onAddToCart(product, 1, e)}
+              title="Add to Cart"
+            >
+              + CART
+            </button>
+            <button
+              className="buy-now-btn"
+              disabled={!product.inStock}
+              onClick={(e) => onBuyNow(product, e)}
+            >
+              BUY NOW
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Store Modal Card Component
+function StoreModalCard({ product, onSelect, onAddToCart, onBuyNow }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const fallback = getProductFallbackImage(product.name, product.brand, product.category);
+  const imageSrc = resolveImageUrl(product.image, fallback);
+
+  return (
+    <div className="store-product-card" onClick={() => onSelect(product)}>
+      <div className="store-img-container">
+        {!imgLoaded && <div className="product-img-skeleton" />}
+        <img
+          src={imageSrc}
+          alt={product.name}
+          loading="lazy"
+          onLoad={() => setImgLoaded(true)}
+          onError={(e) => {
+            setImgLoaded(true);
+            onImageError(e, fallback);
+          }}
+          className={`store-card-img ${imgLoaded ? "loaded" : "loading"}`}
+        />
+        <span className={`store-stock-tag ${product.inStock ? "in" : "out"}`}>
+          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+        </span>
+      </div>
+
+      <div className="store-card-content">
+        <div className="store-card-meta">
+          <span className="card-brand">{product.brand}</span>
+          <span className="card-cat">{product.category}</span>
+        </div>
+
+        <h3 className="card-product-name" title={product.name}>{product.name}</h3>
+        <p className="card-desc-snippet">
+          {product.description?.slice(0, 95) || "Scientifically backed supplement formulation."}...
+        </p>
+
+        <div className="store-card-bottom">
+          <div className="store-price-tag">
+            ${Number(product.price).toFixed(2)}
+          </div>
+
+          <div className="store-card-actions">
+            <button
+              className="btn-details-ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(product);
+              }}
+            >
+              DETAILS
+            </button>
+            <button
+              className="btn-cart-lime"
+              disabled={!product.inStock}
+              onClick={(e) => onAddToCart(product, 1, e)}
+            >
+              + CART
+            </button>
+            <button
+              className="btn-buy-white"
+              disabled={!product.inStock}
+              onClick={(e) => onBuyNow(product, e)}
+            >
+              BUY NOW
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Nutrition() {
   const [foods, setFoods] = useState([]);
@@ -102,11 +412,11 @@ function Nutrition() {
 
   // Displayed products on the main page
   const displayedProducts = useMemo(() => {
-    if (showAllOnPage || (selectedCategory !== "All Products" && selectedCategory !== "ALL")) {
+    if (showAllOnPage || (selectedCategory !== "All Products" && selectedCategory !== "ALL") || searchQuery.trim()) {
       return filteredProducts;
     }
     return filteredProducts.slice(0, 8);
-  }, [filteredProducts, showAllOnPage, selectedCategory]);
+  }, [filteredProducts, showAllOnPage, selectedCategory, searchQuery]);
 
   const handleOpenProductDetails = (product) => {
     setSelectedProduct(product);
@@ -200,14 +510,30 @@ function Nutrition() {
               </div>
             </div>
 
+            {/* LIVE SEARCH BAR (Main Page Shelf) */}
+            <div className="main-shelf-search-row">
+              <LiveSearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                allProducts={allStoreProducts}
+                onSelectProduct={handleOpenProductDetails}
+                placeholder="Live Search: Type product or brand (e.g. Optimum, MuscleBlaze, Creatine)..."
+              />
+            </div>
+
             {/* Category Filter Pills on Main Page */}
             <div className="main-category-pills">
               {CATEGORIES.map((cat) => {
-                const count = (cat === "All Products" || cat === "ALL")
-                  ? allStoreProducts.length 
-                  : allStoreProducts.filter(p => p.category?.toLowerCase() === cat.toLowerCase()).length;
-                const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase() || 
-                  ((cat === "All Products" || cat === "ALL") && (selectedCategory === "ALL" || selectedCategory === "All Products"));
+                const count =
+                  cat === "All Products" || cat === "ALL"
+                    ? allStoreProducts.length
+                    : allStoreProducts.filter(
+                        (p) => p.category?.toLowerCase() === cat.toLowerCase()
+                      ).length;
+                const isSelected =
+                  selectedCategory.toLowerCase() === cat.toLowerCase() ||
+                  ((cat === "All Products" || cat === "ALL") &&
+                    (selectedCategory === "ALL" || selectedCategory === "All Products"));
                 return (
                   <button
                     key={cat}
@@ -217,78 +543,38 @@ function Nutrition() {
                       setShowAllOnPage(true);
                     }}
                   >
-                    {cat.toUpperCase()} {count > 0 ? `(${count})` : ''}
+                    {cat.toUpperCase()} {count > 0 ? `(${count})` : ""}
                   </button>
                 );
               })}
             </div>
 
             {displayedProducts.length === 0 ? (
-              <div className="empty-state">No products found in this category.</div>
+              <div className="empty-state">
+                <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🧪</div>
+                <p>No products found matching your current filter.</p>
+                <button
+                  className="reset-filters-btn"
+                  onClick={() => {
+                    setSelectedCategory("All Products");
+                    setSearchQuery("");
+                  }}
+                  style={{ marginTop: "12px" }}
+                >
+                  RESET SEARCH &amp; FILTERS
+                </button>
+              </div>
             ) : (
               <div className="nutrition-grid" style={{ marginBottom: "70px" }}>
-                {displayedProducts.map((product) => {
-                  const fallback = getProductFallbackImage(
-                    product.name,
-                    product.brand,
-                    product.category
-                  );
-                  const imageSrc = resolveImageUrl(product.image, fallback);
-
-                  return (
-                    <div
-                      key={product._id}
-                      className="product-card"
-                      onClick={() => handleOpenProductDetails(product)}
-                    >
-                      <div className="product-image-box">
-                        <img
-                          src={imageSrc}
-                          alt={product.name}
-                          onError={(e) => onImageError(e, fallback)}
-                          className="product-img"
-                        />
-                        <span className={`stock-badge ${product.inStock ? "in" : "out"}`}>
-                          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
-                        </span>
-                      </div>
-
-                      <div className="product-body">
-                        <div className="product-category-row">
-                          <span className="p-brand">{product.brand}</span>
-                          <span className="p-cat">{product.category}</span>
-                        </div>
-
-                        <h3 className="product-title">{product.name}</h3>
-                        <p className="product-desc">{product.description?.slice(0, 110)}...</p>
-
-                        <div className="product-footer">
-                          <div className="price-box">
-                            <span className="price-val">${Number(product.price).toFixed(2)}</span>
-                          </div>
-
-                          <div className="card-actions">
-                            <button
-                              className="add-cart-btn"
-                              disabled={!product.inStock}
-                              onClick={(e) => handleAddToCart(product, 1, e)}
-                              title="Add to Cart"
-                            >
-                              + CART
-                            </button>
-                            <button
-                              className="buy-now-btn"
-                              disabled={!product.inStock}
-                              onClick={(e) => handleBuyNow(product, e)}
-                            >
-                              BUY NOW
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {displayedProducts.map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    onSelect={handleOpenProductDetails}
+                    onAddToCart={handleAddToCart}
+                    onBuyNow={handleBuyNow}
+                  />
+                ))}
               </div>
             )}
 
@@ -316,6 +602,7 @@ function Nutrition() {
                         <img
                           src={imageSrc}
                           alt={food.name}
+                          loading="lazy"
                           onError={(e) => onImageError(e, fallback)}
                           className="food-img"
                         />
@@ -398,28 +685,22 @@ function Nutrition() {
 
             {/* Filter & Search Bar */}
             <div className="store-controls-bar">
-              {/* Search Bar */}
-              <div className="store-search-box">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search proteins, gainers, creatine, brands..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="store-search-input"
-                />
-                {searchQuery && (
-                  <button className="clear-search-btn" onClick={() => setSearchQuery("")}>
-                    ✕
-                  </button>
-                )}
-              </div>
+              {/* GreenBasket Live Search Bar inside Modal */}
+              <LiveSearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                allProducts={allStoreProducts}
+                onSelectProduct={handleOpenProductDetails}
+                placeholder="Search proteins, gainers, creatine, brands (e.g. Optimum, MuscleBlaze)..."
+              />
 
               {/* Category Filter Pills */}
               <div className="category-pills-row">
                 {CATEGORIES.map((cat) => {
-                  const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase() || 
-                    ((cat === "All Products" || cat === "ALL") && (selectedCategory === "ALL" || selectedCategory === "All Products"));
+                  const isSelected =
+                    selectedCategory.toLowerCase() === cat.toLowerCase() ||
+                    ((cat === "All Products" || cat === "ALL") &&
+                      (selectedCategory === "ALL" || selectedCategory === "All Products"));
                   return (
                     <button
                       key={cat}
@@ -437,7 +718,9 @@ function Nutrition() {
             <div className="store-results-info">
               <span>Showing {filteredProducts.length} certified supplements</span>
               {selectedCategory !== "ALL" && selectedCategory !== "All Products" && (
-                <span className="active-cat-label">Filtered by: <strong>{selectedCategory}</strong></span>
+                <span className="active-cat-label">
+                  Filtered by: <strong>{selectedCategory}</strong>
+                </span>
               )}
             </div>
 
@@ -459,76 +742,15 @@ function Nutrition() {
                   </button>
                 </div>
               ) : (
-                filteredProducts.map((product) => {
-                  const fallback = getProductFallbackImage(
-                    product.name,
-                    product.brand,
-                    product.category
-                  );
-                  const imageSrc = resolveImageUrl(product.image, fallback);
-
-                  return (
-                    <div
-                      key={product._id}
-                      className="store-product-card"
-                      onClick={() => handleOpenProductDetails(product)}
-                    >
-                      <div className="store-img-container">
-                        <img
-                          src={imageSrc}
-                          alt={product.name}
-                          onError={(e) => onImageError(e, fallback)}
-                          className="store-card-img"
-                        />
-                        <span className={`store-stock-tag ${product.inStock ? "in" : "out"}`}>
-                          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
-                        </span>
-                      </div>
-
-                      <div className="store-card-content">
-                        <div className="store-card-meta">
-                          <span className="card-brand">{product.brand}</span>
-                          <span className="card-cat">{product.category}</span>
-                        </div>
-
-                        <h3 className="card-product-name">{product.name}</h3>
-                        <p className="card-desc-snippet">{product.description?.slice(0, 95)}...</p>
-
-                        <div className="store-card-bottom">
-                          <div className="store-price-tag">
-                            ${Number(product.price).toFixed(2)}
-                          </div>
-
-                          <div className="store-card-actions">
-                            <button
-                              className="btn-details-ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenProductDetails(product);
-                              }}
-                            >
-                              DETAILS
-                            </button>
-                            <button
-                              className="btn-cart-lime"
-                              disabled={!product.inStock}
-                              onClick={(e) => handleAddToCart(product, 1, e)}
-                            >
-                              + CART
-                            </button>
-                            <button
-                              className="btn-buy-white"
-                              disabled={!product.inStock}
-                              onClick={(e) => handleBuyNow(product, e)}
-                            >
-                              BUY NOW
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                filteredProducts.map((product) => (
+                  <StoreModalCard
+                    key={product._id}
+                    product={product}
+                    onSelect={handleOpenProductDetails}
+                    onAddToCart={handleAddToCart}
+                    onBuyNow={handleBuyNow}
+                  />
+                ))
               )}
             </div>
           </div>
@@ -608,7 +830,10 @@ function Nutrition() {
 
                 <div className="details-description">
                   <h4>PRODUCT OVERVIEW</h4>
-                  <p>{selectedProduct.description || "A pharmaceutical-grade supplement designed to enhance recovery, muscle protein synthesis, and physical resilience."}</p>
+                  <p>
+                    {selectedProduct.description ||
+                      "A pharmaceutical-grade supplement designed to enhance recovery, muscle protein synthesis, and physical resilience."}
+                  </p>
                 </div>
 
                 {selectedProduct.specs && (
@@ -691,17 +916,17 @@ function Nutrition() {
             <div className="nutrition-modal-details">
               <p className="nutrition-category">NUTRITION ITEM</p>
               <h2 className="nutrition-title">{selectedFood.name}</h2>
-              <p style={{ color: '#ccc', margin: '15px 0', lineHeight: '1.6' }}>
+              <p style={{ color: "#ccc", margin: "15px 0", lineHeight: "1.6" }}>
                 {selectedFood.description ||
                   "A nutritious choice to hit your macro goals and fuel your performance."}
               </p>
 
-              <div className="calories-display" style={{ marginBottom: '20px' }}>
+              <div className="calories-display" style={{ marginBottom: "20px" }}>
                 <span className="cal-num">{selectedFood.calories}</span>
                 <span className="cal-unit">kcal / serving</span>
               </div>
 
-              <div className="macro-row" style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: 0 }}>
+              <div className="macro-row" style={{ borderBottom: "none", paddingBottom: 0, marginBottom: 0 }}>
                 <div className="macro-item">
                   <span className="macro-val">{selectedFood.protein}g</span>
                   <span className="macro-label">PROTEIN</span>

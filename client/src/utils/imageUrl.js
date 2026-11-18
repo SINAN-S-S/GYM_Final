@@ -1,4 +1,4 @@
-// High-quality, verified transparent PNG / isolated product images directly from official CDNs
+// High-quality, verified transparent PNG / isolated product images directly from official CDNs and ultra-reliable sources
 export const PRODUCT_FALLBACK_IMAGES = {
   // Optimum Nutrition Gold Standard Whey (Official transparent PNG render)
   on_gold: "https://www.optimumnutrition.com/cdn/shop/files/US_GSW_2LB_Banana_FOP.png?v=1791382094&width=1200",
@@ -14,6 +14,8 @@ export const PRODUCT_FALLBACK_IMAGES = {
   pre_workout: "https://www.optimumnutrition.com/cdn/shop/files/on-1146473_Image_01.png?v=1755790955&width=1200",
   // Vitamins & Minerals (Official Opti-Men Multivitamin transparent PNG render)
   vitamins: "https://www.optimumnutrition.com/cdn/shop/files/ON_OptiMen_90ct_FOP.png?v=1791831696&width=1200",
+  // Accessories & Gear
+  accessories: "https://pngimg.com/uploads/kettlebell/kettlebell_PNG34.png",
   // General Store Fallback (Official transparent PNG render)
   default_product: "https://www.optimumnutrition.com/cdn/shop/files/US_GSW_2LB_Banana_FOP.png?v=1791382094&width=1200",
 };
@@ -230,18 +232,17 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
   };
   const backendBase = getBackendBase();
 
-  // If in production and URL points to localhost:5000, replace host with active backend base
-  if (!isLocal && (trimmed.includes("localhost:5000") || trimmed.includes("127.0.0.1:5000"))) {
+  // If in production and URL points to local uploads or localhost, local disk files do not exist on serverless Vercel.
+  // Immediately return the matching high-res fallback to prevent guaranteed 404s and flickering.
+  if (!isLocal && (trimmed.includes("/uploads/") || trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:"))) {
+    return fallback;
+  }
+
+  // If local dev environment and points to localhost:5000, keep as local dev
+  if (isLocal && (trimmed.includes("localhost:5000") || trimmed.includes("127.0.0.1:5000"))) {
     return trimmed.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, backendBase);
   }
 
-  // If URL has localhost:5000/uploads, point to current active backend base
-  if (trimmed.includes("localhost:5000/uploads/")) {
-    const filename = trimmed.split("localhost:5000/uploads/")[1];
-    return `${backendBase}/uploads/${filename}`;
-  }
-
-  // If relative path starting with /uploads
   if (trimmed.startsWith("/uploads/")) {
     return `${backendBase}${trimmed}`;
   }
@@ -252,9 +253,13 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
 /**
  * Standard image onError handler to smoothly substitute fallback without infinite loops
  */
-export const onImageError = (e, fallback) => {
+export const onImageError = (e, fallback = PRODUCT_FALLBACK_IMAGES.default_product) => {
   if (e.target.src !== fallback) {
-    e.target.onerror = null; // Prevent infinite fallback loops
+    e.target.onerror = (errEvent) => {
+      // If primary fallback also fails, use emergency SVG data URI fallback
+      errEvent.target.onerror = null;
+      errEvent.target.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2318181f'/%3E%3Ctext x='50%25' y='46%25' dominant-baseline='middle' text-anchor='middle' fill='%23B5F23D' font-family='sans-serif' font-weight='900' font-size='26'%3EALPHAFIT%3C/text%3E%3Ctext x='50%25' y='60%25' dominant-baseline='middle' text-anchor='middle' fill='%23777' font-family='sans-serif' font-size='12'%3ECERTIFIED NUTRITION%3C/text%3E%3C/svg%3E";
+    };
     e.target.src = fallback;
   }
 };

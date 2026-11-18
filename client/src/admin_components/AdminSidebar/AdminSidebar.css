@@ -1,105 +1,378 @@
-.sidebar {
-  width: 250px;
-  height: 100vh;
-  background: #050505;
-  border-right: 2px solid #222;
-  color: white;
-  padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: sticky;
-  top: 0;
-  font-family: 'Inter', sans-serif;
-}
+/* ===================================================
+   ADMIN SIDEBAR & LAYOUT
+=================================================== */
 
-.sidebar h2 {
-  margin-bottom: 30px;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 2px solid #B5F23D;
-  padding-bottom: 15px;
-  display: inline-block;
-}
-
-.sidebar a {
-  text-decoration: none;
-  color: #888;
-  padding: 12px 15px;
-  border-radius: 4px;
-  transition: all 0.2s ease-in-out;
-  font-weight: 600;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid transparent;
-}
-
-.sidebar a:hover {
-  background: #111;
-  color: #fff;
-  border-color: #333;
-}
-
-.sidebar a.active-link {
-  background: #B5F23D;
-  color: #050505;
-  font-weight: 800;
-  border-color: #B5F23D;
-  box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.1);
-  transform: translate(-2px, -2px);
-}
-
+/* Root Layout Container */
 .admin-layout {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  background-color: #08080a;
+  color: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
 }
 
+/* --- DESKTOP SIDEBAR SHELL --- */
+.admin-sidebar {
+  width: 270px;
+  min-width: 270px;
+  height: 100vh;
+  background: #0d0d12;
+  border-right: 1px solid #1e1e28;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  box-sizing: border-box;
+  padding: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sidebar Brand Header */
+.sidebar-brand-header {
+  padding: 24px 20px 18px;
+  border-bottom: 1px solid #1a1a24;
+  background: #0d0d12;
+  flex-shrink: 0;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.brand-shield {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(181, 242, 61, 0.12);
+  border: 1px solid #B5F23D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shield-svg {
+  color: #B5F23D;
+}
+
+.brand-text-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.brand-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #B5F23D;
+  margin-top: 2px;
+}
+
+.system-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: #12121a;
+  border-radius: 4px;
+  border: 1px solid #1e1e26;
+  width: fit-content;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #B5F23D;
+  box-shadow: 0 0 8px #B5F23D;
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.status-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #888;
+}
+
+/* Nav Section Label */
+.nav-section-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #555;
+  padding: 12px 14px 6px;
+  text-transform: uppercase;
+}
+
+/* --- SCROLLABLE NAVIGATION AREA --- */
+.admin-sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb {
+  background: #242432;
+  border-radius: 4px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #36364a;
+}
+
+/* Individual Navigation Item */
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #999;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.18s ease-in-out;
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.nav-icon-box {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: color 0.18s ease;
+}
+
+.nav-icon {
+  color: #777;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.nav-item-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.active-glow-pill {
+  width: 4px;
+  height: 0;
+  background: #B5F23D;
+  border-radius: 2px;
+  position: absolute;
+  right: 8px;
+  transition: height 0.2s ease;
+}
+
+/* Hover State */
+.admin-nav-item:hover {
+  background: #15151e;
+  color: #fff;
+  border-color: #242432;
+}
+
+.admin-nav-item:hover .nav-icon {
+  color: #B5F23D;
+  transform: translateX(1px);
+}
+
+/* Active State */
+.admin-nav-item.active {
+  background: #B5F23D;
+  color: #0a0a0f !important;
+  font-weight: 800;
+  border-color: #B5F23D;
+  box-shadow: 0 4px 14px rgba(181, 242, 61, 0.25);
+}
+
+.admin-nav-item.active .nav-icon {
+  color: #0a0a0f !important;
+}
+
+.admin-nav-item.active .active-glow-pill {
+  height: 16px;
+  background: #0a0a0f;
+}
+
+/* --- SIDEBAR FOOTER ACTIONS --- */
+.sidebar-footer {
+  padding: 16px 14px;
+  border-top: 1px solid #1a1a24;
+  background: #0d0d12;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.back-site-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #14141c;
+  color: #B5F23D;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+.back-site-btn:hover {
+  background: #B5F23D;
+  color: #000;
+  border-color: #B5F23D;
+}
+
+.admin-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: transparent;
+  color: #ff5555;
+  border: 1px solid #331515;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+  background: #ff5555;
+  color: #fff;
+  border-color: #ff5555;
+}
+
+/* --- MOBILE TOP NAVIGATION BAR --- */
+.admin-mobile-topbar {
+  display: none;
+  background: #0d0d12;
+  border-bottom: 1px solid #1e1e28;
+  padding: 14px 20px;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+}
+
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon-mobile {
+  color: #B5F23D;
+}
+
+.mobile-brand .brand-text {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.mobile-toggle-btn {
+  background: #161622;
+  border: 1px solid #282836;
+  color: #B5F23D;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mobile-toggle-btn:hover {
+  background: #242436;
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+}
+
+/* --- RESPONSIVE STYLES (< 1024px) --- */
 @media (max-width: 1024px) {
   .admin-layout {
     flex-direction: column;
   }
 
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: sticky;
+  .admin-mobile-topbar {
+    display: flex;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1040;
+  }
+
+  .admin-sidebar {
+    position: fixed;
     top: 0;
-    z-index: 100;
-    border-right: none;
-    border-bottom: 2px solid #222;
-    padding: 15px 20px;
-    flex-direction: row;
-    overflow-x: auto;
-    white-space: nowrap;
-    align-items: center;
+    bottom: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 1050;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
   }
 
-  .sidebar::-webkit-scrollbar {
-    height: 4px;
-  }
-  .sidebar::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 4px;
-  }
-
-  .sidebar h2 {
-    margin-bottom: 0;
-    margin-right: 20px;
-    font-size: 1.2rem;
-    border-bottom: none;
-    padding-bottom: 0;
-    flex-shrink: 0;
-  }
-
-  .sidebar a {
-    display: inline-block;
-    padding: 8px 15px;
-    font-size: 0.85rem;
-    flex-shrink: 0;
+  .admin-sidebar.open {
+    transform: translateX(0);
   }
 }

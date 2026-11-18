@@ -228,6 +228,7 @@ function Blog() {
                       getBlogFallbackImage(featured.title, featured.content)
                     )}
                     alt={featured.title}
+                    loading="lazy"
                     onError={(e) =>
                       onImageError(
                         e,
@@ -296,6 +297,7 @@ function Blog() {
                         <img
                           src={imageSrc}
                           alt={post.title}
+                          loading="lazy"
                           onError={(e) => onImageError(e, fallback)}
                           className="card-thumb-img"
                         />
@@ -398,6 +400,7 @@ function Blog() {
                         getBlogFallbackImage(selectedBlog.title, selectedBlog.content)
                       )}
                       alt={selectedBlog.title}
+                      loading="lazy"
                       onError={(e) =>
                         onImageError(
                           e,
