@@ -80,10 +80,10 @@ export default function App() {
                 <Route path="/program/:id" element={<ProgramDetails />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/:id" element={<Checkout />} />
-                <Route path="/exercises" element={<Workouts />} />
                 <Route path="/workouts" element={<Workouts />} />
-                <Route path="/videos" element={<Navigate to="/exercises" replace />} />
-                <Route path="/workout-videos" element={<Navigate to="/exercises" replace />} />
+                <Route path="/exercises" element={<Workouts />} />
+                <Route path="/videos" element={<Navigate to="/workouts" replace />} />
+                <Route path="/workout-videos" element={<Navigate to="/workouts" replace />} />
                 <Route path="/calculator" element={<Calculator />} />
                 <Route path="/bmi-calculator" element={<BMICalculator />} />
                 <Route path="/bmi-history" element={<BMIHistory />} />

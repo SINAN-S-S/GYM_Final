@@ -842,7 +842,7 @@ export default function Profile() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/exercises")}
+                  onClick={() => navigate("/workouts")}
                   style={{
                     backgroundColor: "#1e1e28",
                     color: "#B5F23D",
@@ -855,7 +855,7 @@ export default function Profile() {
                     letterSpacing: "0.5px"
                   }}
                 >
-                  🎬 EXERCISES & VIDEOS
+                  🎬 WORKOUTS & VIDEOS
                 </button>
               </div>
             </div>

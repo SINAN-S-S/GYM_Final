@@ -310,15 +310,15 @@ export default function Workouts() {
         {/* HEADER SECTION */}
         <header className="workouts-header">
           <div className="header-left">
-            <span className="kicker-pill">03 — MASTER EXERCISE & VIDEO LIBRARY</span>
+            <span className="kicker-pill">03 — MASTER WORKOUT ARCHIVE</span>
             <h1 className="heavy-title">
               ELITE <br />
-              <span className="accent-text">ROUTINES & EXERCISES</span>
+              <span className="accent-text">WORKOUTS & ROUTINES</span>
             </h1>
           </div>
           <div className="header-right">
             <p className="header-desc">
-              Explore high-definition exercise demonstration videos, technique breakdowns, and
+              Explore high-definition workout demonstration videos, technique breakdowns, and
               structured training routines designed by AlphaFit head coaches.
             </p>
           </div>
@@ -393,7 +393,7 @@ export default function Workouts() {
         {loading ? (
           <div className="video-state-box loading">
             <div className="spinner"></div>
-            <p>LOADING EXERCISE & WORKOUT ARCHIVE...</p>
+            <p>LOADING WORKOUT ARCHIVE...</p>
           </div>
         ) : error ? (
           <div className="video-state-box error">
@@ -408,9 +408,9 @@ export default function Workouts() {
             <div className="lock-icon-wrap">
               <FaLock />
             </div>
-            <h2>EXCLUSIVE MEMBER CONTENT</h2>
+            <h2>EXCLUSIVE MEMBER WORKOUTS</h2>
             <p className="locked-desc">
-              The Elite Exercise & Video Library is exclusive to AlphaFit members with an
+              The Elite Workout & Video Library is exclusive to AlphaFit members with an
               active membership plan or enrolled training program.
             </p>
 
@@ -432,9 +432,9 @@ export default function Workouts() {
         ) : filteredItems.length === 0 ? (
           <div className="video-state-box empty">
             <FaDumbbell className="empty-icon" />
-            <h3>No Exercises or Routines Found</h3>
+            <h3>No Workouts or Routines Found</h3>
             <p>
-              We couldn&apos;t find any exercises or workout routines matching your selected filters.
+              We couldn&apos;t find any workout tutorials or routines matching your selected filters.
             </p>
             <button
               className="reset-btn"
@@ -444,7 +444,7 @@ export default function Workouts() {
                 setSearch("");
               }}
             >
-              View All Exercises
+              View All Workouts
             </button>
           </div>
         ) : (

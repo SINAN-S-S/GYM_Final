@@ -57,8 +57,8 @@ export default function Navbar() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/exercises" className={({ isActive }) => (isActive ? "active-nav" : "")} onClick={closeMenu}>
-                Exercises
+              <NavLink to="/workouts" className={({ isActive }) => (isActive ? "active-nav" : "")} onClick={closeMenu}>
+                Workouts
               </NavLink>
             </li>
             <li>
