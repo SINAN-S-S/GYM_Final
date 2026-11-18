@@ -10,6 +10,9 @@
     "install:all": "npm install && npm --prefix client install && npm --prefix server install",
     "test": "npm --prefix server test"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "allowScripts": {
     "@firebase/util": true,
     "protobufjs": true

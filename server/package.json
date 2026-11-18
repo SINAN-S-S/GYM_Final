@@ -9,6 +9,9 @@
     "test": "node test_audit.js",
     "build": "node -e \"console.log('Server build ready')\""
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
