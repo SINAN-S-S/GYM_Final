@@ -116,3 +116,4 @@ export const chatWithAIAssistant = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+

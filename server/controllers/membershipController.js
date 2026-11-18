@@ -172,3 +172,4 @@ export const deleteMembershipPlan = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+

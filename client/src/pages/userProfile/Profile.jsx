@@ -89,7 +89,16 @@ export default function Profile() {
     notes: "",
   });
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
+  const getBackendUrl = () => {
+    const isLocal = typeof window !== "undefined" && window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    if (isLocal) return "http://localhost:5000";
+    const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
+    if (!configured || /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured)) {
+      return "https://gym-final-3uya.vercel.app";
+    }
+    return configured;
+  };
+  const backendUrl = getBackendUrl();
 
   // Initial Data Fetch
   useEffect(() => {
@@ -131,20 +140,27 @@ export default function Profile() {
 
         const attHistRes = await axios.get(`${backendUrl}/api/attendance/my-history`, { headers }).catch(() => null);
         if (attHistRes?.data) {
-          setAttendanceHistory(attHistRes.data.history || []);
+          const list = attHistRes.data.history || attHistRes.data.records || (Array.isArray(attHistRes.data) ? attHistRes.data : []);
+          setAttendanceHistory(list);
           setAttendanceStats({
-            totalCheckIns: attHistRes.data.totalCheckIns || 0,
+            totalCheckIns: attHistRes.data.totalCheckIns || attHistRes.data.totalDays || list.length,
             streak: attHistRes.data.streak || 0,
           });
         }
 
         // 3. Workouts
-        const workoutRes = await axios.get(`${backendUrl}/api/workout-logs/my-logs`, { headers }).catch(() => null);
-        if (workoutRes?.data) setWorkouts(workoutRes.data);
+        const workoutRes = await axios.get(`${backendUrl}/api/workout-logs/my`, { headers }).catch(() => null);
+        if (workoutRes?.data) {
+          const wList = workoutRes.data.logs || workoutRes.data.workouts || (Array.isArray(workoutRes.data) ? workoutRes.data : []);
+          setWorkouts(wList);
+        }
 
         // 4. Progress
         const progRes = await axios.get(`${backendUrl}/api/progress/my`, { headers }).catch(() => null);
-        if (progRes?.data) setProgressLogs(progRes.data);
+        if (progRes?.data) {
+          const pList = Array.isArray(progRes.data) ? progRes.data : (progRes.data.progress || []);
+          setProgressLogs(pList);
+        }
 
         // 5. Diet Plan
         const dietRes = await axios.get(`${backendUrl}/api/diet-plans/my`, { headers }).catch(() => null);
@@ -178,6 +194,10 @@ export default function Profile() {
 
         // 9. Notifications
         const notifRes = await axios.get(`${backendUrl}/api/notifications/my`, { headers }).catch(() => null);
+        if (notifRes?.data) {
+          const nList = notifRes.data.notifications || (Array.isArray(notifRes.data) ? notifRes.data : []);
+          setNotifications(nList);
+        }
         if (notifRes?.data) setNotifications(notifRes.data);
 
       } catch (err) {
@@ -238,7 +258,8 @@ export default function Profile() {
       const res = await axios.post(`${backendUrl}/api/workout-logs`, workoutForm, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setWorkouts([res.data, ...workouts]);
+      const newLog = res.data.log || res.data;
+      setWorkouts([newLog, ...workouts]);
       alert("Workout logged successfully! +25 Alpha Points earned.");
       setWorkoutForm({
         title: "",
@@ -260,8 +281,9 @@ export default function Profile() {
       const res = await axios.post(`${backendUrl}/api/progress`, progressForm, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProgressLogs([res.data.progress, ...progressLogs]);
-      alert(`Progress logged! Calculated BMI: ${res.data.progress.bmi} (${res.data.progress.category})`);
+      const newProg = res.data.progress || res.data;
+      setProgressLogs([newProg, ...progressLogs]);
+      alert(`Progress logged! Calculated BMI: ${newProg.bmi || "Recorded"} (${newProg.category || "Normal"})`);
     } catch (err) {
       alert(err.response?.data?.msg || "Failed to log progress");
     }

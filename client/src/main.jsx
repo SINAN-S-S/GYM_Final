@@ -16,7 +16,7 @@ const getActiveBackend = () => {
     return DEFAULT_DEV_BACKEND;
   }
   const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
-  const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five/.test(configured);
+  const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
   if (!configured || isObsolete) {
     return DEFAULT_PROD_BACKEND;
   }
@@ -36,7 +36,7 @@ axios.interceptors.request.use(request => {
     if (!isLocal) {
       // In production (e.g. on https://gym-final-lake.vercel.app), route all API requests to the deployed backend
       request.url = request.url.replace(
-        /^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app)/,
+        /^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app|gym-final-qsuh\.vercel\.app)/,
         activeBackend
       );
 

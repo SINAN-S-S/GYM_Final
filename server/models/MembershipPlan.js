@@ -41,3 +41,4 @@ const membershipPlanSchema = new mongoose.Schema(
 const MembershipPlan = mongoose.model("MembershipPlan", membershipPlanSchema);
 
 export default MembershipPlan;
+

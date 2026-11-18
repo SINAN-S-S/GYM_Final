@@ -92,3 +92,4 @@ dietPlanSchema.index({ user: 1, isActive: 1 });
 const DietPlan = mongoose.model("DietPlan", dietPlanSchema);
 
 export default DietPlan;
+

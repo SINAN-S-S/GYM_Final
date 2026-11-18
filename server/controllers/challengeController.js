@@ -6,7 +6,44 @@ import Notification from "../models/Notification.js";
 // GET ALL ACTIVE CHALLENGES (With current user's join status)
 export const getActiveChallenges = async (req, res) => {
   try {
-    const challenges = await Challenge.find({ isActive: true }).sort({ createdAt: -1 });
+    let challenges = await Challenge.find({ isActive: true }).sort({ createdAt: -1 });
+
+    // Auto-seed default gym challenges if none exist
+    if (challenges.length === 0) {
+      const defaultChallenges = [
+        {
+          title: "30-Day Consistency Beast",
+          description: "Check in to AlphaFit at least 20 times this month to claim the Consistency King badge.",
+          category: "Monthly",
+          targetMetric: "Days",
+          targetNumber: 20,
+          points: 250,
+          badge: "Consistency King",
+          isActive: true,
+        },
+        {
+          title: "10,000 Pushups Club",
+          description: "Log your pushup volume this week towards the 10,000 pushup club milestone.",
+          category: "Weekly",
+          targetMetric: "Reps",
+          targetNumber: 1000,
+          points: 150,
+          badge: "Pushup Beast",
+          isActive: true,
+        },
+        {
+          title: "Cardio Crusher 50k",
+          description: "Burn 5,000 kcal through high-intensity gym training and conditioning sessions.",
+          category: "Daily",
+          targetMetric: "Calories",
+          targetNumber: 5000,
+          points: 100,
+          badge: "Cardio Titan",
+          isActive: true,
+        },
+      ];
+      challenges = await Challenge.insertMany(defaultChallenges);
+    }
 
     // Fetch user participation records
     let userParticipations = [];
@@ -215,3 +252,4 @@ export const deleteChallenge = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+

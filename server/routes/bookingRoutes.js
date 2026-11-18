@@ -17,10 +17,10 @@ import {
 const router = express.Router();
 
 // USER ROUTES
-router.post("/", protect, createBooking);
+router.post(["/", "/book"], protect, createBooking);
 
 router.get(
-  "/mybookings",
+  ["/mybookings", "/my"],
   protect,
   getUserBookings
 );
@@ -32,10 +32,10 @@ router.put(
 );
 
 // ADMIN ROUTES
-router.get("/", protect, admin, getAllBookings);
+router.get(["/", "/all"], protect, admin, getAllBookings);
 
 router.put(
-  "/:id",
+  ["/:id", "/:id/status"],
   protect,
   admin,
   updateBookingStatus

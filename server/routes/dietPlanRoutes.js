@@ -13,3 +13,4 @@ router.post("/assign", protect, admin, assignDietPlan);
 router.get("/all", protect, admin, getAllDietPlans);
 
 export default router;
+

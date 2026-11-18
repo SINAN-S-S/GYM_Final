@@ -75,12 +75,21 @@ export const checkInMember = async (req, res) => {
       });
     }
 
+    const methodMap = {
+      qr_code: "QR_Code",
+      qr_scan: "QR_SCAN",
+      admin_manual: "Admin_Manual",
+      manual_admin: "MANUAL_ADMIN",
+      kiosk: "KIOSK",
+    };
+    const normalizedMethod = methodMap[(method || "").toLowerCase()] || "QR_SCAN";
+
     const attendance = await Attendance.create({
       user: targetUser._id,
       date: today,
       checkInTime: new Date(),
       status: "Present",
-      verificationMethod: method || "QR_SCAN",
+      verificationMethod: normalizedMethod,
       notes: `Verified check-in for ${targetUser.username}`,
     });
 
@@ -140,9 +149,35 @@ export const getMyAttendance = async (req, res) => {
 
     const totalDays = await Attendance.countDocuments({ user: req.user._id });
 
+    // Calculate real consecutive attendance streak
+    let streak = 0;
+    const uniqueDates = [...new Set(records.map((r) => r.date))].sort().reverse();
+    let checkDate = new Date();
+    for (let i = 0; i < uniqueDates.length; i++) {
+      const dStr = getTodayDateString(checkDate);
+      if (uniqueDates.includes(dStr)) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else if (i === 0) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        const yestStr = getTodayDateString(checkDate);
+        if (uniqueDates.includes(yestStr)) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+
     res.json({
       totalDays,
+      totalCheckIns: totalDays,
+      streak,
       records,
+      history: records,
     });
   } catch (err) {
     res.status(500).json({ msg: err.message });
@@ -176,8 +211,10 @@ export const getAllAttendance = async (req, res) => {
       date: queryDate,
       count: todayCount,
       records,
+      logs: records,
     });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 };
+

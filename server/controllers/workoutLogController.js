@@ -15,19 +15,34 @@ export const createWorkoutLog = async (req, res) => {
       date,
     } = req.body;
 
+    const sanitizedExercises = (Array.isArray(exercises) ? exercises : []).map((ex) => ({
+      name: ex.name || "Strength Exercise",
+      category: ex.category || category || "Strength",
+      sets: (Array.isArray(ex.sets) && ex.sets.length > 0 ? ex.sets : [{ reps: 10, weight: 0 }]).map((s, idx) => ({
+        setNumber: s.setNumber || idx + 1,
+        reps: Number(s.reps) || 10,
+        weight: Number(s.weight) || 0,
+        completed: s.completed !== false,
+      })),
+    }));
+
     const log = await WorkoutLog.create({
       user: req.user._id,
       title: title || "Strength Training Session",
       category: category || "Strength",
       durationMinutes: Number(durationMinutes) || 45,
       caloriesBurned: Number(caloriesBurned) || 300,
-      exercises: Array.isArray(exercises) ? exercises : [],
+      exercises: sanitizedExercises,
       notes: notes || "",
       completed: completed !== false,
       date: date ? new Date(date) : new Date(),
     });
 
-    res.status(201).json(log);
+    res.status(201).json({
+      success: true,
+      log,
+      ...log.toObject(),
+    });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -49,6 +64,7 @@ export const getMyWorkoutLogs = async (req, res) => {
     res.json({
       totalWorkouts,
       logs,
+      workouts: logs,
     });
   } catch (err) {
     res.status(500).json({ msg: err.message });
@@ -171,3 +187,4 @@ export const assignWorkoutToMember = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+

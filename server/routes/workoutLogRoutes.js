@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 router.post("/", protect, createWorkoutLog);
-router.get("/my", protect, getMyWorkoutLogs);
+router.get(["/my", "/my-logs"], protect, getMyWorkoutLogs);
 router.get("/stats", protect, getMyWorkoutStats);
 router.put("/:id", protect, updateWorkoutLog);
 router.delete("/:id", protect, deleteWorkoutLog);
@@ -21,3 +21,4 @@ router.delete("/:id", protect, deleteWorkoutLog);
 router.post("/assign", protect, admin, assignWorkoutToMember);
 
 export default router;
+

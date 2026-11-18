@@ -26,7 +26,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     verificationMethod: {
       type: String,
-      enum: ["QR_SCAN", "MANUAL_ADMIN", "KIOSK"],
+      enum: ["QR_SCAN", "QR_Code", "MANUAL_ADMIN", "Admin_Manual", "KIOSK"],
       default: "QR_SCAN",
     },
     notes: {
@@ -43,3 +43,4 @@ attendanceSchema.index({ user: 1, date: 1 });
 const Attendance = mongoose.model("Attendance", attendanceSchema);
 
 export default Attendance;
+

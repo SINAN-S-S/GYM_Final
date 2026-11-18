@@ -21,3 +21,4 @@ router.post("/admin", protect, admin, createChallenge);
 router.delete("/admin/:id", protect, admin, deleteChallenge);
 
 export default router;
+

@@ -19,3 +19,4 @@ router.post("/admin", protect, admin, createNotification);
 router.delete("/admin/:id", protect, admin, deleteNotification);
 
 export default router;
+

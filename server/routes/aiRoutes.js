@@ -6,3 +6,4 @@ const router = express.Router();
 router.post("/chat", chatWithAIAssistant);
 
 export default router;
+

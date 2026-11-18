@@ -8,7 +8,7 @@ function MainLayout() {
   return (
     <div>
       <Navbar />
-      
+
       <div style={{ position: 'relative', minHeight: '100vh' }}>
         <Outlet />
       </div>

@@ -224,7 +224,7 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
   const getBackendBase = () => {
     if (isLocal) return DEFAULT_DEV_BACKEND;
     const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
-    const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five/.test(configured);
+    const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
     if (!configured || isObsolete) return DEFAULT_PROD_BACKEND;
     return configured;
   };

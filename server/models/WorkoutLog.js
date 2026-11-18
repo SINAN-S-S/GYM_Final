@@ -3,16 +3,14 @@ import mongoose from "mongoose";
 const setEntrySchema = new mongoose.Schema({
   setNumber: {
     type: Number,
-    required: true,
+    default: 1,
   },
   reps: {
     type: Number,
-    required: true,
     default: 10,
   },
   weight: {
     type: Number,
-    required: true,
     default: 0,
   },
   completed: {
@@ -96,3 +94,4 @@ workoutLogSchema.index({ user: 1, date: -1 });
 const WorkoutLog = mongoose.model("WorkoutLog", workoutLogSchema);
 
 export default WorkoutLog;
+

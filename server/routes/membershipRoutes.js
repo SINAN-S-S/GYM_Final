@@ -19,3 +19,4 @@ router.put("/admin/plans/:id", protect, admin, updateMembershipPlan);
 router.delete("/admin/plans/:id", protect, admin, deleteMembershipPlan);
 
 export default router;
+

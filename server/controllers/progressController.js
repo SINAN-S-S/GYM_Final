@@ -95,7 +95,26 @@ export const logProgress = async (req, res) => {
       });
     }
 
-    res.status(201).json(log);
+    // Determine BMI category
+    let category = "Normal";
+    if (calculatedBmi) {
+      if (calculatedBmi < 18.5) category = "Underweight";
+      else if (calculatedBmi < 25) category = "Normal";
+      else if (calculatedBmi < 30) category = "Overweight";
+      else category = "Obese";
+    }
+
+    const payload = {
+      ...log.toObject(),
+      bmi: calculatedBmi,
+      category,
+    };
+
+    res.status(201).json({
+      success: true,
+      progress: payload,
+      ...payload,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

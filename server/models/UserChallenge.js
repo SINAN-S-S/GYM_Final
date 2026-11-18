@@ -38,3 +38,4 @@ userChallengeSchema.index({ user: 1, challenge: 1 }, { unique: true });
 const UserChallenge = mongoose.model("UserChallenge", userChallengeSchema);
 
 export default UserChallenge;
+
