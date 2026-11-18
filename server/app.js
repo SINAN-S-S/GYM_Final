@@ -75,7 +75,7 @@ app.use((req, res, next) => {
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Home Route / Health Check (Responds immediately for ping/uptime monitors)
-app.get(["/", "/api", "/api/health"], (req, res) => {
+app.get(["/", "/api", "/api/", "/api/health"], (req, res) => {
   res.status(200).json({
     success: true,
     message: "Backend API Running Successfully",
