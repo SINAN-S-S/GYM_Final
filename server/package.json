@@ -7,7 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "node test_audit.js",
-    "build": "node -e \"console.log('Server build complete')\""
+    "build": "node -e \"import('node:fs').then(fs => { if (!fs.existsSync('dist')) fs.mkdirSync('dist', {recursive: true}); fs.copyFileSync('app.js', 'dist/app.js'); fs.copyFileSync('app.js', 'dist/index.js'); console.log('Server build complete'); })\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
