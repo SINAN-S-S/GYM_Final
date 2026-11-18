@@ -13,12 +13,17 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
     
-    if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
+    if (token) {
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
+        } catch (e) {
+          console.error("Failed to parse stored user", e);
+          setIsAuthenticated(true);
+        }
+      } else {
         setIsAuthenticated(true);
-      } catch (e) {
-        console.error("Failed to parse stored user", e);
       }
     }
   }, []);

@@ -91,6 +91,13 @@ export default function Navbar() {
                 Community
               </NavLink>
             </li>
+            {isAuthenticated && user && (
+              <li>
+                <NavLink to="/profile" className={({ isActive }) => (isActive ? "active-nav" : "")} onClick={closeMenu}>
+                  Profile
+                </NavLink>
+              </li>
+            )}
 
             {/* Mobile Auth Actions */}
             <li className="mobile-auth-section">

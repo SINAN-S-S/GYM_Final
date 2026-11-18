@@ -37,7 +37,7 @@ import "./Profile.css";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user: authUser, logout } = useContext(AuthContext);
+  const { user: authUser, setUser, logout } = useContext(AuthContext);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState("overview");
@@ -133,6 +133,9 @@ export default function Profile() {
               weight: profileRes.data.weight || "",
               height: profileRes.data.height || "",
             }));
+            if (!authUser && setUser) {
+              setUser(profileRes.data);
+            }
           }
         } catch (err) {
           if (err.response?.status === 401) {
@@ -152,9 +155,10 @@ export default function Profile() {
         const attHistRes = await axios.get(`${backendUrl}/api/attendance/my-history`, { headers }).catch(() => null);
         if (attHistRes?.data) {
           const list = attHistRes.data.history || attHistRes.data.records || (Array.isArray(attHistRes.data) ? attHistRes.data : []);
-          setAttendanceHistory(list);
+          const safeList = Array.isArray(list) ? list : [];
+          setAttendanceHistory(safeList);
           setAttendanceStats({
-            totalCheckIns: attHistRes.data.totalCheckIns || attHistRes.data.totalDays || list.length,
+            totalCheckIns: attHistRes.data.totalCheckIns || attHistRes.data.totalDays || safeList.length,
             streak: attHistRes.data.streak || 0,
           });
         }
@@ -163,14 +167,14 @@ export default function Profile() {
         const workoutRes = await axios.get(`${backendUrl}/api/workout-logs/my`, { headers }).catch(() => null);
         if (workoutRes?.data) {
           const wList = workoutRes.data.logs || workoutRes.data.workouts || (Array.isArray(workoutRes.data) ? workoutRes.data : []);
-          setWorkouts(wList);
+          setWorkouts(Array.isArray(wList) ? wList : []);
         }
 
         // 4. Progress
         const progRes = await axios.get(`${backendUrl}/api/progress/my`, { headers }).catch(() => null);
         if (progRes?.data) {
           const pList = Array.isArray(progRes.data) ? progRes.data : (progRes.data.progress || []);
-          setProgressLogs(pList);
+          setProgressLogs(Array.isArray(pList) ? pList : []);
         }
 
         // 5. Diet Plan
@@ -180,36 +184,48 @@ export default function Profile() {
         // 6. Trainers & Bookings
         const trainerRes = await axios.get(`${backendUrl}/api/trainers`).catch(() => null);
         if (trainerRes?.data) {
-          setTrainers(trainerRes.data);
-          if (trainerRes.data.length > 0) {
-            setBookingForm((prev) => ({ ...prev, trainerId: trainerRes.data[0]._id }));
+          const tList = Array.isArray(trainerRes.data) ? trainerRes.data : [];
+          setTrainers(tList);
+          if (tList.length > 0) {
+            setBookingForm((prev) => ({ ...prev, trainerId: tList[0]._id }));
           }
         }
 
         const bookingRes = await axios.get(`${backendUrl}/api/bookings/mybookings`, { headers }).catch(() => null);
-        if (bookingRes?.data) setBookings(bookingRes.data);
+        if (bookingRes?.data) {
+          const bList = Array.isArray(bookingRes.data) ? bookingRes.data : (bookingRes.data.bookings || []);
+          setBookings(Array.isArray(bList) ? bList : []);
+        }
 
         // 7. Challenges & Leaderboard
         const chalRes = await axios.get(`${backendUrl}/api/challenges`, { headers }).catch(() => null);
-        if (chalRes?.data) setChallenges(chalRes.data);
+        if (chalRes?.data) {
+          setChallenges(Array.isArray(chalRes.data) ? chalRes.data : []);
+        }
 
         const leaderRes = await axios.get(`${backendUrl}/api/challenges/leaderboard`, { headers }).catch(() => null);
-        if (leaderRes?.data) setLeaderboard(leaderRes.data);
+        if (leaderRes?.data) {
+          setLeaderboard(Array.isArray(leaderRes.data) ? leaderRes.data : []);
+        }
 
         // 8. Memberships & Purchases
         const plansRes = await axios.get(`${backendUrl}/api/memberships/plans`).catch(() => null);
-        if (plansRes?.data) setMembershipPlans(plansRes.data);
+        if (plansRes?.data) {
+          setMembershipPlans(Array.isArray(plansRes.data) ? plansRes.data : []);
+        }
 
         const purchaseRes = await axios.get(`${backendUrl}/api/purchases/my-purchases`, { headers }).catch(() => null);
-        if (purchaseRes?.data) setPurchases(purchaseRes.data);
+        if (purchaseRes?.data) {
+          const purList = Array.isArray(purchaseRes.data) ? purchaseRes.data : (purchaseRes.data.purchases || []);
+          setPurchases(Array.isArray(purList) ? purList : []);
+        }
 
         // 9. Notifications
         const notifRes = await axios.get(`${backendUrl}/api/notifications/my`, { headers }).catch(() => null);
         if (notifRes?.data) {
           const nList = notifRes.data.notifications || (Array.isArray(notifRes.data) ? notifRes.data : []);
-          setNotifications(nList);
+          setNotifications(Array.isArray(nList) ? nList : []);
         }
-        if (notifRes?.data) setNotifications(notifRes.data);
 
       } catch (err) {
         console.error("Dashboard fetch error:", err);
@@ -226,12 +242,17 @@ export default function Profile() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${backendUrl}/api/users/profile`, profile, {
+      const res = await axios.put(`${backendUrl}/api/users/profile`, profile, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.data) {
+        setProfile(res.data);
+        if (setUser) setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+      }
       alert("Profile updated successfully!");
     } catch (err) {
-      alert("Error updating profile");
+      alert(err.response?.data?.message || err.response?.data?.msg || "Error updating profile");
     }
   };
 
@@ -469,7 +490,7 @@ export default function Profile() {
       await axios.put(`${backendUrl}/api/notifications/mark-all-read`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) => (Array.isArray(prev) ? prev.map((n) => ({ ...n, isRead: true })) : []));
     } catch (err) {
       console.error(err);
     }
@@ -480,14 +501,16 @@ export default function Profile() {
     ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(qrData.qrToken)}&bgcolor=111116&color=B5F23D`
     : "";
 
-  // Calculate Latest BMI
-  const latestWeight = Number(progressLogs[0]?.weight || profile.weight || 75);
-  const latestHeight = Number(progressLogs[0]?.height || profile.height || 178);
+  // Safe Progress Arrays & Calculate Latest BMI
+  const safeProgress = Array.isArray(progressLogs) ? progressLogs : [];
+  const latestWeight = Number(safeProgress[0]?.weight || profile.weight || 75);
+  const latestHeight = Number(safeProgress[0]?.height || profile.height || 178);
   const calculatedBMI = latestHeight > 0 ? (latestWeight / Math.pow(latestHeight / 100, 2)).toFixed(1) : "22.5";
   const bmiCategory = calculatedBMI < 18.5 ? "Underweight" : calculatedBMI < 25 ? "Normal" : calculatedBMI < 30 ? "Overweight" : "Obese";
 
   // Progression Chart Data
-  const chartData = [...progressLogs]
+  const chartData = [...safeProgress]
+    .slice(-10)
     .sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt))
     .map((p) => ({
       date: new Date(p.date || p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -613,7 +636,7 @@ export default function Profile() {
             <FaCreditCard /> MEMBERSHIP & BILLS
           </button>
           <button className={`tab-btn ${activeTab === "notifications" ? "active" : ""}`} onClick={() => setActiveTab("notifications")}>
-            <FaBell /> ALERTS ({notifications.filter((n) => !n.isRead).length})
+            <FaBell /> ALERTS ({(Array.isArray(notifications) ? notifications.filter((n) => !n.isRead).length : 0)})
           </button>
         </div>
 
@@ -724,28 +747,28 @@ export default function Profile() {
               <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
                 <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>THIS WEEK</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#B5F23D", marginTop: "4px" }}>
-                  {workouts.filter(w => new Date(w.date || w.createdAt) >= new Date(Date.now() - 7 * 86400000)).length}
+                  {Array.isArray(workouts) ? workouts.filter(w => new Date(w.date || w.createdAt) >= new Date(Date.now() - 7 * 86400000)).length : 0}
                 </div>
                 <div style={{ fontSize: "0.68rem", color: "#666" }}>Workouts</div>
               </div>
               <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
                 <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>THIS MONTH</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#38bdf8", marginTop: "4px" }}>
-                  {workouts.filter(w => new Date(w.date || w.createdAt) >= new Date(Date.now() - 30 * 86400000)).length}
+                  {Array.isArray(workouts) ? workouts.filter(w => new Date(w.date || w.createdAt) >= new Date(Date.now() - 30 * 86400000)).length : 0}
                 </div>
                 <div style={{ fontSize: "0.68rem", color: "#666" }}>Workouts</div>
               </div>
               <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
                 <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>ACTIVE TIME</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#fff", marginTop: "4px" }}>
-                  {workouts.reduce((sum, w) => sum + (Number(w.durationMinutes) || 0), 0)}m
+                  {Array.isArray(workouts) ? workouts.reduce((sum, w) => sum + (Number(w.durationMinutes) || 0), 0) : 0}m
                 </div>
                 <div style={{ fontSize: "0.68rem", color: "#666" }}>Logged Minutes</div>
               </div>
               <div style={{ backgroundColor: "#14141a", border: "1px solid #282834", borderRadius: "8px", padding: "14px", textAlign: "center" }}>
                 <div style={{ fontSize: "0.72rem", color: "#8c8c9a", fontWeight: "700" }}>CALORIES BURNED</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "#ff4757", marginTop: "4px" }}>
-                  {workouts.reduce((sum, w) => sum + (Number(w.caloriesBurned) || 0), 0)}
+                  {Array.isArray(workouts) ? workouts.reduce((sum, w) => sum + (Number(w.caloriesBurned) || 0), 0) : 0}
                 </div>
                 <div style={{ fontSize: "0.68rem", color: "#666" }}>Total kcal</div>
               </div>
@@ -1024,7 +1047,7 @@ export default function Profile() {
             </div>
 
             {/* Before & After Visual Comparison */}
-            {progressLogs.length > 0 && (
+            {Array.isArray(progressLogs) && progressLogs.length > 0 && (
               <div className="dashboard-card" style={{ marginTop: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                   <h3 style={{ margin: 0 }}>BEFORE & AFTER COMPARISON</h3>
