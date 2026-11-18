@@ -7,7 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "node test_audit.js",
-    "build": "node -e \"console.log('Server build ready')\""
+    "build": "npm install --prefer-online"
   },
   "engines": {
     "node": ">=18.0.0"
