@@ -1,4 +1,4 @@
-const DEFAULT_PROD_BACKEND = "https://gym-final-qsuh.vercel.app";
+const DEFAULT_PROD_BACKEND = "https://gym-final-3uya.vercel.app";
 const DEFAULT_DEV_BACKEND = "http://localhost:5000";
 
 const getBackendBase = () => {

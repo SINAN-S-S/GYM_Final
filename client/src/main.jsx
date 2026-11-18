@@ -7,7 +7,7 @@ import "./styles/variables.css";
 import axios from "axios";
 
 // --- GLOBAL FRONTEND API LOGGING & URL NORMALIZATION ---
-const DEFAULT_PROD_BACKEND = "https://gym-final-qsuh.vercel.app";
+const DEFAULT_PROD_BACKEND = "https://gym-final-3uya.vercel.app";
 const DEFAULT_DEV_BACKEND = "http://localhost:5000";
 
 const getActiveBackend = () => {
@@ -47,7 +47,7 @@ axios.interceptors.request.use(request => {
     } else {
       // In local development, ensure requests target localhost:5000
       request.url = request.url.replace(
-        /^https?:\/\/gym-final-qsuh\.vercel\.app/,
+        /^https?:\/\/(gym-final-qsuh\.vercel\.app|gym-final-3uya\.vercel\.app)/,
         DEFAULT_DEV_BACKEND
       );
     }
