@@ -7,6 +7,13 @@ import "./styles/variables.css";
 import axios from "axios";
 
 // --- GLOBAL FRONTEND API LOGGING & URL NORMALIZATION ---
+const DEFAULT_BACKEND_URL = "https://gym-final-qsuh.vercel.app";
+const configuredBackend = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  DEFAULT_BACKEND_URL
+).replace(/\/+$/, "").replace(/\/api$/, "");
+
 axios.interceptors.request.use(request => {
   if (request.url) {
     // If VITE_BACKEND_URL was undefined or omitted at build time
@@ -14,15 +21,25 @@ axios.interceptors.request.use(request => {
       request.url = request.url.replace(/^undefined/, "");
     }
 
-    // In production (Vercel / live domain), normalize localhost or obsolete backend hosts
-    // to same-origin relative path so Vercel serverless function /api routes work seamlessly
+    // In production (e.g. on https://gym-final-lake.vercel.app), route all API requests to the deployed backend
     if (typeof window !== "undefined" && window.location && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      request.url = request.url.replace(/^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app)/, "");
+      request.url = request.url.replace(
+        /^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app)/,
+        configuredBackend
+      );
+
+      // If request URL is relative (/api/...), prefix with configuredBackend
+      if (request.url.startsWith("/api")) {
+        request.url = `${configuredBackend}${request.url}`;
+      }
     }
 
-    // Clean up duplicate slashes after protocol (e.g. http://localhost:5000//api -> http://localhost:5000/api)
+    // Clean up duplicate slashes after protocol (e.g. https://domain.vercel.app//api -> https://domain.vercel.app/api)
     request.url = request.url.replace(/([^:])\/\/+/g, '$1/');
   }
+
+  // Ensure cross-origin credentials (cookies, authorization headers) are sent to backend
+  request.withCredentials = true;
 
   // Automatically attach Bearer token from localStorage if present and not already attached
   if (typeof window !== "undefined" && window.localStorage) {
@@ -33,9 +50,9 @@ axios.interceptors.request.use(request => {
     }
   }
 
-  console.log(`\n[Frontend]  API Request: ${request.method?.toUpperCase()} ${request.url}`);
+  console.log(`\n[Frontend] API Request: ${request.method?.toUpperCase()} ${request.url}`);
   if (request.data) {
-    console.log('[Frontend]  Request Payload:', request.data);
+    console.log('[Frontend] Request Payload:', request.data);
   }
   return request;
 });

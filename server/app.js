@@ -33,11 +33,31 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middlewares - Placed FIRST so all responses (including 500 DB errors) include CORS headers
+const allowedOrigins = [
+  "https://gym-final-lake.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5000",
+];
+
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile apps, curl, uptime monitors)
+    if (!origin) return callback(null, true);
+
+    // Allow explicitly listed origins or any Vercel deployment preview / subdomains
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(null, true);
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 }));
 app.use(express.json());
 
