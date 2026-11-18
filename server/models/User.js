@@ -53,6 +53,42 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    membership: {
+      plan: {
+        type: String,
+        default: "Pro Athlete Membership",
+      },
+      status: {
+        type: String,
+        enum: ["Active", "Expired", "Pending", "None"],
+        default: "Active",
+      },
+      startDate: {
+        type: Date,
+        default: Date.now,
+      },
+      expiresAt: {
+        type: Date,
+        default: () => new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
+      },
+    },
+
+    qrCode: {
+      type: String,
+      default: "",
+    },
+
+    points: {
+      type: Number,
+      default: 150,
+    },
+
+    assignedTrainer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Trainer",
+      default: null,
+    },
   },
   { timestamps: true }
 );

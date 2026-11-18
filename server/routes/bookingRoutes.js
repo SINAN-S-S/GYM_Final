@@ -8,6 +8,7 @@ import {
 import {
   createBooking,
   getUserBookings,
+  cancelUserBooking,
   getAllBookings,
   updateBookingStatus,
   deleteBooking,
@@ -22,6 +23,12 @@ router.get(
   "/mybookings",
   protect,
   getUserBookings
+);
+
+router.put(
+  "/:id/cancel",
+  protect,
+  cancelUserBooking
 );
 
 // ADMIN ROUTES

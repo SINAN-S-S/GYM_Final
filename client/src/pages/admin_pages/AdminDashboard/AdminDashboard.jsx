@@ -102,21 +102,41 @@ function AdminDashboard() {
               
               {/* Summary Metrics */}
               <div className="admin-card stats-card">
-                <label>TOTAL USERS</label>
-                <div className="admin-value">{stats.totalUsers}</div>
-                <p className="sub-label">ACTIVE ACCOUNTS</p>
+                <label>ACTIVE MEMBERS</label>
+                <div className="admin-value">{stats.activeMembers || stats.totalUsers || 0}</div>
+                <p className="sub-label">{stats.totalUsers || 0} TOTAL REGISTERED</p>
+              </div>
+
+              <div className="admin-card stats-card" style={{ borderColor: 'rgba(181, 242, 61, 0.4)' }}>
+                <label>TODAY'S ATTENDANCE</label>
+                <div className="admin-value" style={{ color: '#B5F23D' }}>{stats.todayAttendance || 0}</div>
+                <p className="sub-label" style={{ cursor: 'pointer', color: '#B5F23D' }} onClick={() => navigate('/admin/attendance')}>VIEW CHECK-IN LOGS →</p>
               </div>
 
               <div className="admin-card stats-card">
-                <label>TOTAL WORKOUTS</label>
-                <div className="admin-value">{stats.totalWorkouts}</div>
-                <p className="sub-label">ELITE ROUTINES</p>
+                <label>PLATFORM REVENUE</label>
+                <div className="admin-value">${stats.totalRevenue ? Number(stats.totalRevenue).toLocaleString() : "0"}</div>
+                <p className="sub-label">MEMBERSHIPS & STORE</p>
               </div>
 
               <div className="admin-card stats-card">
-                <label>TOTAL PROGRAMS</label>
-                <div className="admin-value">{stats.totalPrograms}</div>
-                <p className="sub-label">MULTI-WEEK PLANS</p>
+                <label>PENDING SESSIONS</label>
+                <div className="admin-value" style={{ color: stats.pendingBookings > 0 ? '#ffab00' : '#fff' }}>
+                  {stats.pendingBookings || 0}
+                </div>
+                <p className="sub-label" style={{ cursor: 'pointer', color: '#ffab00' }} onClick={() => navigate('/admin/bookings')}>MANAGE APPOINTMENTS →</p>
+              </div>
+
+              <div className="admin-card stats-card">
+                <label>WORKOUT ROUTINES</label>
+                <div className="admin-value">{stats.totalWorkouts || 0}</div>
+                <p className="sub-label">EXERCISE PROTOCOLS</p>
+              </div>
+
+              <div className="admin-card stats-card">
+                <label>ELITE TRAINERS</label>
+                <div className="admin-value">{stats.totalTrainers || 0}</div>
+                <p className="sub-label">CERTIFIED COACHES</p>
               </div>
 
               {/* Platform Activity Chart Visual */}

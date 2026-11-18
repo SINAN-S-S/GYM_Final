@@ -30,6 +30,11 @@ const bookingSchema = new mongoose.Schema(
       required: false,
     },
 
+    timeSlot: {
+      type: String,
+      default: "10:00 AM - 11:00 AM",
+    },
+
     notes: {
       type: String,
     },

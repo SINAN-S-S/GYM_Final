@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../pages/Footer/Footer";
 import LoginModal from "../components/common/LoginModal";
+import AIAssistant from "../components/common/AIAssistant";
 
 function MainLayout() {
   return (
@@ -14,6 +15,7 @@ function MainLayout() {
 
       <Footer />
       <LoginModal />
+      <AIAssistant />
     </div>
   );
 }

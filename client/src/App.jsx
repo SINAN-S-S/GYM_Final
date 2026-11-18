@@ -41,6 +41,8 @@ const AdminExerciseBank = lazy(() => import("./pages/admin_pages/ExerciseBank/Ad
 const AdminWorkouts = lazy(() => import("./pages/admin_pages/Workouts/AdminWorkouts"));
 const AdminBMIHistory = lazy(() => import("./pages/admin_pages/BMIHistory/AdminBMIHistory"));
 const AdminCommunity = lazy(() => import("./pages/admin_pages/Community/AdminCommunity"));
+const AdminAttendance = lazy(() => import("./pages/admin_pages/Attendance/AdminAttendance"));
+const AdminBookings = lazy(() => import("./pages/admin_pages/Bookings/AdminBookings"));
 
 // Route Loading Spinner Fallback
 const PageLoader = () => (
@@ -187,6 +189,24 @@ export default function App() {
                 element={
                   <AdminRoute>
                     <AdminCommunity />
+                  </AdminRoute>
+                }
+              />
+
+              <Route
+                path="/admin/attendance"
+                element={
+                  <AdminRoute>
+                    <AdminAttendance />
+                  </AdminRoute>
+                }
+              />
+
+              <Route
+                path="/admin/bookings"
+                element={
+                  <AdminRoute>
+                    <AdminBookings />
                   </AdminRoute>
                 }
               />

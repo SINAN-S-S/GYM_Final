@@ -26,6 +26,13 @@ import purchaseRoutes from "./routes/purchaseRoutes.js";
 import proteinPowderRoutes from "./routes/proteinPowderRoutes.js";
 import bmiRoutes from "./routes/bmiRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
+import workoutLogRoutes from "./routes/workoutLogRoutes.js";
+import dietPlanRoutes from "./routes/dietPlanRoutes.js";
+import challengeRoutes from "./routes/challengeRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
+import membershipRoutes from "./routes/membershipRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -137,6 +144,13 @@ app.use("/api/purchases", purchaseRoutes);
 app.use("/api/protein-powders", proteinPowderRoutes);
 app.use("/api/bmi", bmiRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/workout-logs", workoutLogRoutes);
+app.use("/api/diet-plans", dietPlanRoutes);
+app.use("/api/challenges", challengeRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/memberships", membershipRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // 404 Handler
 app.use((req, res) => {

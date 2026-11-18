@@ -3,36 +3,73 @@ import Workout from "../models/Workout.js";
 import Program from "../models/Program.js";
 import CommunityPost from "../models/CommunityPost.js";
 import Broadcast from "../models/Broadcast.js";
+import Trainer from "../models/Trainer.js";
+import Booking from "../models/Booking.js";
+import Purchase from "../models/Purchase.js";
+import Attendance from "../models/Attendance.js";
+import Challenge from "../models/Challenge.js";
+import ProteinPowder from "../models/ProteinPowder.js";
+import Notification from "../models/Notification.js";
 
-// @desc    Get dashboard statistics
+// @desc    Get comprehensive dashboard statistics from real database data
 // @route   GET /api/admin/dashboard-stats
 // @access  Private/Admin
 export const getDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
+    const today = new Date().toISOString().split("T")[0];
 
-    const totalWorkouts = await Workout.countDocuments();
-
-    const totalPrograms = await Program.countDocuments();
-
-    const totalCommunityPosts = await CommunityPost.countDocuments();
-
-    // Get 5 most recent users
-    const recentUsers = await User.find({})
-      .sort({ createdAt: -1 })
-      .select("-password")
-      .limit(5);
-
-    // Get latest broadcasts
-    const broadcasts = await Broadcast.find({})
-      .sort({ createdAt: -1 })
-      .limit(5);
-
-    res.json({
+    const [
       totalUsers,
+      activeMembers,
       totalWorkouts,
       totalPrograms,
       totalCommunityPosts,
+      totalTrainers,
+      totalProducts,
+      todayAttendance,
+      totalBookings,
+      pendingBookings,
+      activeChallenges,
+      allPurchases,
+      recentUsers,
+      broadcasts,
+    ] = await Promise.all([
+      User.countDocuments({ isDeleted: { $ne: true } }),
+      User.countDocuments({ "membership.status": "Active" }),
+      Workout.countDocuments(),
+      Program.countDocuments(),
+      CommunityPost.countDocuments(),
+      Trainer.countDocuments(),
+      ProteinPowder.countDocuments(),
+      Attendance.countDocuments({ date: today }),
+      Booking.countDocuments(),
+      Booking.countDocuments({ status: "Pending" }),
+      Challenge.countDocuments({ isActive: true }),
+      Purchase.find({ status: { $in: ["Completed", "SUCCESS"] } }).select("amount createdAt"),
+      User.find({ isDeleted: { $ne: true } })
+        .sort({ createdAt: -1 })
+        .select("-password")
+        .limit(6),
+      Notification.find({ user: null })
+        .sort({ createdAt: -1 })
+        .limit(6),
+    ]);
+
+    const totalRevenue = allPurchases.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    res.json({
+      totalUsers,
+      activeMembers,
+      totalWorkouts,
+      totalPrograms,
+      totalCommunityPosts,
+      totalTrainers,
+      totalProducts,
+      todayAttendance,
+      totalBookings,
+      pendingBookings,
+      activeChallenges,
+      totalRevenue,
       recentUsers,
       broadcasts,
     });
