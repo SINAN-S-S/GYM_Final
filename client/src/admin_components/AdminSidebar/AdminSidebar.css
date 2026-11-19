@@ -10,23 +10,42 @@
   background-color: #08080a;
   color: #fff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip; /* clip prevents scrollbar without breaking position: sticky */
+  align-items: stretch;
+}
+
+/* Also support admin-page-container */
+.admin-page-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #08080a;
+  color: #fff;
+  overflow-x: clip;
+  align-items: stretch;
 }
 
 /* --- DESKTOP SIDEBAR SHELL --- */
 .admin-sidebar {
   width: 270px;
   min-width: 270px;
+  max-width: 270px;
   height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
   background: #0d0d12;
   border-right: 1px solid #1e1e28;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
+  left: 0;
+  align-self: flex-start;
+  flex-shrink: 0;
   z-index: 1050;
   box-sizing: border-box;
   padding: 0;
+  overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -126,13 +145,16 @@
 
 /* --- SCROLLABLE NAVIGATION AREA --- */
 .admin-sidebar-nav {
-  flex: 1;
+  flex: 1 1 0px;
+  min-height: 0; /* CRITICAL: Enables shrinking & scrolling of flex items in 100vh container */
   overflow-y: auto;
   overflow-x: hidden;
   padding: 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #B5F23D #14141c;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar {
@@ -140,16 +162,16 @@
 }
 
 .admin-sidebar-nav::-webkit-scrollbar-track {
-  background: transparent;
+  background: #101018;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar-thumb {
-  background: #242432;
+  background: #2a2a3c;
   border-radius: 4px;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #36364a;
+  background: #B5F23D;
 }
 
 /* Individual Navigation Item */
@@ -355,9 +377,9 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
-    z-index: 1040;
+    z-index: 1140;
   }
 
   .admin-sidebar {
@@ -367,9 +389,14 @@
     left: 0;
     width: 280px;
     height: 100vh;
-    z-index: 1050;
+    min-height: 100vh;
+    max-height: 100vh;
+    z-index: 1150;
     transform: translateX(-100%);
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .admin-sidebar.open {

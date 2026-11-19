@@ -259,7 +259,7 @@ function ProductCard({ product, onSelect, onAddToCart, onBuyNow }) {
   );
 }
 
-// Store Modal Card Component
+// Store Modal Card Component (Grid View)
 function StoreModalCard({ product, onSelect, onAddToCart, onBuyNow }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const fallback = getProductFallbackImage(product.name, product.brand, product.category);
@@ -272,7 +272,6 @@ function StoreModalCard({ product, onSelect, onAddToCart, onBuyNow }) {
         <img
           src={imageSrc}
           alt={product.name}
-          loading="lazy"
           onLoad={() => setImgLoaded(true)}
           onError={(e) => {
             setImgLoaded(true);
@@ -332,6 +331,68 @@ function StoreModalCard({ product, onSelect, onAddToCart, onBuyNow }) {
   );
 }
 
+// Store Modal List Item Component (List View)
+function StoreModalListItem({ product, onSelect, onAddToCart, onBuyNow }) {
+  const fallback = getProductFallbackImage(product.name, product.brand, product.category);
+  const imageSrc = resolveImageUrl(product.image, fallback);
+
+  return (
+    <div className="store-product-list-item" onClick={() => onSelect(product)}>
+      <div className="store-list-img-box">
+        <img
+          src={imageSrc}
+          alt={product.name}
+          onError={(e) => onImageError(e, fallback)}
+          className="store-list-img"
+        />
+      </div>
+
+      <div className="store-list-info">
+        <div className="store-card-meta">
+          <span className="card-brand">{product.brand}</span>
+          <span className="card-cat">{product.category}</span>
+          <span className={`store-stock-tag inline ${product.inStock ? "in" : "out"}`}>
+            {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+          </span>
+        </div>
+        <h4 className="store-list-title">{product.name}</h4>
+        <p className="store-list-desc">
+          {product.description?.slice(0, 120) || "Scientifically backed supplement formulation."}...
+        </p>
+      </div>
+
+      <div className="store-list-pricing-actions">
+        <div className="store-price-tag">${Number(product.price).toFixed(2)}</div>
+        <div className="store-list-btns">
+          <button
+            className="btn-details-ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(product);
+            }}
+          >
+            DETAILS
+          </button>
+          <button
+            className="btn-cart-lime"
+            disabled={!product.inStock}
+            onClick={(e) => onAddToCart(product, 1, e)}
+          >
+            + CART
+          </button>
+          <button
+            className="btn-buy-white"
+            disabled={!product.inStock}
+            onClick={(e) => onBuyNow(product, e)}
+          >
+            BUY
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Nutrition() {
   const [foods, setFoods] = useState([]);
   const [powders, setPowders] = useState([]);
@@ -341,6 +402,7 @@ function Nutrition() {
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedFood, setSelectedFood] = useState(null);
+  const [storeViewMode, setStoreViewMode] = useState("grid"); // "grid" | "list"
 
   // Store filtering & search state
   const [selectedCategory, setSelectedCategory] = useState("All Products");
@@ -714,35 +776,68 @@ function Nutrition() {
               </div>
             </div>
 
-            {/* Product Count Indicator */}
+            {/* Product Count Indicator & View Toggle */}
             <div className="store-results-info">
-              <span>Showing {filteredProducts.length} certified supplements</span>
-              {selectedCategory !== "ALL" && selectedCategory !== "All Products" && (
-                <span className="active-cat-label">
-                  Filtered by: <strong>{selectedCategory}</strong>
-                </span>
-              )}
+              <div className="store-results-left">
+                <span>Showing {filteredProducts.length} certified supplements</span>
+                {selectedCategory !== "ALL" && selectedCategory !== "All Products" && (
+                  <span className="active-cat-label">
+                    Filtered by: <strong>{selectedCategory}</strong>
+                  </span>
+                )}
+              </div>
+
+              <div className="store-view-toggle">
+                <button
+                  type="button"
+                  className={`view-mode-btn ${storeViewMode === "grid" ? "active" : ""}`}
+                  onClick={() => setStoreViewMode("grid")}
+                  title="Grid View"
+                >
+                  <span style={{ fontSize: "1rem" }}>⊞</span> Grid
+                </button>
+                <button
+                  type="button"
+                  className={`view-mode-btn ${storeViewMode === "list" ? "active" : ""}`}
+                  onClick={() => setStoreViewMode("list")}
+                  title="List View"
+                >
+                  <span style={{ fontSize: "1rem" }}>☰</span> List
+                </button>
+              </div>
             </div>
 
-            {/* Products Grid */}
-            <div className="store-modal-grid">
-              {filteredProducts.length === 0 ? (
-                <div className="no-results-box">
-                  <div className="no-res-icon">🧪</div>
-                  <h3>NO PRODUCTS MATCH YOUR SEARCH</h3>
-                  <p>Try clearing filters or searching with different keywords.</p>
-                  <button
-                    className="reset-filters-btn"
-                    onClick={() => {
-                      setSelectedCategory("All Products");
-                      setSearchQuery("");
-                    }}
-                  >
-                    SHOW ALL PRODUCTS
-                  </button>
-                </div>
-              ) : (
-                filteredProducts.map((product) => (
+            {/* Products Display Container (Grid or List) */}
+            {filteredProducts.length === 0 ? (
+              <div className="no-results-box">
+                <div className="no-res-icon">🧪</div>
+                <h3>NO PRODUCTS MATCH YOUR SEARCH</h3>
+                <p>Try clearing filters or searching with different keywords.</p>
+                <button
+                  className="reset-filters-btn"
+                  onClick={() => {
+                    setSelectedCategory("All Products");
+                    setSearchQuery("");
+                  }}
+                >
+                  SHOW ALL PRODUCTS
+                </button>
+              </div>
+            ) : storeViewMode === "list" ? (
+              <div className="store-modal-list">
+                {filteredProducts.map((product) => (
+                  <StoreModalListItem
+                    key={product._id}
+                    product={product}
+                    onSelect={handleOpenProductDetails}
+                    onAddToCart={handleAddToCart}
+                    onBuyNow={handleBuyNow}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="store-modal-grid">
+                {filteredProducts.map((product) => (
                   <StoreModalCard
                     key={product._id}
                     product={product}
@@ -750,9 +845,9 @@ function Nutrition() {
                     onAddToCart={handleAddToCart}
                     onBuyNow={handleBuyNow}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -890,6 +985,60 @@ function Nutrition() {
                     </button>
                   </div>
                 </div>
+
+                {/* Related & Matching Products in Category */}
+                {(() => {
+                  const matchingProducts = allStoreProducts
+                    .filter(
+                      (p) =>
+                        p._id !== selectedProduct._id &&
+                        p.category?.toLowerCase() === selectedProduct.category?.toLowerCase()
+                    )
+                    .slice(0, 6);
+
+                  if (matchingProducts.length === 0) return null;
+
+                  return (
+                    <div className="details-related-section">
+                      <div className="related-title-row">
+                        <span className="related-kicker">
+                          MATCHING IN {selectedProduct.category?.toUpperCase()}
+                        </span>
+                        <span className="related-count">({matchingProducts.length} related)</span>
+                      </div>
+                      <div className="details-related-grid">
+                        {matchingProducts.map((rel) => {
+                          const relFallback = getProductFallbackImage(rel.name, rel.brand, rel.category);
+                          return (
+                            <div
+                              key={rel._id}
+                              className="related-product-card"
+                              onClick={() => {
+                                setSelectedProduct(rel);
+                                setProductQty(1);
+                              }}
+                              title={`View ${rel.name}`}
+                            >
+                              <div className="related-img-wrap">
+                                <img
+                                  src={resolveImageUrl(rel.image, relFallback)}
+                                  alt={rel.name}
+                                  onError={(e) => onImageError(e, relFallback)}
+                                  className="related-thumb-img"
+                                />
+                              </div>
+                              <div className="related-info">
+                                <span className="related-brand">{rel.brand}</span>
+                                <h5 className="related-name">{rel.name}</h5>
+                                <span className="related-price">${Number(rel.price).toFixed(2)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

@@ -22,12 +22,12 @@ function AdminPrograms() {
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
 
-const fetchPrograms = async () => {
+  const fetchPrograms = async () => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/programs`);
     setPrograms(res.data);
   };
 
-  
+
   useEffect(() => {
     fetchPrograms();
   }, []);
@@ -49,7 +49,7 @@ const fetchPrograms = async () => {
       if (form.price) formData.append("price", form.price);
       if (form.videoUrl) formData.append("videoUrl", form.videoUrl);
       if (form._id) formData.append("_id", form._id);
-      
+
       if (file) {
         formData.append("image", file);
       } else if (imageUrl) {
@@ -144,9 +144,9 @@ const fetchPrograms = async () => {
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '15px 0' }}>
             <label style={{ fontSize: '0.9rem', color: '#888' }}>Upload Image File:</label>
-            <input 
-              type="file" 
-              onChange={(e) => setFile(e.target.files[0])} 
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files[0])}
               style={{ color: '#fff' }}
             />
             <span style={{ textAlign: 'center', color: '#888' }}>— OR —</span>

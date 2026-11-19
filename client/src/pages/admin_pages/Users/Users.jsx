@@ -1,12 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import {
+  Users as UsersIcon,
+  Search,
+  UserCheck,
+  UserX,
+  Trash2,
+  RotateCcw,
+  Shield,
+  Utensils,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  AlertTriangle,
+  Mail,
+  Award
+} from "lucide-react";
 import "./Users.css";
 import AdminSidebar from "../../../admin_components/AdminSidebar/AdminSidebar";
 
 function Users() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-
   const [activeTab, setActiveTab] = useState("users");
   const [bookings, setBookings] = useState([]);
   const [dietModalUser, setDietModalUser] = useState(null);
@@ -41,14 +56,13 @@ function Users() {
     }
   };
 
-
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsers(res.data);
+      setUsers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Fetch error:", err);
     }
@@ -60,7 +74,7 @@ function Users() {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/bookings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBookings(res.data);
+      setBookings(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Fetch bookings error:", err);
     }
@@ -74,12 +88,14 @@ function Users() {
   const handleAcceptBooking = async (bookingId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/${bookingId}`, 
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/bookings/${bookingId}`,
         { status: "Confirmed" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update local state
-      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: "Confirmed" } : b));
+      setBookings((prev) =>
+        prev.map((b) => (b._id === bookingId ? { ...b, status: "Confirmed" } : b))
+      );
     } catch (err) {
       console.error(err);
       alert("Failed to confirm booking");
@@ -90,21 +106,37 @@ function Users() {
     if (!window.confirm("Are you sure you want to remove this trainer request?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/${bookingId}`, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setBookings(prev => prev.filter(b => b._id !== bookingId));
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/bookings/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
     } catch (err) {
       console.error(err);
       alert("Failed to remove booking");
     }
   };
 
-  const filtered = users.filter(
-    (u) =>
-      u.username?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter(
+      (u) =>
+        u.username?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        u.role?.toLowerCase().includes(q)
+    );
+  }, [users, search]);
+
+  const activeUsers = useMemo(() => filtered.filter((u) => !u.isDeleted), [filtered]);
+  const deletedUsers = useMemo(() => filtered.filter((u) => u.isDeleted), [filtered]);
+
+  const stats = useMemo(() => {
+    const total = users.length;
+    const active = users.filter((u) => !u.isDeleted && !u.isBlocked).length;
+    const blocked = users.filter((u) => u.isBlocked && !u.isDeleted).length;
+    const deleted = users.filter((u) => u.isDeleted).length;
+    return { total, active, blocked, deleted };
+  }, [users]);
 
   const toggleRole = async (user) => {
     const role = user.role === "admin" ? "user" : "admin";
@@ -150,10 +182,14 @@ function Users() {
     if (user.role === "admin") return alert("Cannot remove an admin.");
     const token = localStorage.getItem("token");
     try {
-      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/remove`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers((prev) => prev.map((u) => u._id === user._id ? { ...u, isDeleted: true } : u));
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/remove`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u._id === user._id ? { ...u, isDeleted: true } : u))
+      );
     } catch (err) {
       console.error(err);
       alert("Failed to remove user");
@@ -163,10 +199,14 @@ function Users() {
   const restoreUser = async (user) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/restore`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers((prev) => prev.map((u) => u._id === user._id ? { ...u, isDeleted: false } : u));
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/restore`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u._id === user._id ? { ...u, isDeleted: false } : u))
+      );
     } catch (err) {
       console.error(err);
       alert("Failed to restore user");
@@ -174,12 +214,18 @@ function Users() {
   };
 
   const hardDeleteUser = async (user) => {
-    if (!window.confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this user? This cannot be undone."
+      )
+    )
+      return;
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/hard-delete`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${user._id}/hard-delete`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setUsers((prev) => prev.filter((u) => u._id !== user._id));
     } catch (err) {
       console.error(err);
@@ -189,271 +235,457 @@ function Users() {
 
   return (
     <div className="admin-layout">
-      
       {/* Sidebar */}
       <AdminSidebar />
 
-      {/* Main Content */}
-      <div style={{ flex: 1 }}>
-        <div className="users-page">
-         <div className="users-topbar">
-  <h1 className="users-title">Users Management</h1>
+      {/* Main Content Area */}
+      <main className="users-main-content">
+        <div className="users-container-inner">
+          {/* Header Banner */}
+          <header className="users-page-header">
+            <div>
+              <span className="users-header-kicker">ADMINISTRATION — ACCESS & IDENTITY</span>
+              <h1 className="users-page-title">USER MANAGEMENT & ROLES</h1>
+              <p className="users-page-subtitle">
+                Inspect registered athletes, assign coaching meal plans, manage access roles, and monitor trainer appointments.
+              </p>
+            </div>
+          </header>
 
-  <div className="users-tabs">
-    <button
-      onClick={() => setActiveTab("users")}
-      className={`tab-btn ${activeTab === "users" ? "active-users" : ""}`}
-    >
-      Active Users
-    </button>
+          {/* Quick Metrics Bar */}
+          <div className="users-metrics-grid">
+            <div className="metric-box">
+              <div className="metric-icon total">
+                <UsersIcon size={20} />
+              </div>
+              <div className="metric-info">
+                <span className="metric-label">TOTAL MEMBERS</span>
+                <span className="metric-value">{stats.total}</span>
+              </div>
+            </div>
 
-    <button
-      onClick={() => setActiveTab("restore")}
-      className={`tab-btn ${activeTab === "restore" ? "active-restore" : ""}`}
-    >
-      Restore List
-    </button>
+            <div className="metric-box">
+              <div className="metric-icon active">
+                <UserCheck size={20} />
+              </div>
+              <div className="metric-info">
+                <span className="metric-label">ACTIVE ACCOUNTS</span>
+                <span className="metric-value">{stats.active}</span>
+              </div>
+            </div>
 
-    <button
-      onClick={() => setActiveTab("bookings")}
-      className={`tab-btn ${activeTab === "bookings" ? "active-bookings" : ""}`}
-    >
-      Trainer Requests
-    </button>
-  </div>
-</div>
+            <div className="metric-box">
+              <div className="metric-icon blocked">
+                <UserX size={20} />
+              </div>
+              <div className="metric-info">
+                <span className="metric-label">BLOCKED</span>
+                <span className="metric-value">{stats.blocked}</span>
+              </div>
+            </div>
 
-          {activeTab === "users" ? (
-            <>
-              <input
-                placeholder="Search users..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="search"
-              />
+            <div className="metric-box">
+              <div className="metric-icon archive">
+                <RotateCcw size={20} />
+              </div>
+              <div className="metric-info">
+                <span className="metric-label">ARCHIVED / REMOVED</span>
+                <span className="metric-value">{stats.deleted}</span>
+              </div>
+            </div>
+          </div>
 
-              <div className="table">
-                <div className="row header">
-                  <span>Name</span>
-                  <span>Email</span>
-                  <span>Role</span>
-                  <span>Status</span>
-                  <span>Actions</span>
+          {/* Controls Bar: Tabs & Search */}
+          <div className="users-controls-card">
+            <div className="users-tabs-row">
+              <button
+                onClick={() => setActiveTab("users")}
+                className={`user-tab-btn ${activeTab === "users" ? "active" : ""}`}
+              >
+                <UsersIcon size={16} />
+                <span>Active Users ({users.filter((u) => !u.isDeleted).length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("restore")}
+                className={`user-tab-btn ${activeTab === "restore" ? "active" : ""}`}
+              >
+                <RotateCcw size={16} />
+                <span>Restore Archive ({users.filter((u) => u.isDeleted).length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("bookings")}
+                className={`user-tab-btn ${activeTab === "bookings" ? "active" : ""}`}
+              >
+                <Calendar size={16} />
+                <span>Trainer Requests ({bookings.length})</span>
+              </button>
+            </div>
+
+            {activeTab !== "bookings" && (
+              <div className="users-search-wrapper">
+                <Search size={18} className="search-icon-inside" />
+                <input
+                  type="text"
+                  placeholder="Search by username, email, or role..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="users-search-input"
+                />
+                {search && (
+                  <button className="clear-search-btn" onClick={() => setSearch("")}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* TAB 1: ACTIVE USERS */}
+          {activeTab === "users" && (
+            <div className="users-table-card">
+              <div className="users-table-header">
+                <span className="col-user">MEMBER IDENTITY</span>
+                <span className="col-email">CONTACT & PLAN</span>
+                <span className="col-role">ROLE</span>
+                <span className="col-status">STATUS</span>
+                <span className="col-actions">ACTIONS</span>
+              </div>
+
+              {activeUsers.length === 0 ? (
+                <div className="users-empty-state">
+                  <AlertTriangle size={36} className="empty-icon" />
+                  <h3>No Active Users Found</h3>
+                  <p>Try refining your search keyword or check the Restore Archive tab.</p>
                 </div>
+              ) : (
+                <div className="users-table-body">
+                  {activeUsers.map((user) => {
+                    const isAdmin = user.role === "admin";
+                    const isBlocked = !!user.isBlocked;
 
-                {filtered.filter(u => !u.isDeleted).length === 0 ? (
-                  <p style={{ padding: "20px" }}>No active users found</p>
-                ) : (
-                  filtered.filter(u => !u.isDeleted).map((user) => (
-                    <div className="row" key={user._id}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {user.profileImage ? (
-                          <img
-                            src={user.profileImage}
-                            alt="avatar"
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                            style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#333', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#B5F23D', fontWeight: 'bold' }}>
-                            {user.username.charAt(0).toUpperCase()}
+                    return (
+                      <div className="users-table-row" key={user._id}>
+                        {/* Member Identity */}
+                        <div className="col-user cell-identity">
+                          {user.profileImage ? (
+                            <img
+                              src={user.profileImage}
+                              alt={user.username}
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                              className="user-avatar-img"
+                            />
+                          ) : (
+                            <div className="user-avatar-placeholder">
+                              {(user.username || "U").charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="identity-text">
+                            <span className="user-name-text">{user.username}</span>
+                            <span className="user-id-text">ID: {user._id.slice(-6).toUpperCase()}</span>
                           </div>
-                        )}
-                        {user.username}
-                      </span>
-                      <span>
-                        <div>{user.email}</div>
-                        <div style={{ fontSize: "0.72rem", color: "#B5F23D", marginTop: "3px" }}>
-                          {user.membership?.plan || "Pro Athlete"} ({user.membership?.status || "Active"})
                         </div>
-                      </span>
 
-                      <span style={{ fontWeight: 'bold', color: user.role === 'admin' ? '#FF4D4D' : '#B5F23D' }}>
-                        {user.role}
-                      </span>
+                        {/* Contact & Plan */}
+                        <div className="col-email cell-email">
+                          <div className="email-row">
+                            <Mail size={13} className="email-icon" />
+                            <span>{user.email}</span>
+                          </div>
+                          <div className="plan-badge-row">
+                            <span className="user-plan-tag">
+                              <Award size={11} /> {user.membership?.plan || "Pro Athlete"}
+                            </span>
+                            <span className="user-membership-status">
+                              ({user.membership?.status || "Active"})
+                            </span>
+                          </div>
+                        </div>
 
-                      <span className={user.isBlocked ? "blocked" : "active"}>
-                        {user.isBlocked ? "Blocked" : "Active"}
-                      </span>
+                        {/* Role Pill */}
+                        <div className="col-role cell-role">
+                          <span className={`user-role-badge ${isAdmin ? "admin" : "user"}`}>
+                            {isAdmin ? <Shield size={12} /> : null}
+                            {user.role ? user.role.toUpperCase() : "USER"}
+                          </span>
+                        </div>
 
-                      <div className="actions" style={{ gap: '5px' }}>
-                        <button onClick={() => setDietModalUser(user)} style={{ padding: '5px', fontSize: '0.78rem', background: '#38bdf8', color: '#111', border: 'none', borderRadius: '4px', fontWeight: 'bold' }} title="Assign Diet & Nutrition Plan">
-                          Plan
-                        </button>
+                        {/* Status Pill */}
+                        <div className="col-status cell-status">
+                          <span className={`user-status-pill ${isBlocked ? "blocked" : "active"}`}>
+                            <span className="status-indicator-dot"></span>
+                            {isBlocked ? "Blocked" : "Active"}
+                          </span>
+                        </div>
 
-                        <button onClick={() => toggleRole(user)} style={{ padding: '5px', fontSize: '0.8rem' }}>
-                          Role
-                        </button>
-
-                        <button onClick={() => toggleBlock(user)} style={{ padding: '5px', fontSize: '0.8rem' }}>
-                          {user.isBlocked ? "Unblock" : "Block"}
-                        </button>
-                        
-                        {user.role !== "admin" && (
-                          <button onClick={() => removeUser(user)} style={{ padding: '5px', fontSize: '0.8rem', background: '#FF4D4D', color: '#fff', border: 'none' }}>
-                            Remove
+                        {/* Actions */}
+                        <div className="col-actions cell-actions">
+                          <button
+                            onClick={() => setDietModalUser(user)}
+                            className="btn-action-plan"
+                            title="Assign Diet & Nutrition Protocol"
+                          >
+                            <Utensils size={14} />
+                            <span>Plan</span>
                           </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </>
-          ) : activeTab === "restore" ? (
-            <>
-              <div className="table">
-                <div className="row header">
-                  <span>Name</span>
-                  <span>Email</span>
-                  <span>Role</span>
-                  <span>Status</span>
-                  <span>Actions</span>
-                </div>
 
-                {filtered.filter(u => u.isDeleted).length === 0 ? (
-                  <p style={{ padding: "20px" }}>No deleted users found</p>
-                ) : (
-                  filtered.filter(u => u.isDeleted).map((user) => (
-                    <div className="row" key={user._id}>
-                      <span>{user.username}</span>
-                      <span>
-                        <div>{user.email}</div>
-                        <div style={{ fontSize: "0.72rem", color: "#B5F23D", marginTop: "3px" }}>
-                          {user.membership?.plan || "Pro Athlete"} ({user.membership?.status || "Active"})
+                          <button
+                            onClick={() => toggleRole(user)}
+                            className="btn-action-role"
+                            title="Toggle Admin / Member Role"
+                          >
+                            <Shield size={14} />
+                            <span>Role</span>
+                          </button>
+
+                          <button
+                            onClick={() => toggleBlock(user)}
+                            className={`btn-action-block ${isBlocked ? "unblock" : "block"}`}
+                            title={isBlocked ? "Unblock User Access" : "Block User Access"}
+                          >
+                            {isBlocked ? <CheckCircle2 size={14} /> : <UserX size={14} />}
+                            <span>{isBlocked ? "Unblock" : "Block"}</span>
+                          </button>
+
+                          {!isAdmin && (
+                            <button
+                              onClick={() => removeUser(user)}
+                              className="btn-action-remove"
+                              title="Archive / Remove User to Restore List"
+                            >
+                              <Trash2 size={14} />
+                              <span>Remove</span>
+                            </button>
+                          )}
                         </div>
-                      </span>
-                      
-                      <span style={{ fontWeight: 'bold', color: user.role === 'admin' ? '#FF4D4D' : '#B5F23D' }}>
-                        {user.role}
-                      </span>
-
-                      <span style={{ color: '#FF9F43' }}>Removed</span>
-
-                      <div className="actions" style={{ gap: '10px' }}>
-                        <button onClick={() => restoreUser(user)} style={{ padding: '5px 15px', background: '#38bdf8', color: '#fff', border: 'none', borderRadius: '4px' }}>
-                          Restore User
-                        </button>
-                        <button onClick={() => hardDeleteUser(user)} style={{ padding: '5px 15px', background: '#FF4D4D', color: '#fff', border: 'none', borderRadius: '4px' }}>
-                          Permanently Delete
-                        </button>
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="table">
-                <div className="row header">
-                  <span>User</span>
-                  <span>Trainer Requested</span>
-                  <span>Date Requested</span>
-                  <span>Status</span>
-                  <span>Action</span>
+                    );
+                  })}
                 </div>
+              )}
+            </div>
+          )}
 
-                {bookings.length === 0 ? (
-                  <p style={{ padding: "20px" }}>No trainer requests found</p>
-                ) : (
-                  bookings.map((booking) => (
-                    <div className="row" key={booking._id}>
-                      <span>{booking.user?.name || booking.user?.email || "Unknown User"}</span>
-                      <span>{booking.trainer?.name || "Unknown Trainer"}</span>
-                      <span>{new Date(booking.createdAt).toLocaleDateString()}</span>
-                      
-                      <span style={{ color: booking.status === "Confirmed" ? '#B5F23D' : '#FF9F43', fontWeight: 'bold' }}>
-                        {booking.status}
-                      </span>
+          {/* TAB 2: RESTORE ARCHIVE */}
+          {activeTab === "restore" && (
+            <div className="users-table-card">
+              <div className="users-table-header">
+                <span className="col-user">MEMBER IDENTITY</span>
+                <span className="col-email">CONTACT & PLAN</span>
+                <span className="col-role">ROLE</span>
+                <span className="col-status">ARCHIVE STATUS</span>
+                <span className="col-actions">RESTORE / PURGE</span>
+              </div>
 
-                      <div className="actions" style={{ gap: '10px' }}>
-                        {booking.status === "Pending" ? (
-                          <>
-                            <button 
-                              onClick={() => handleAcceptBooking(booking._id)}
-                              style={{ background: '#B5F23D', color: '#000', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                            >
-                              Accept
-                            </button>
-                            <button 
-                              onClick={() => handleRemoveBooking(booking._id)}
-                              style={{ background: '#FF4D4D', color: '#fff', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                            >
-                              Remove
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <span style={{ color: '#888' }}>Accepted</span>
-                            <button 
-                              onClick={() => handleRemoveBooking(booking._id)}
-                              style={{ background: '#FF4D4D', color: '#fff', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                            >
-                              Remove
-                            </button>
-                          </>
-                        )}
+              {deletedUsers.length === 0 ? (
+                <div className="users-empty-state">
+                  <CheckCircle2 size={36} className="empty-icon success" />
+                  <h3>Restore Archive is Empty</h3>
+                  <p>No removed or archived user accounts are pending restoration.</p>
+                </div>
+              ) : (
+                <div className="users-table-body">
+                  {deletedUsers.map((user) => (
+                    <div className="users-table-row archived" key={user._id}>
+                      <div className="col-user cell-identity">
+                        <div className="user-avatar-placeholder archived">
+                          {(user.username || "U").charAt(0).toUpperCase()}
+                        </div>
+                        <div className="identity-text">
+                          <span className="user-name-text">{user.username}</span>
+                          <span className="user-id-text">ID: {user._id.slice(-6).toUpperCase()}</span>
+                        </div>
+                      </div>
+
+                      <div className="col-email cell-email">
+                        <div className="email-row">
+                          <Mail size={13} className="email-icon" />
+                          <span>{user.email}</span>
+                        </div>
+                        <div className="plan-badge-row">
+                          <span className="user-plan-tag archived">
+                            {user.membership?.plan || "Pro Athlete"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="col-role cell-role">
+                        <span className="user-role-badge user">{user.role?.toUpperCase() || "USER"}</span>
+                      </div>
+
+                      <div className="col-status cell-status">
+                        <span className="user-status-pill archived">
+                          <span className="status-indicator-dot archived"></span>
+                          Removed
+                        </span>
+                      </div>
+
+                      <div className="col-actions cell-actions">
+                        <button
+                          onClick={() => restoreUser(user)}
+                          className="btn-action-restore"
+                          title="Restore user account to active status"
+                        >
+                          <RotateCcw size={14} />
+                          <span>Restore User</span>
+                        </button>
+
+                        <button
+                          onClick={() => hardDeleteUser(user)}
+                          className="btn-action-purge"
+                          title="Permanently erase this account and all records"
+                        >
+                          <Trash2 size={14} />
+                          <span>Purge Forever</span>
+                        </button>
                       </div>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: TRAINER BOOKINGS */}
+          {activeTab === "bookings" && (
+            <div className="users-table-card">
+              <div className="users-table-header bookings">
+                <span>ATHLETE</span>
+                <span>ASSIGNED COACH</span>
+                <span>REQUEST DATE</span>
+                <span>STATUS</span>
+                <span>APPOINTMENT ACTIONS</span>
               </div>
-            </>
+
+              {bookings.length === 0 ? (
+                <div className="users-empty-state">
+                  <Calendar size={36} className="empty-icon" />
+                  <h3>No Trainer Requests Pending</h3>
+                  <p>When athletes schedule private coaching sessions, requests will appear here.</p>
+                </div>
+              ) : (
+                <div className="users-table-body">
+                  {bookings.map((booking) => {
+                    const isConfirmed = booking.status === "Confirmed";
+
+                    return (
+                      <div className="users-table-row bookings" key={booking._id}>
+                        <div className="cell-identity">
+                          <div className="user-avatar-placeholder">
+                            {(booking.user?.name || booking.user?.username || booking.user?.email || "A")
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+                          <div>
+                            <span className="user-name-text">
+                              {booking.user?.name || booking.user?.username || "Athlete"}
+                            </span>
+                            <div className="user-id-text">{booking.user?.email || "No email"}</div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <strong style={{ color: "#B5F23D" }}>
+                            {booking.trainer?.name || "Senior Coach"}
+                          </strong>
+                          <div style={{ fontSize: "0.75rem", color: "#888" }}>
+                            {booking.trainer?.specialization || "Strength & Hypertrophy"}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span style={{ color: "#ccc", fontSize: "0.85rem" }}>
+                            {new Date(booking.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className={`user-status-pill ${isConfirmed ? "active" : "pending"}`}>
+                            <span className="status-indicator-dot"></span>
+                            {booking.status}
+                          </span>
+                        </div>
+
+                        <div className="cell-actions">
+                          {!isConfirmed && (
+                            <button
+                              onClick={() => handleAcceptBooking(booking._id)}
+                              className="btn-action-accept"
+                            >
+                              <CheckCircle2 size={14} />
+                              <span>Accept</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleRemoveBooking(booking._id)}
+                            className="btn-action-purge"
+                          >
+                            <XCircle size={14} />
+                            <span>Remove</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* DIET PLAN ASSIGNMENT MODAL */}
       {dietModalUser && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0,0,0,0.8)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000,
-          padding: "20px"
-        }}>
-          <div style={{
-            backgroundColor: "#14141a",
-            border: "1px solid #333344",
-            borderRadius: "10px",
-            padding: "28px",
-            width: "100%",
-            maxWidth: "520px",
-            color: "#fff"
-          }}>
-            <h3 style={{ margin: "0 0 6px", color: "#B5F23D", fontSize: "1.2rem" }}>
-              ASSIGN NUTRITION PLAN
-            </h3>
-            <p style={{ margin: "0 0 18px", color: "#aaa", fontSize: "0.85rem" }}>
-              Member: <strong style={{ color: "#fff" }}>{dietModalUser.username}</strong> ({dietModalUser.email})
-            </p>
+        <div
+          className="diet-modal-backdrop"
+          onClick={() => setDietModalUser(null)}
+        >
+          <div
+            className="diet-modal-box"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="diet-modal-header">
+              <div>
+                <span className="modal-kicker">COACHING PROTOCOL</span>
+                <h3 className="diet-modal-title">ASSIGN NUTRITION PLAN</h3>
+                <p className="diet-modal-sub">
+                  Assigning to athlete: <strong style={{ color: "#B5F23D" }}>{dietModalUser.username}</strong> ({dietModalUser.email})
+                </p>
+              </div>
+              <button
+                className="diet-modal-close-btn"
+                onClick={() => setDietModalUser(null)}
+              >
+                ✕
+              </button>
+            </div>
 
-            <form onSubmit={handleAssignDiet}>
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>PLAN TITLE</label>
+            <form onSubmit={handleAssignDiet} className="diet-modal-form">
+              <div className="form-group">
+                <label>PLAN TITLE</label>
                 <input
                   type="text"
                   value={dietForm.title}
                   onChange={(e) => setDietForm({ ...dietForm, title: e.target.value })}
                   required
-                  style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>GOAL</label>
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label>GOAL</label>
                   <select
                     value={dietForm.goal}
                     onChange={(e) => setDietForm({ ...dietForm, goal: e.target.value })}
-                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
                   >
                     <option value="Muscle Gain">Muscle Gain</option>
                     <option value="Fat Loss">Fat Loss</option>
@@ -461,74 +693,89 @@ function Users() {
                     <option value="Endurance">Endurance</option>
                   </select>
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>DAILY CALORIES</label>
+                <div className="form-group">
+                  <label>DAILY CALORIES (kcal)</label>
                   <input
                     type="number"
                     value={dietForm.targetCalories}
-                    onChange={(e) => setDietForm({ ...dietForm, targetCalories: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setDietForm({ ...dietForm, targetCalories: Number(e.target.value) })
+                    }
                     required
-                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>PROTEIN (g)</label>
+              <div className="form-row-3">
+                <div className="form-group">
+                  <label>PROTEIN (g)</label>
                   <input
                     type="number"
                     value={dietForm.targetProtein}
-                    onChange={(e) => setDietForm({ ...dietForm, targetProtein: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setDietForm({ ...dietForm, targetProtein: Number(e.target.value) })
+                    }
                     required
-                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
                   />
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>CARBS (g)</label>
+                <div className="form-group">
+                  <label>CARBS (g)</label>
                   <input
                     type="number"
                     value={dietForm.targetCarbs}
-                    onChange={(e) => setDietForm({ ...dietForm, targetCarbs: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setDietForm({ ...dietForm, targetCarbs: Number(e.target.value) })
+                    }
                     required
-                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
                   />
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>FATS (g)</label>
+                <div className="form-group">
+                  <label>FATS (g)</label>
                   <input
                     type="number"
                     value={dietForm.targetFats}
-                    onChange={(e) => setDietForm({ ...dietForm, targetFats: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setDietForm({ ...dietForm, targetFats: Number(e.target.value) })
+                    }
                     required
-                    style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#8c8c9a", marginBottom: "4px", fontWeight: "700" }}>COACH INSTRUCTIONS</label>
-                <textarea
-                  rows="2"
-                  value={dietForm.instructions}
-                  onChange={(e) => setDietForm({ ...dietForm, instructions: e.target.value })}
-                  style={{ width: "100%", padding: "10px", backgroundColor: "#0b0b0e", border: "1px solid #333", borderRadius: "5px", color: "#fff", outline: "none" }}
+              <div className="form-group">
+                <label>DAILY WATER TARGET (Liters)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={dietForm.waterLiters}
+                  onChange={(e) =>
+                    setDietForm({ ...dietForm, waterLiters: Number(e.target.value) })
+                  }
+                  required
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <div className="form-group">
+                <label>COACH INSTRUCTIONS & MEAL TIMING</label>
+                <textarea
+                  rows="3"
+                  value={dietForm.instructions}
+                  onChange={(e) =>
+                    setDietForm({ ...dietForm, instructions: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="diet-modal-actions">
                 <button
                   type="button"
                   onClick={() => setDietModalUser(null)}
-                  style={{ padding: "10px 18px", backgroundColor: "#222", border: "1px solid #444", color: "#ccc", borderRadius: "5px", cursor: "pointer", fontWeight: "700" }}
+                  className="btn-modal-cancel"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  style={{ padding: "10px 22px", backgroundColor: "#B5F23D", border: "none", color: "#111", borderRadius: "5px", cursor: "pointer", fontWeight: "800" }}
-                >
-                  ASSIGN PLAN
+                <button type="submit" className="btn-modal-submit">
+                  ASSIGN PROTOCOL
                 </button>
               </div>
             </form>

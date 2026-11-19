@@ -179,6 +179,9 @@ export const getProductFallbackImage = (name = "", brand = "", category = "") =>
   if (text.includes("bottle") || text.includes("flask")) {
     return "https://pngimg.com/uploads/water_bottle/water_bottle_PNG10152.png";
   }
+  if (text.includes("band")) {
+    return "https://upload.wikimedia.org/wikipedia/commons/c/cf/Strength_band.png";
+  }
   return PRODUCT_FALLBACK_IMAGES.default_product;
 };
 

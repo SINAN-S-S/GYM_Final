@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext";
 
 import "./Login.css";
@@ -8,6 +9,7 @@ import axios from "axios";
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -76,13 +78,23 @@ export default function Login() {
 
               <div className="input-field">
                 <label>SECURE PASSWORD</label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="••••••••"
-                  onChange={handleChange}
-          required
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="••••••••"
+                    onChange={handleChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <button type="submit" className="login-btn">
