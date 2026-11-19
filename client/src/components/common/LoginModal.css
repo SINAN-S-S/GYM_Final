@@ -10,7 +10,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* Higher than everything else */
+  z-index: 9999;
+  /* Higher than everything else */
   padding: 20px;
 }
 
@@ -31,6 +32,7 @@
     opacity: 0;
     transform: scale(0.9) translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
