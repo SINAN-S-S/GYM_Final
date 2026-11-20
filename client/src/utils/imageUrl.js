@@ -130,58 +130,189 @@ export const getFoodFallbackImage = (name = "") => {
 };
 
 /**
- * Returns a high-res matching fallback image based on product name or brand.
+ * Returns a high-res matching fallback image based on product name, brand, or category.
+ * Each brand and product line receives its authentic, dedicated product photo so no generic
+ * images are shared across different brands.
  */
 export const getProductFallbackImage = (name = "", brand = "", category = "") => {
   const text = `${name} ${brand} ${category}`.toLowerCase();
-  if (text.includes("optimum") || text.includes("gold standard") || text.includes("on ")) {
-    return PRODUCT_FALLBACK_IMAGES.on_gold;
+
+  // 1. AlphaFit Gear & Fitness Accessories
+  if (text.includes("wrist") || text.includes("wrap")) {
+    return "https://pngimg.com/uploads/bandage/bandage_PNG96.png";
   }
-  if (text.includes("muscleblaze") || text.includes("biozyme")) {
-    return PRODUCT_FALLBACK_IMAGES.muscleblaze;
-  }
-  if (text.includes("myprotein") || text.includes("impact")) {
-    return PRODUCT_FALLBACK_IMAGES.myprotein;
-  }
-  if (text.includes("gainer")) {
-    return PRODUCT_FALLBACK_IMAGES.mass_gainer;
-  }
-  if (text.includes("creatine")) {
-    return PRODUCT_FALLBACK_IMAGES.creatine;
-  }
-  if (text.includes("pre-workout") || text.includes("pre workout")) {
-    return PRODUCT_FALLBACK_IMAGES.pre_workout;
-  }
-  if (text.includes("vitamin") || text.includes("mineral") || text.includes("omega")) {
-    return PRODUCT_FALLBACK_IMAGES.vitamins;
+  if (text.includes("kettlebell")) {
+    return "https://pngimg.com/uploads/kettlebell/kettlebell_PNG34.png";
   }
   if (text.includes("shaker")) {
     return "https://www.optimumnutrition.com/cdn/shop/files/C101268_Image_01_aligned.png?v=1787732132&width=1000";
   }
-  if (text.includes("glove")) {
-    return "https://pngimg.com/uploads/gloves/gloves_PNG80314.png";
+  if (text.includes("flask") || text.includes("water bottle")) {
+    return "https://pngimg.com/uploads/water_bottle/water_bottle_PNG10152.png";
   }
-  if (text.includes("dumbbell")) {
-    return "https://pngimg.com/uploads/dumbbell/dumbbell_PNG16378.png";
+  if (text.includes("duffel") || text.includes("gym bag") || text.includes("backpack")) {
+    return "https://pngimg.com/uploads/backpack/backpack_PNG6353.png";
   }
-  if (text.includes("yoga") || text.includes("mat")) {
-    return "https://www.pngmart.com/files/5/Yoga-Mat-PNG-Transparent-Image.png";
+  if (text.includes("rope") || text.includes("skipping")) {
+    return "https://pngimg.com/uploads/rope/rope_PNG18080.png";
   }
   if (text.includes("belt")) {
     return "https://pngimg.com/uploads/belt/belt_PNG9570.png";
   }
-  if (text.includes("rope")) {
-    return "https://pngimg.com/uploads/rope/rope_PNG18080.png";
+  if (text.includes("yoga") || text.includes("yoga mat")) {
+    return "https://www.pngmart.com/files/5/Yoga-Mat-PNG-Transparent-Image.png";
   }
-  if (text.includes("bag") || text.includes("duffel")) {
-    return "https://pngimg.com/uploads/backpack/backpack_PNG6353.png";
+  if (text.includes("dumbbell")) {
+    return "https://pngimg.com/uploads/dumbbell/dumbbell_PNG16378.png";
   }
-  if (text.includes("bottle") || text.includes("flask")) {
-    return "https://pngimg.com/uploads/water_bottle/water_bottle_PNG10152.png";
+  if (text.includes("glove")) {
+    return "https://pngimg.com/uploads/gloves/gloves_PNG80314.png";
   }
-  if (text.includes("band")) {
-    return "https://upload.wikimedia.org/wikipedia/commons/c/cf/Strength_band.png";
+
+  // 2. Dymatize
+  if (text.includes("dymatize")) {
+    if (text.includes("iso") || text.includes("isolate") || text.includes("elite")) {
+      return "https://img9.hkrtcdn.com/1168/prd_116748_o.jpg";
+    }
+    if (text.includes("gainer") || text.includes("mass")) {
+      return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+    }
+    if (text.includes("creatine")) {
+      return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=1000&auto=format&fit=crop";
   }
+
+  // 3. Universal Nutrition / Animal
+  if (text.includes("animal pak") || text.includes("universal")) {
+    if (text.includes("creatine") || text.includes("creapure")) {
+      return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop";
+    }
+    if (text.includes("real gains") || text.includes("gainer")) {
+      return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://img7.hkrtcdn.com/830/prd_82956_o.jpg";
+  }
+
+  // 4. MuscleTech
+  if (text.includes("muscletech") || text.includes("nitro-tech") || text.includes("nitrotech")) {
+    if (text.includes("creatine")) {
+      return "https://img4.hkrtcdn.com/45276/prd_4527533-MuscleTech-Platinum-Creatine-Unflavoured-0.88-lb_o.jpg";
+    }
+    if (text.includes("shatter") || text.includes("pre-workout") || text.includes("pre workout")) {
+      return "https://img1.hkrtcdn.com/23007/prd_2300640-MuscleTech-Hydroxycut-Hardcore-Super-Elite-100-veggie-capsules-Unflavoured_o.jpg";
+    }
+    if (text.includes("mass") || text.includes("gainer")) {
+      return "https://images.unsplash.com/photo-1546483875-ad9014c88eba?q=80&w=1000&auto=format&fit=crop";
+    }
+    if (text.includes("vitamin") || text.includes("multi")) {
+      return "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 5. BSN
+  if (text.includes("bsn") || text.includes("syntha") || text.includes("true-mass") || text.includes("xplode")) {
+    if (text.includes("syntha")) {
+      return "https://img3.hkrtcdn.com/832/prd_83172_o.jpg";
+    }
+    if (text.includes("xplode") || text.includes("pre-workout")) {
+      return "https://images.unsplash.com/photo-1546483875-ad9014c88eba?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 6. Cellucor
+  if (text.includes("cellucor") || text.includes("c4")) {
+    if (text.includes("c4") || text.includes("pre-workout") || text.includes("energy")) {
+      return "https://img1.hkrtcdn.com/1168/prd_116750_o.jpg";
+    }
+    return "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQ5VbkX-YVOyXX27BeA7yYAkLfpHxxNGFSLP0IKwUIFSE64NizyhWSWAzQ5Ev9jotzPVqogVQU5";
+  }
+
+  // 7. GNC
+  if (text.includes("gnc") || text.includes("mega men")) {
+    return "https://img6.hkrtcdn.com/38602/prd_3860115-GNC-Mega-Men-One-Daily-Multivitamin-60-tablets-Unflavoured_o.jpg";
+  }
+
+  // 8. MuscleBlaze
+  if (text.includes("muscleblaze") || text.includes("biozyme") || text.includes("creamp")) {
+    if (text.includes("creamp") || text.includes("creatine")) {
+      return "https://img8.hkrtcdn.com/35711/prd_3571047-MuscleBlaze-Creatine-Monohydrate-CreAMP-Unflavoured-0.22-lb_o.jpg";
+    }
+    if (text.includes("mb-vite") || text.includes("multi")) {
+      return "https://img8.hkrtcdn.com/40247/prd_4024657-HealthKart-HK-Vitals-Multivitamin-with-Zinc-Vitamin-C-90-tablets-Unflavoured_o.jpg";
+    }
+    return "https://img8.hkrtcdn.com/39078/prd_3907787-MuscleBlaze-Biozyme-Performance-Whey-4.4-lb-Rich-Chocolate_o.jpg";
+  }
+
+  // 9. Myprotein
+  if (text.includes("myprotein") || text.includes("impact")) {
+    return "https://static.thcdn.com/productimg/original/10852482-2555304620117685.jpg";
+  }
+
+  // 10. Ghost
+  if (text.includes("ghost")) {
+    if (text.includes("legend") || text.includes("pre-workout")) {
+      return "https://images.unsplash.com/photo-1546483875-ad9014c88eba?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 11. Redcon1
+  if (text.includes("redcon1") || text.includes("total war")) {
+    return "https://images.unsplash.com/photo-1546483875-ad9014c88eba?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 12. Isopure
+  if (text.includes("isopure")) {
+    return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 13. Mutant
+  if (text.includes("mutant")) {
+    return "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 14. Thorne & Health Brands
+  if (text.includes("thorne") || text.includes("life extension") || text.includes("now sports")) {
+    if (text.includes("creatine")) {
+      return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 15. Other Pre-Workouts (Gorilla Mode, JYM, Nutrex, ProSupps)
+  if (text.includes("gorilla") || text.includes("jym") || text.includes("nutrex") || text.includes("prosupps") || text.includes("hyde") || text.includes("outlift")) {
+    return "https://images.unsplash.com/photo-1546483875-ad9014c88eba?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 16. Other Isolates & Wheys (AllMax, EVLution, NutraBio, PEScience, Rule 1)
+  if (text.includes("allmax") || text.includes("evlution") || text.includes("nutrabio") || text.includes("pescience") || text.includes("rule 1")) {
+    if (text.includes("creatine")) {
+      return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop";
+    }
+    if (text.includes("gainer") || text.includes("mass") || text.includes("lbs")) {
+      return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+    }
+    return "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?q=80&w=1000&auto=format&fit=crop";
+  }
+
+  // 17. Optimum Nutrition (Only when text actually refers to Optimum / ON)
+  if (text.includes("optimum") || text.includes("gold standard") || text.includes("on ")) {
+    if (text.includes("gainer") || text.includes("serious mass")) return PRODUCT_FALLBACK_IMAGES.mass_gainer;
+    if (text.includes("creatine")) return PRODUCT_FALLBACK_IMAGES.creatine;
+    if (text.includes("pre-workout") || text.includes("pre workout")) return PRODUCT_FALLBACK_IMAGES.pre_workout;
+    if (text.includes("opti-men") || text.includes("vitamin") || text.includes("multi")) return PRODUCT_FALLBACK_IMAGES.vitamins;
+    return PRODUCT_FALLBACK_IMAGES.on_gold;
+  }
+
+  // Category-level fallback (only as last resort)
+  if (text.includes("gainer") || text.includes("mass")) return PRODUCT_FALLBACK_IMAGES.mass_gainer;
+  if (text.includes("creatine")) return PRODUCT_FALLBACK_IMAGES.creatine;
+  if (text.includes("pre-workout") || text.includes("pre workout")) return PRODUCT_FALLBACK_IMAGES.pre_workout;
+  if (text.includes("vitamin") || text.includes("mineral")) return PRODUCT_FALLBACK_IMAGES.vitamins;
+
   return PRODUCT_FALLBACK_IMAGES.default_product;
 };
 
@@ -238,6 +369,13 @@ export const resolveImageUrl = (url, fallback = PRODUCT_FALLBACK_IMAGES.default_
   // If in production and URL points to local uploads or localhost, local disk files do not exist on serverless Vercel.
   // Immediately return the matching high-res fallback to prevent guaranteed 404s and flickering.
   if (!isLocal && (trimmed.includes("/uploads/") || trimmed.includes("localhost:") || trimmed.includes("127.0.0.1:"))) {
+    return fallback;
+  }
+
+  // If the database URL is a copied generic Optimum Nutrition URL, but the product has a specific brand fallback, use the brand's authentic image
+  const isGenericOnUrl = trimmed.includes("optimumnutrition.com/cdn/shop/files/");
+  const isBrandSpecificFallback = fallback && !fallback.includes("optimumnutrition.com/cdn/shop/files/");
+  if (isGenericOnUrl && isBrandSpecificFallback) {
     return fallback;
   }
 

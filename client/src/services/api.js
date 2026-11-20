@@ -1,17 +1,12 @@
 const DEFAULT_PROD_BACKEND = "https://gym-final-3uya.vercel.app";
-const DEFAULT_DEV_BACKEND = "http://localhost:5000";
 
 const getBackendBase = () => {
-  const isLocal = typeof window !== "undefined" && window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-  if (isLocal) {
-    return DEFAULT_DEV_BACKEND;
-  }
   const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
-  const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
-  if (!configured || isObsolete) {
-    return DEFAULT_PROD_BACKEND;
+  const isObsolete = /gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
+  if (configured && !isObsolete) {
+    return configured;
   }
-  return configured;
+  return DEFAULT_PROD_BACKEND;
 };
 
 const API = `${getBackendBase()}/api`;

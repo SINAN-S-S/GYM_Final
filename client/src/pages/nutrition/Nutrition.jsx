@@ -66,8 +66,7 @@ function LiveSearchBar({
     return allProducts.filter((p) => {
       return (
         p.name?.toLowerCase().includes(query) ||
-        p.brand?.toLowerCase().includes(query) ||
-        p.category?.toLowerCase().includes(query)
+        p.brand?.toLowerCase().includes(query)
       );
     });
   }, [allProducts, query]);
@@ -464,9 +463,7 @@ function Nutrition() {
       const matchesSearch =
         !query ||
         product.name?.toLowerCase().includes(query) ||
-        product.brand?.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query) ||
-        product.category?.toLowerCase().includes(query);
+        product.brand?.toLowerCase().includes(query);
 
       return matchesCategory && matchesSearch;
     });
@@ -590,8 +587,8 @@ function Nutrition() {
                   cat === "All Products" || cat === "ALL"
                     ? allStoreProducts.length
                     : allStoreProducts.filter(
-                        (p) => p.category?.toLowerCase() === cat.toLowerCase()
-                      ).length;
+                      (p) => p.category?.toLowerCase() === cat.toLowerCase()
+                    ).length;
                 const isSelected =
                   selectedCategory.toLowerCase() === cat.toLowerCase() ||
                   ((cat === "All Products" || cat === "ALL") &&

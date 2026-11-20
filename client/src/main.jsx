@@ -8,26 +8,18 @@ import axios from "axios";
 
 // --- GLOBAL FRONTEND API LOGGING & URL NORMALIZATION ---
 const DEFAULT_PROD_BACKEND = "https://gym-final-3uya.vercel.app";
-const DEFAULT_DEV_BACKEND = "http://localhost:5000";
 
 const getActiveBackend = () => {
-  const isLocal = typeof window !== "undefined" && window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-  const forceProd = typeof window !== "undefined" && (window.location?.search?.includes("useProdBackend") || localStorage.getItem("useProdBackend") === "true");
-  if (isLocal && !forceProd) {
-    return DEFAULT_DEV_BACKEND;
-  }
   const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
-  const isObsolete = /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
-  if (!configured || isObsolete) {
-    return DEFAULT_PROD_BACKEND;
+  const isObsolete = /gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
+  if (configured && !isObsolete) {
+    return configured;
   }
-  return configured;
+  return DEFAULT_PROD_BACKEND;
 };
 
 axios.interceptors.request.use(request => {
   const activeBackend = getActiveBackend();
-  const isLocal = typeof window !== "undefined" && window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-  const forceProd = typeof window !== "undefined" && (window.location?.search?.includes("useProdBackend") || localStorage.getItem("useProdBackend") === "true");
 
   if (request.url) {
     // If VITE_BACKEND_URL was undefined or omitted at build time
@@ -35,23 +27,15 @@ axios.interceptors.request.use(request => {
       request.url = request.url.replace(/^undefined/, "");
     }
 
-    if (!isLocal || forceProd) {
-      // In production (or when forceProd is active), route all API requests to the deployed backend
-      request.url = request.url.replace(
-        /^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app|gym-final-qsuh\.vercel\.app)/,
-        activeBackend
-      );
+    // Route all API requests through the active verified backend
+    request.url = request.url.replace(
+      /^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app|gym-final-qsuh\.vercel\.app)/,
+      activeBackend
+    );
 
-      // If request URL is relative (/api/...), prefix with activeBackend
-      if (request.url.startsWith("/api")) {
-        request.url = `${activeBackend}${request.url}`;
-      }
-    } else {
-      // In local development, ensure requests target localhost:5000
-      request.url = request.url.replace(
-        /^https?:\/\/(gym-final-qsuh\.vercel\.app|gym-final-3uya\.vercel\.app)/,
-        DEFAULT_DEV_BACKEND
-      );
+    // If request URL is relative (/api/...), prefix with activeBackend
+    if (request.url.startsWith("/api")) {
+      request.url = `${activeBackend}${request.url}`;
     }
 
     // Clean up duplicate slashes after protocol (e.g. https://domain.vercel.app//api -> https://domain.vercel.app/api)
