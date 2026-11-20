@@ -258,15 +258,15 @@ function ProductCard({ product, onSelect, onAddToCart, onBuyNow }) {
   );
 }
 
-// Store Modal Card Component (Grid View)
-function StoreModalCard({ product, onSelect, onAddToCart, onBuyNow }) {
+// Store Modal List Item Component (Clean Vertical List View)
+function StoreModalListItem({ product, onSelect, onAddToCart, onBuyNow }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const fallback = getProductFallbackImage(product.name, product.brand, product.category);
   const imageSrc = resolveImageUrl(product.image, fallback);
 
   return (
-    <div className="store-product-card" onClick={() => onSelect(product)}>
-      <div className="store-img-container">
+    <div className="store-product-list-item" onClick={() => onSelect(product)}>
+      <div className="store-list-img-box">
         {!imgLoaded && <div className="product-img-skeleton" />}
         <img
           src={imageSrc}
@@ -276,73 +276,7 @@ function StoreModalCard({ product, onSelect, onAddToCart, onBuyNow }) {
             setImgLoaded(true);
             onImageError(e, fallback);
           }}
-          className={`store-card-img ${imgLoaded ? "loaded" : "loading"}`}
-        />
-        <span className={`store-stock-tag ${product.inStock ? "in" : "out"}`}>
-          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
-        </span>
-      </div>
-
-      <div className="store-card-content">
-        <div className="store-card-meta">
-          <span className="card-brand">{product.brand}</span>
-          <span className="card-cat">{product.category}</span>
-        </div>
-
-        <h3 className="card-product-name" title={product.name}>{product.name}</h3>
-        <p className="card-desc-snippet">
-          {product.description?.slice(0, 95) || "Scientifically backed supplement formulation."}...
-        </p>
-
-        <div className="store-card-bottom">
-          <div className="store-price-tag">
-            ${Number(product.price).toFixed(2)}
-          </div>
-
-          <div className="store-card-actions">
-            <button
-              className="btn-details-ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect(product);
-              }}
-            >
-              DETAILS
-            </button>
-            <button
-              className="btn-cart-lime"
-              disabled={!product.inStock}
-              onClick={(e) => onAddToCart(product, 1, e)}
-            >
-              + CART
-            </button>
-            <button
-              className="btn-buy-white"
-              disabled={!product.inStock}
-              onClick={(e) => onBuyNow(product, e)}
-            >
-              BUY NOW
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Store Modal List Item Component (List View)
-function StoreModalListItem({ product, onSelect, onAddToCart, onBuyNow }) {
-  const fallback = getProductFallbackImage(product.name, product.brand, product.category);
-  const imageSrc = resolveImageUrl(product.image, fallback);
-
-  return (
-    <div className="store-product-list-item" onClick={() => onSelect(product)}>
-      <div className="store-list-img-box">
-        <img
-          src={imageSrc}
-          alt={product.name}
-          onError={(e) => onImageError(e, fallback)}
-          className="store-list-img"
+          className={`store-list-img ${imgLoaded ? "loaded" : "loading"}`}
         />
       </div>
 
@@ -354,7 +288,7 @@ function StoreModalListItem({ product, onSelect, onAddToCart, onBuyNow }) {
             {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
           </span>
         </div>
-        <h4 className="store-list-title">{product.name}</h4>
+        <h4 className="store-list-title" title={product.name}>{product.name}</h4>
         <p className="store-list-desc">
           {product.description?.slice(0, 120) || "Scientifically backed supplement formulation."}...
         </p>
@@ -401,7 +335,6 @@ function Nutrition() {
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedFood, setSelectedFood] = useState(null);
-  const [storeViewMode, setStoreViewMode] = useState("grid"); // "grid" | "list"
 
   // Store filtering & search state
   const [selectedCategory, setSelectedCategory] = useState("All Products");
@@ -773,7 +706,7 @@ function Nutrition() {
               </div>
             </div>
 
-            {/* Product Count Indicator & View Toggle */}
+            {/* Product Count Indicator */}
             <div className="store-results-info">
               <div className="store-results-left">
                 <span>Showing {filteredProducts.length} certified supplements</span>
@@ -783,28 +716,9 @@ function Nutrition() {
                   </span>
                 )}
               </div>
-
-              <div className="store-view-toggle">
-                <button
-                  type="button"
-                  className={`view-mode-btn ${storeViewMode === "grid" ? "active" : ""}`}
-                  onClick={() => setStoreViewMode("grid")}
-                  title="Grid View"
-                >
-                  <span style={{ fontSize: "1rem" }}>⊞</span> Grid
-                </button>
-                <button
-                  type="button"
-                  className={`view-mode-btn ${storeViewMode === "list" ? "active" : ""}`}
-                  onClick={() => setStoreViewMode("list")}
-                  title="List View"
-                >
-                  <span style={{ fontSize: "1rem" }}>☰</span> List
-                </button>
-              </div>
             </div>
 
-            {/* Products Display Container (Grid or List) */}
+            {/* Products Display Container (Clean Vertical List View) */}
             {filteredProducts.length === 0 ? (
               <div className="no-results-box">
                 <div className="no-res-icon">🧪</div>
@@ -820,22 +734,10 @@ function Nutrition() {
                   SHOW ALL PRODUCTS
                 </button>
               </div>
-            ) : storeViewMode === "list" ? (
+            ) : (
               <div className="store-modal-list">
                 {filteredProducts.map((product) => (
                   <StoreModalListItem
-                    key={product._id}
-                    product={product}
-                    onSelect={handleOpenProductDetails}
-                    onAddToCart={handleAddToCart}
-                    onBuyNow={handleBuyNow}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="store-modal-grid">
-                {filteredProducts.map((product) => (
-                  <StoreModalCard
                     key={product._id}
                     product={product}
                     onSelect={handleOpenProductDetails}
