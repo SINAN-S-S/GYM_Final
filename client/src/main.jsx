@@ -8,18 +8,35 @@ import axios from "axios";
 
 // --- GLOBAL FRONTEND API LOGGING & URL NORMALIZATION ---
 const DEFAULT_PROD_BACKEND = "https://gym-final-3uya.vercel.app";
+const DEFAULT_DEV_BACKEND = "http://localhost:5000";
+
+const isLocalHost = () => {
+  if (typeof window === "undefined" || !window.location) return false;
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1";
+};
 
 const getActiveBackend = () => {
+  const isLocal = isLocalHost();
   const configured = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
-  const isObsolete = /gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
-  if (configured && !isObsolete) {
-    return configured;
+
+  // If running locally in dev, use configured dev backend or default local port 5000
+  if (isLocal) {
+    return configured || DEFAULT_DEV_BACKEND;
   }
-  return DEFAULT_PROD_BACKEND;
+
+  // In production (e.g. gym-final-lake.vercel.app or any live deployment):
+  // Never route to localhost, 127.0.0.1, or obsolete legacy backends
+  const isObsolete = !configured || /localhost|127\.0\.0\.1|gym-final-u29p|onrender|gym-final-five|gym-final-qsuh/.test(configured);
+  if (isObsolete) {
+    return DEFAULT_PROD_BACKEND;
+  }
+  return configured;
 };
 
 axios.interceptors.request.use(request => {
   const activeBackend = getActiveBackend();
+  const isLocal = isLocalHost();
 
   if (request.url) {
     // If VITE_BACKEND_URL was undefined or omitted at build time
@@ -27,11 +44,19 @@ axios.interceptors.request.use(request => {
       request.url = request.url.replace(/^undefined/, "");
     }
 
-    // Route all API requests through the active verified backend
-    request.url = request.url.replace(
-      /^https?:\/\/(localhost:5000|127\.0\.0\.1:5000|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app|gym-final-qsuh\.vercel\.app)/,
-      activeBackend
-    );
+    // In production, force all localhost, 127.0.0.1, and obsolete backend URLs to the live backend
+    if (!isLocal) {
+      request.url = request.url.replace(
+        /^https?:\/\/(localhost(:[0-9]+)?|127\.0\.0\.1(:[0-9]+)?|gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app|gym-final-qsuh\.vercel\.app)/,
+        activeBackend
+      );
+    } else {
+      // In local dev, replace obsolete remote domains with active backend
+      request.url = request.url.replace(
+        /^https?:\/\/(gym-final-u29p\.vercel\.app|gym-final-cvrc\.onrender\.com|gym-final-five\.vercel\.app|gym-final-qsuh\.vercel\.app)/,
+        activeBackend
+      );
+    }
 
     // If request URL is relative (/api/...), prefix with activeBackend
     if (request.url.startsWith("/api")) {
