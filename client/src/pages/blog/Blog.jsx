@@ -79,6 +79,7 @@ function Blog() {
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
+  const [featuredAspectRatio, setFeaturedAspectRatio] = useState(null);
 
   const fetchBlogs = async () => {
     try {
@@ -221,7 +222,14 @@ function Blog() {
                 className="featured-post-card"
                 onClick={() => setSelectedBlog(featured)}
               >
-                <div className="featured-image-box">
+                <div
+                  className="featured-image-box"
+                  style={
+                    featuredAspectRatio
+                      ? { width: `clamp(260px, calc(460px * ${featuredAspectRatio}), 52%)` }
+                      : undefined
+                  }
+                >
                   <img
                     src={resolveImageUrl(
                       featured.image,
@@ -229,6 +237,11 @@ function Blog() {
                     )}
                     alt={featured.title}
                     loading="lazy"
+                    onLoad={(e) => {
+                      if (e.target.naturalWidth && e.target.naturalHeight) {
+                        setFeaturedAspectRatio(e.target.naturalWidth / e.target.naturalHeight);
+                      }
+                    }}
                     onError={(e) =>
                       onImageError(
                         e,
